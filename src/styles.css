@@ -2,6 +2,8 @@
 @source "../src";
 @import "tw-animate-css";
 
+@source inline("bg-emerald-100 bg-emerald-400 text-emerald-700 bg-amber-100 bg-amber-400 text-amber-700 bg-rose-100 bg-rose-400 text-rose-700 bg-violet-400 no-scrollbar");
+
 @custom-variant dark (&:is(.dark *));
 
 /*

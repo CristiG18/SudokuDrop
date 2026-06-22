@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TournamentsRouteImport } from './routes/tournaments'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
@@ -22,11 +21,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayDropdokuRouteImport } from './routes/play.dropdoku'
 import { Route as PlayClassicRouteImport } from './routes/play.classic'
 
-const TournamentsRoute = TournamentsRouteImport.update({
-  id: '/tournaments',
-  path: '/tournaments',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
@@ -93,7 +87,6 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
   '/shop': typeof ShopRoute
-  '/tournaments': typeof TournamentsRoute
   '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
 }
@@ -107,7 +100,6 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
   '/shop': typeof ShopRoute
-  '/tournaments': typeof TournamentsRoute
   '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
 }
@@ -122,7 +114,6 @@ export interface FileRoutesById {
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
   '/shop': typeof ShopRoute
-  '/tournaments': typeof TournamentsRoute
   '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
 }
@@ -138,7 +129,6 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/personal'
     | '/shop'
-    | '/tournaments'
     | '/play/classic'
     | '/play/dropdoku'
   fileRoutesByTo: FileRoutesByTo
@@ -152,7 +142,6 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/personal'
     | '/shop'
-    | '/tournaments'
     | '/play/classic'
     | '/play/dropdoku'
   id:
@@ -166,7 +155,6 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/personal'
     | '/shop'
-    | '/tournaments'
     | '/play/classic'
     | '/play/dropdoku'
   fileRoutesById: FileRoutesById
@@ -181,20 +169,12 @@ export interface RootRouteChildren {
   LeaderboardRoute: typeof LeaderboardRoute
   PersonalRoute: typeof PersonalRoute
   ShopRoute: typeof ShopRoute
-  TournamentsRoute: typeof TournamentsRoute
   PlayClassicRoute: typeof PlayClassicRoute
   PlayDropdokuRoute: typeof PlayDropdokuRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tournaments': {
-      id: '/tournaments'
-      path: '/tournaments'
-      fullPath: '/tournaments'
-      preLoaderRoute: typeof TournamentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/shop': {
       id: '/shop'
       path: '/shop'
@@ -285,7 +265,6 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardRoute: LeaderboardRoute,
   PersonalRoute: PersonalRoute,
   ShopRoute: ShopRoute,
-  TournamentsRoute: TournamentsRoute,
   PlayClassicRoute: PlayClassicRoute,
   PlayDropdokuRoute: PlayDropdokuRoute,
 }

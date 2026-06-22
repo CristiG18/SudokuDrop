@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlayDropdokuRouteImport } from './routes/play.dropdoku'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayDropdokuRoute = PlayDropdokuRouteImport.update({
+  id: '/play/dropdoku',
+  path: '/play/dropdoku',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/play/dropdoku': typeof PlayDropdokuRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/play/dropdoku': typeof PlayDropdokuRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/play/dropdoku': typeof PlayDropdokuRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/play/dropdoku'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/play/dropdoku'
+  id: '__root__' | '/' | '/play/dropdoku'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PlayDropdokuRoute: typeof PlayDropdokuRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/play/dropdoku': {
+      id: '/play/dropdoku'
+      path: '/play/dropdoku'
+      fullPath: '/play/dropdoku'
+      preLoaderRoute: typeof PlayDropdokuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PlayDropdokuRoute: PlayDropdokuRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

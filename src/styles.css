@@ -2,15 +2,12 @@
 @source "../src";
 @import "tw-animate-css";
 
-@source inline("bg-jewel-1 bg-jewel-2 bg-jewel-3 bg-jewel-4 bg-jewel-5 bg-jewel-6 bg-jewel-7 bg-jewel-8 bg-jewel-9 bg-jewel-joker text-jewel-1 text-jewel-2 text-jewel-3 text-jewel-7 text-jewel-8");
-
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Sudoku Drop — Jewel Style design system.
- * Pastel, soft shadows, rounded "jewel" panels.
- * All colors are semantic tokens. Themes (monthly reskins / shop skins)
- * swap a small set of vars on :root[data-theme="..."].
+ * Sudoku Drop — minimalist airy style.
+ * White bg, soft gray surfaces, single blue accent, hairline borders,
+ * generous whitespace. Numbers are blue on white cells.
  */
 
 @theme inline {
@@ -20,7 +17,6 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -42,150 +38,112 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --color-jewel-1: var(--jewel-1);
-  --color-jewel-2: var(--jewel-2);
-  --color-jewel-3: var(--jewel-3);
-  --color-jewel-4: var(--jewel-4);
-  --color-jewel-5: var(--jewel-5);
-  --color-jewel-6: var(--jewel-6);
-  --color-jewel-7: var(--jewel-7);
-  --color-jewel-8: var(--jewel-8);
-  --color-jewel-9: var(--jewel-9);
-  --color-jewel-joker: var(--jewel-joker);
-
   --color-board: var(--board);
-  --color-board-line: var(--board-line);
-  --color-diamond: var(--diamond);
+  --color-board-line-thin: var(--board-line-thin);
+  --color-board-line-thick: var(--board-line-thick);
+  --color-cell-fixed: var(--cell-fixed);
+  --color-cell-user: var(--cell-user);
+  --color-cell-selected: var(--cell-selected);
 
-  --shadow-jewel: var(--shadow-jewel);
   --shadow-soft: var(--shadow-soft);
-  --shadow-pop: var(--shadow-pop);
+  --shadow-card: var(--shadow-card);
 }
 
 :root {
-  --radius: 1.1rem;
+  --radius: 1rem;
 
-  /* Default pastel "Sapphire/Rose" theme */
-  --background: oklch(0.985 0.012 310);
-  --foreground: oklch(0.28 0.06 280);
+  --background: oklch(0.985 0.003 250);
+  --foreground: oklch(0.22 0.02 250);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.28 0.06 280);
+  --card-foreground: oklch(0.22 0.02 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.28 0.06 280);
+  --popover-foreground: oklch(0.22 0.02 250);
 
-  --primary: oklch(0.72 0.16 320);          /* rose-violet */
-  --primary-foreground: oklch(0.99 0.005 320);
-  --secondary: oklch(0.94 0.04 260);
-  --secondary-foreground: oklch(0.32 0.08 280);
-  --muted: oklch(0.96 0.015 300);
-  --muted-foreground: oklch(0.5 0.04 280);
-  --accent: oklch(0.86 0.1 220);            /* sky pastel */
-  --accent-foreground: oklch(0.25 0.08 260);
-  --destructive: oklch(0.65 0.21 25);
+  --primary: oklch(0.55 0.21 255);            /* clean blue */
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.01 250);
+  --secondary-foreground: oklch(0.28 0.04 255);
+  --muted: oklch(0.96 0.008 250);
+  --muted-foreground: oklch(0.55 0.02 250);
+  --accent: oklch(0.94 0.04 255);
+  --accent-foreground: oklch(0.45 0.18 255);
+  --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.92 0.02 300);
-  --input: oklch(0.92 0.02 300);
-  --ring: oklch(0.72 0.16 320);
+  --border: oklch(0.92 0.008 250);
+  --input: oklch(0.92 0.008 250);
+  --ring: oklch(0.55 0.21 255);
 
-  /* Jewel palette — 1..9 numbered pieces */
-  --jewel-1: oklch(0.82 0.13 25);    /* coral */
-  --jewel-2: oklch(0.83 0.13 60);    /* peach */
-  --jewel-3: oklch(0.86 0.13 105);   /* lime */
-  --jewel-4: oklch(0.82 0.13 155);   /* mint */
-  --jewel-5: oklch(0.82 0.12 200);   /* sky */
-  --jewel-6: oklch(0.78 0.13 245);   /* periwinkle */
-  --jewel-7: oklch(0.78 0.14 290);   /* lavender */
-  --jewel-8: oklch(0.8 0.14 330);    /* rose */
-  --jewel-9: oklch(0.85 0.1 80);     /* gold */
-  --jewel-joker: oklch(0.92 0.04 300);
+  --board: oklch(1 0 0);
+  --board-line-thin: oklch(0.88 0.01 250);
+  --board-line-thick: oklch(0.55 0.04 255);
+  --cell-fixed: oklch(0.22 0.02 250);
+  --cell-user: oklch(0.55 0.21 255);
+  --cell-selected: oklch(0.93 0.05 255);
 
-  --board: oklch(0.98 0.01 300);
-  --board-line: oklch(0.55 0.08 290);
-  --diamond: oklch(0.78 0.16 210);
+  --shadow-soft: 0 1px 2px oklch(0.3 0.04 255 / 0.05), 0 4px 12px -6px oklch(0.3 0.04 255 / 0.08);
+  --shadow-card: 0 2px 8px -2px oklch(0.3 0.04 255 / 0.06), 0 12px 28px -16px oklch(0.3 0.04 255 / 0.18);
 
-  --shadow-jewel:
-    0 1px 0 oklch(1 0 0 / 0.9) inset,
-    0 -2px 0 oklch(0 0 0 / 0.08) inset,
-    0 6px 14px -6px oklch(0.3 0.1 290 / 0.35);
-  --shadow-soft: 0 10px 30px -12px oklch(0.3 0.1 290 / 0.25);
-  --shadow-pop: 0 20px 40px -16px oklch(0.3 0.15 320 / 0.45);
-
-  --sidebar: oklch(0.985 0.012 310);
-  --sidebar-foreground: oklch(0.28 0.06 280);
-  --sidebar-primary: oklch(0.72 0.16 320);
+  --sidebar: oklch(0.985 0.003 250);
+  --sidebar-foreground: oklch(0.22 0.02 250);
+  --sidebar-primary: oklch(0.55 0.21 255);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.94 0.04 260);
-  --sidebar-accent-foreground: oklch(0.32 0.08 280);
-  --sidebar-border: oklch(0.92 0.02 300);
-  --sidebar-ring: oklch(0.72 0.16 320);
+  --sidebar-accent: oklch(0.96 0.01 250);
+  --sidebar-accent-foreground: oklch(0.28 0.04 255);
+  --sidebar-border: oklch(0.92 0.008 250);
+  --sidebar-ring: oklch(0.55 0.21 255);
 }
 
-/* Monthly reskin themes — swap data-theme on <html> */
-:root[data-theme="ice"] {
-  --background: oklch(0.97 0.02 220);
-  --primary: oklch(0.7 0.14 230);
-  --accent: oklch(0.88 0.08 200);
-  --board: oklch(0.97 0.015 220);
-  --board-line: oklch(0.5 0.08 230);
-}
-:root[data-theme="amber"] {
-  --background: oklch(0.97 0.03 60);
-  --primary: oklch(0.72 0.17 45);
-  --accent: oklch(0.85 0.13 70);
-  --board: oklch(0.98 0.02 60);
-  --board-line: oklch(0.45 0.12 40);
-}
+/* Monthly seasonal accents — subtle, only shift primary hue */
+:root[data-theme="ice"] { --primary: oklch(0.6 0.16 220); --accent: oklch(0.94 0.05 220); }
+:root[data-theme="rose"] { --primary: oklch(0.6 0.2 350); --accent: oklch(0.94 0.05 350); }
+:root[data-theme="amber"] { --primary: oklch(0.65 0.18 55); --accent: oklch(0.94 0.05 55); }
 
 @layer base {
   * { border-color: var(--color-border); }
   html, body, #root { height: 100%; }
   body {
-    background:
-      radial-gradient(1200px 600px at 50% -10%, oklch(from var(--primary) l c h / 0.18), transparent 60%),
-      radial-gradient(900px 500px at 100% 100%, oklch(from var(--accent) l c h / 0.25), transparent 60%),
-      var(--color-background);
+    background: var(--color-background);
     color: var(--color-foreground);
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     overscroll-behavior: none;
-    font-family: ui-rounded, "SF Pro Rounded", "Inter", system-ui, sans-serif;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.005em;
   }
-}
-
-@utility jewel-panel {
-  background: linear-gradient(180deg, oklch(1 0 0 / 0.6), oklch(1 0 0 / 0.15));
-  border-radius: 1.25rem;
-  box-shadow: var(--shadow-jewel);
-  backdrop-filter: blur(8px);
+  h1, h2, h3 { letter-spacing: -0.02em; }
 }
 
 @utility soft-card {
   background-color: var(--color-card);
-  border-radius: 1.5rem;
+  border-radius: 1.25rem;
   box-shadow: var(--shadow-soft);
 }
 
-@keyframes jewel-pop {
-  0% { transform: scale(0.6); opacity: 0; }
-  60% { transform: scale(1.08); opacity: 1; }
-  100% { transform: scale(1); }
+@utility tab-chip {
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
 }
-@keyframes jewel-clear {
-  0% { transform: scale(1); opacity: 1; filter: brightness(1); }
-  60% { transform: scale(1.25); filter: brightness(1.6); }
-  100% { transform: scale(0.2); opacity: 0; }
+@utility tab-chip-active {
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
 }
-@keyframes drop-bounce {
-  0% { transform: translateY(-12px); }
-  60% { transform: translateY(4px); }
-  100% { transform: translateY(0); }
-}
+
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-.animate-jewel-pop { animation: jewel-pop 220ms cubic-bezier(.2,.9,.3,1.2) both; }
-.animate-jewel-clear { animation: jewel-clear 320ms ease-in both; }
-.animate-drop-bounce { animation: drop-bounce 220ms cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
 .animate-slide-up { animation: slide-up 280ms cubic-bezier(.2,.8,.2,1) both; }
+.animate-fade-in { animation: fade-in 200ms ease-out both; }
+.animate-pop { animation: pop 160ms cubic-bezier(.2,.9,.3,1.2) both; }

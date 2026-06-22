@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import {
   ROWS,
   COLS,
@@ -17,8 +16,7 @@ interface BoardProps {
   cellSize: number;
 }
 
-const GUTTER = 4;
-const THICK = 6;
+const THICK = 2;
 
 export function Board({
   board,
@@ -40,33 +38,15 @@ export function Board({
     return null;
   };
 
-  const totalSize = cellSize * COLS + GUTTER * 2;
+  const inner = cellSize * COLS;
 
   return (
     <div
-      className="relative jewel-panel p-2"
-      style={{ width: totalSize, height: totalSize }}
+      className="relative bg-card rounded-2xl p-2 shadow-soft"
+      style={{ width: inner + 16, height: inner + 16 }}
     >
-      {/* Sub-grid 3x3 thick lines */}
-      <div className="absolute inset-2 pointer-events-none">
-        {[1, 2].map((i) => (
-          <div
-            key={`v${i}`}
-            className="absolute top-0 bottom-0 bg-board-line/40 rounded-full"
-            style={{ left: (cellSize * COLS * i) / 3 - THICK / 2, width: THICK }}
-          />
-        ))}
-        {[1, 2].map((i) => (
-          <div
-            key={`h${i}`}
-            className="absolute left-0 right-0 bg-board-line/40 rounded-full"
-            style={{ top: (cellSize * ROWS * i) / 3 - THICK / 2, height: THICK }}
-          />
-        ))}
-      </div>
-
       <div
-        className="grid relative"
+        className="grid relative bg-board border border-board-line-thick rounded-md overflow-hidden"
         style={{
           gridTemplateColumns: `repeat(${COLS}, ${cellSize}px)`,
           gridTemplateRows: `repeat(${ROWS}, ${cellSize}px)`,
@@ -77,32 +57,34 @@ export function Board({
             const pv = pieceCellAt(r, c);
             const clearing = isClearing(r, c);
             const isSwapFirst = swapFirst?.r === r && swapFirst?.c === c;
+            const rightThick = (c + 1) % 3 === 0 && c !== COLS - 1;
+            const bottomThick = (r + 1) % 3 === 0 && r !== ROWS - 1;
             return (
               <button
                 key={`${r}-${c}`}
                 onClick={() => helperMode && onCellTap(r, c)}
                 className="flex items-center justify-center"
-                style={{ padding: 2 }}
+                style={{
+                  borderRight: `${rightThick ? THICK : 1}px solid ${rightThick ? "var(--color-board-line-thick)" : "var(--color-board-line-thin)"}`,
+                  borderBottom: `${bottomThick ? THICK : 1}px solid ${bottomThick ? "var(--color-board-line-thick)" : "var(--color-board-line-thin)"}`,
+                  backgroundColor: isSwapFirst ? "var(--color-cell-selected)" : undefined,
+                }}
                 aria-label={`cell ${r}-${c}`}
               >
                 {pv !== null ? (
-                  <Jewel value={pv} size={cellSize - 4} popping />
+                  <Jewel value={pv} size={cellSize - 2} popping />
                 ) : v !== null ? (
-                  <Jewel
-                    value={v}
-                    size={cellSize - 4}
-                    clearing={clearing}
-                    highlight={isSwapFirst || !!helperMode}
-                  />
-                ) : (
-                  <div
-                    className="w-full h-full rounded-[10px] bg-board/60"
+                  <span
+                    className={clearing ? "opacity-0 transition-opacity duration-300" : ""}
                     style={{
-                      boxShadow:
-                        "inset 0 1px 2px oklch(0 0 0 / 0.04), inset 0 -1px 1px oklch(1 0 0 / 0.6)",
+                      color: "var(--color-cell-user)",
+                      fontSize: cellSize * 0.5,
+                      fontWeight: 600,
                     }}
-                  />
-                )}
+                  >
+                    {v === 0 ? "★" : v}
+                  </span>
+                ) : null}
               </button>
             );
           }),

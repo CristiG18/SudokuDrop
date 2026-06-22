@@ -9,9 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TournamentsRouteImport } from './routes/tournaments'
+import { Route as ShopRouteImport } from './routes/shop'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as EventsRouteImport } from './routes/events'
+import { Route as DailyRouteImport } from './routes/daily'
+import { Route as ClassicRouteImport } from './routes/classic'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayDropdokuRouteImport } from './routes/play.dropdoku'
 
+const TournamentsRoute = TournamentsRouteImport.update({
+  id: '/tournaments',
+  path: '/tournaments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DailyRoute = DailyRouteImport.update({
+  id: '/daily',
+  path: '/daily',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClassicRoute = ClassicRouteImport.update({
+  id: '/classic',
+  path: '/classic',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -25,32 +61,123 @@ const PlayDropdokuRoute = PlayDropdokuRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/classic': typeof ClassicRoute
+  '/daily': typeof DailyRoute
+  '/events': typeof EventsRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/shop': typeof ShopRoute
+  '/tournaments': typeof TournamentsRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/classic': typeof ClassicRoute
+  '/daily': typeof DailyRoute
+  '/events': typeof EventsRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/shop': typeof ShopRoute
+  '/tournaments': typeof TournamentsRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/classic': typeof ClassicRoute
+  '/daily': typeof DailyRoute
+  '/events': typeof EventsRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/shop': typeof ShopRoute
+  '/tournaments': typeof TournamentsRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/play/dropdoku'
+  fullPaths:
+    | '/'
+    | '/classic'
+    | '/daily'
+    | '/events'
+    | '/leaderboard'
+    | '/shop'
+    | '/tournaments'
+    | '/play/dropdoku'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/play/dropdoku'
-  id: '__root__' | '/' | '/play/dropdoku'
+  to:
+    | '/'
+    | '/classic'
+    | '/daily'
+    | '/events'
+    | '/leaderboard'
+    | '/shop'
+    | '/tournaments'
+    | '/play/dropdoku'
+  id:
+    | '__root__'
+    | '/'
+    | '/classic'
+    | '/daily'
+    | '/events'
+    | '/leaderboard'
+    | '/shop'
+    | '/tournaments'
+    | '/play/dropdoku'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ClassicRoute: typeof ClassicRoute
+  DailyRoute: typeof DailyRoute
+  EventsRoute: typeof EventsRoute
+  LeaderboardRoute: typeof LeaderboardRoute
+  ShopRoute: typeof ShopRoute
+  TournamentsRoute: typeof TournamentsRoute
   PlayDropdokuRoute: typeof PlayDropdokuRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tournaments': {
+      id: '/tournaments'
+      path: '/tournaments'
+      fullPath: '/tournaments'
+      preLoaderRoute: typeof TournamentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/daily': {
+      id: '/daily'
+      path: '/daily'
+      fullPath: '/daily'
+      preLoaderRoute: typeof DailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/classic': {
+      id: '/classic'
+      path: '/classic'
+      fullPath: '/classic'
+      preLoaderRoute: typeof ClassicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -70,6 +197,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ClassicRoute: ClassicRoute,
+  DailyRoute: DailyRoute,
+  EventsRoute: EventsRoute,
+  LeaderboardRoute: LeaderboardRoute,
+  ShopRoute: ShopRoute,
+  TournamentsRoute: TournamentsRoute,
   PlayDropdokuRoute: PlayDropdokuRoute,
 }
 export const routeTree = rootRouteImport

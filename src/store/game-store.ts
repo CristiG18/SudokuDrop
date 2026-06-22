@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 
 export type Helper = "hammer" | "swap" | "boom";
 export type Skin = "default" | "glass" | "neon" | "wood";
-export type ThemeKey = "default" | "ice" | "amber";
+export type ThemeKey = "default" | "ice" | "amber" | "rose";
 
 export interface HighScores {
   dropdoku: number;

@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { BottomTabs } from "../components/BottomTabs";
+
 
 function NotFoundComponent() {
   return (
@@ -118,8 +120,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="min-h-screen pb-20">
+        <Outlet />
+      </div>
+      <BottomTabs />
     </QueryClientProvider>
   );
 }
+

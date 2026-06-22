@@ -11,10 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TournamentsRouteImport } from './routes/tournaments'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as DailyRouteImport } from './routes/daily'
 import { Route as ClassicRouteImport } from './routes/classic'
+import { Route as BattleRouteImport } from './routes/battle'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayDropdokuRouteImport } from './routes/play.dropdoku'
 
@@ -28,9 +31,19 @@ const ShopRoute = ShopRouteImport.update({
   path: '/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PersonalRoute = PersonalRouteImport.update({
+  id: '/personal',
+  path: '/personal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -48,6 +61,11 @@ const ClassicRoute = ClassicRouteImport.update({
   path: '/classic',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BattleRoute = BattleRouteImport.update({
+  id: '/battle',
+  path: '/battle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -61,20 +79,26 @@ const PlayDropdokuRoute = PlayDropdokuRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
   '/events': typeof EventsRoute
+  '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/personal': typeof PersonalRoute
   '/shop': typeof ShopRoute
   '/tournaments': typeof TournamentsRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
   '/events': typeof EventsRoute
+  '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/personal': typeof PersonalRoute
   '/shop': typeof ShopRoute
   '/tournaments': typeof TournamentsRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
@@ -82,10 +106,13 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
   '/events': typeof EventsRoute
+  '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/personal': typeof PersonalRoute
   '/shop': typeof ShopRoute
   '/tournaments': typeof TournamentsRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
@@ -94,30 +121,39 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/battle'
     | '/classic'
     | '/daily'
     | '/events'
+    | '/explore'
     | '/leaderboard'
+    | '/personal'
     | '/shop'
     | '/tournaments'
     | '/play/dropdoku'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/battle'
     | '/classic'
     | '/daily'
     | '/events'
+    | '/explore'
     | '/leaderboard'
+    | '/personal'
     | '/shop'
     | '/tournaments'
     | '/play/dropdoku'
   id:
     | '__root__'
     | '/'
+    | '/battle'
     | '/classic'
     | '/daily'
     | '/events'
+    | '/explore'
     | '/leaderboard'
+    | '/personal'
     | '/shop'
     | '/tournaments'
     | '/play/dropdoku'
@@ -125,10 +161,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BattleRoute: typeof BattleRoute
   ClassicRoute: typeof ClassicRoute
   DailyRoute: typeof DailyRoute
   EventsRoute: typeof EventsRoute
+  ExploreRoute: typeof ExploreRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  PersonalRoute: typeof PersonalRoute
   ShopRoute: typeof ShopRoute
   TournamentsRoute: typeof TournamentsRoute
   PlayDropdokuRoute: typeof PlayDropdokuRoute
@@ -150,11 +189,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/personal': {
+      id: '/personal'
+      path: '/personal'
+      fullPath: '/personal'
+      preLoaderRoute: typeof PersonalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leaderboard': {
       id: '/leaderboard'
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -178,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClassicRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/battle': {
+      id: '/battle'
+      path: '/battle'
+      fullPath: '/battle'
+      preLoaderRoute: typeof BattleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -197,10 +257,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BattleRoute: BattleRoute,
   ClassicRoute: ClassicRoute,
   DailyRoute: DailyRoute,
   EventsRoute: EventsRoute,
+  ExploreRoute: ExploreRoute,
   LeaderboardRoute: LeaderboardRoute,
+  PersonalRoute: PersonalRoute,
   ShopRoute: ShopRoute,
   TournamentsRoute: TournamentsRoute,
   PlayDropdokuRoute: PlayDropdokuRoute,

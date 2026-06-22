@@ -20,6 +20,7 @@ import { Route as ClassicRouteImport } from './routes/classic'
 import { Route as BattleRouteImport } from './routes/battle'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayDropdokuRouteImport } from './routes/play.dropdoku'
+import { Route as PlayClassicRouteImport } from './routes/play.classic'
 
 const TournamentsRoute = TournamentsRouteImport.update({
   id: '/tournaments',
@@ -76,6 +77,11 @@ const PlayDropdokuRoute = PlayDropdokuRouteImport.update({
   path: '/play/dropdoku',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayClassicRoute = PlayClassicRouteImport.update({
+  id: '/play/classic',
+  path: '/play/classic',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/personal': typeof PersonalRoute
   '/shop': typeof ShopRoute
   '/tournaments': typeof TournamentsRoute
+  '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/personal': typeof PersonalRoute
   '/shop': typeof ShopRoute
   '/tournaments': typeof TournamentsRoute
+  '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/personal': typeof PersonalRoute
   '/shop': typeof ShopRoute
   '/tournaments': typeof TournamentsRoute
+  '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/shop'
     | '/tournaments'
+    | '/play/classic'
     | '/play/dropdoku'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/shop'
     | '/tournaments'
+    | '/play/classic'
     | '/play/dropdoku'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/shop'
     | '/tournaments'
+    | '/play/classic'
     | '/play/dropdoku'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   PersonalRoute: typeof PersonalRoute
   ShopRoute: typeof ShopRoute
   TournamentsRoute: typeof TournamentsRoute
+  PlayClassicRoute: typeof PlayClassicRoute
   PlayDropdokuRoute: typeof PlayDropdokuRoute
 }
 
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayDropdokuRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/play/classic': {
+      id: '/play/classic'
+      path: '/play/classic'
+      fullPath: '/play/classic'
+      preLoaderRoute: typeof PlayClassicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   PersonalRoute: PersonalRoute,
   ShopRoute: ShopRoute,
   TournamentsRoute: TournamentsRoute,
+  PlayClassicRoute: PlayClassicRoute,
   PlayDropdokuRoute: PlayDropdokuRoute,
 }
 export const routeTree = rootRouteImport

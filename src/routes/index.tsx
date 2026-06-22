@@ -1,176 +1,172 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  Gem,
-  Play,
+  Brain,
+  Crown,
+  Flame,
+  HelpCircle,
   Calendar,
-  Trophy,
-  ShoppingBag,
   Sparkles,
-  ListOrdered,
-  Grid3x3,
-  X,
+  Trophy,
+  Blocks,
 } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
-import type { Difficulty } from "@/game/engine";
+import {
+  currentMonthTheme,
+  dailyForDate,
+} from "@/game/schedule";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Sudoku Drop — Jewel Style" },
-      { name: "description", content: "A pastel jewel Sudoku puzzle for mobile." },
+      { title: "Sudoku Drop — Acasă" },
+      { name: "description", content: "Sudoku clasic, provocări zilnice, evenimente și turnee." },
     ],
   }),
-  component: Menu,
+  component: Home,
 });
 
-function Menu() {
-  const navigate = useNavigate();
+function Home() {
   const diamonds = useGameStore((s) => s.diamonds);
-  const highScore = useGameStore((s) => s.highScores.dropdoku);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const setTheme = useGameStore((s) => s.setTheme);
+  const month = currentMonthTheme();
+  const today = new Date();
+  const todayDiff = dailyForDate(today);
+  const monthName = today.toLocaleDateString("ro-RO", { month: "short" });
+  const day = today.getDate();
 
-  const pick = (difficulty: Difficulty) => {
-    setSheetOpen(false);
-    navigate({ to: "/play/dropdoku", search: { difficulty } });
-  };
+  useEffect(() => {
+    setTheme(month.key);
+    if (typeof document !== "undefined") {
+      document.documentElement.dataset.theme = month.key;
+    }
+  }, [month.key, setTheme]);
 
   return (
-    <div className="min-h-screen flex flex-col px-6 pt-10 pb-8">
-      {/* HUD */}
-      <div className="flex items-center justify-between">
-        <div className="soft-card px-3 py-2 flex items-center gap-1.5 font-bold">
-          <Gem className="w-4 h-4 text-diamond" />
+    <div className="min-h-screen flex flex-col">
+      {/* Top HUD */}
+      <header className="px-5 pt-5 flex items-center justify-between">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/60 text-sm font-semibold text-accent-foreground">
+          <Brain className="w-4 h-4" />
           {diamonds}
         </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/60 text-sm font-semibold text-accent-foreground">
+            <Crown className="w-4 h-4" /> 0
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/60 text-sm font-semibold text-accent-foreground">
+            <Flame className="w-4 h-4" /> 0
+          </div>
+        </div>
+      </header>
+
+      {/* Carousel */}
+      <div className="mt-6 -mx-1 overflow-x-auto no-scrollbar">
+        <div className="flex gap-3 px-4 snap-x snap-mandatory">
+          <CarouselCard
+            to="/daily"
+            tag="Provocarea Zilnică"
+            title={`${monthName} ${day}`}
+            sub={todayDiff.toUpperCase()}
+            Icon={Trophy}
+            tint="primary"
+          />
+          <CarouselCard
+            to="/events"
+            tag="Eveniment"
+            title={month.name}
+            sub="100 niveluri"
+            Icon={Sparkles}
+            tint="muted"
+          />
+          <CarouselCard
+            to="/battle"
+            tag="Turneu"
+            title="Bronz"
+            sub="Începe acum"
+            Icon={Trophy}
+            tint="primary"
+          />
+          <CarouselCard
+            to="/play/dropdoku"
+            search={{ difficulty: "normal" as const }}
+            tag="Dropdoku"
+            title="Endless"
+            sub="Jewel falling"
+            Icon={Blocks}
+            tint="muted"
+          />
+        </div>
+      </div>
+
+      {/* Big classic */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        <h1 className="text-4xl font-bold text-muted-foreground/80 tracking-tight">
+          Sudoku clasic
+        </h1>
         <Link
-          to="/shop"
-          className="soft-card px-3 py-2 text-sm font-semibold flex items-center gap-1.5"
+          to="/classic"
+          search={{ help: 1 }}
+          className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm font-medium text-primary shadow-soft"
         >
-          <ShoppingBag className="w-4 h-4" /> Shop
+          <HelpCircle className="w-4 h-4" /> Cum se joacă
         </Link>
       </div>
 
-      {/* Hero */}
-      <div className="flex-1 flex flex-col items-center justify-center text-center">
-        <div className="relative mb-4">
-          <Sparkles className="absolute -top-3 -left-6 w-6 h-6 text-jewel-7 animate-pulse" />
-          <Sparkles className="absolute -bottom-2 -right-4 w-5 h-5 text-jewel-2 animate-pulse" />
-          <div className="grid grid-cols-3 gap-1.5 jewel-panel p-3">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-              <div
-                key={n}
-                className={`w-10 h-10 rounded-xl bg-jewel-${n} flex items-center justify-center font-bold text-foreground/80`}
-                style={{ boxShadow: "var(--shadow-jewel)" }}
-              >
-                {n}
-              </div>
-            ))}
-          </div>
-        </div>
-        <h1 className="text-4xl font-black tracking-tight">Sudoku Drop</h1>
-        <p className="text-sm text-muted-foreground mt-1 mb-2">Jewel Style</p>
-        <p className="text-xs text-muted-foreground">Best Dropdoku: {highScore}</p>
-
-        <button
-          onClick={() => setSheetOpen(true)}
-          className="mt-8 px-12 py-5 rounded-3xl bg-primary text-primary-foreground font-black text-xl shadow-pop active:scale-95 transition flex items-center gap-2"
-          style={{ boxShadow: "var(--shadow-pop)" }}
+      {/* CTA */}
+      <div className="px-6 pb-6">
+        <Link
+          to="/classic"
+          className="block w-full text-center py-4 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-card active:scale-[0.98] transition"
         >
-          <Play className="w-6 h-6 fill-current" /> PLAY
-        </button>
+          Joc Nou
+        </Link>
       </div>
-
-      {/* Mode grid */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <ModeCard to="/classic" Icon={Grid3x3} label="Classic" tint="jewel-5" />
-        <ModeCard to="/daily" Icon={Calendar} label="Daily" tint="jewel-3" />
-        <ModeCard to="/events" Icon={Sparkles} label="Events" tint="jewel-8" />
-        <ModeCard to="/tournaments" Icon={Trophy} label="Tournaments" tint="jewel-2" />
-      </div>
-
-      <Link
-        to="/leaderboard"
-        className="soft-card py-3 flex items-center justify-center gap-2 font-semibold"
-      >
-        <ListOrdered className="w-5 h-5" /> Leaderboards
-      </Link>
-
-      {/* Bottom sheet */}
-      {sheetOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm flex items-end"
-          onClick={() => setSheetOpen(false)}
-        >
-          <div
-            className="bg-card w-full rounded-t-3xl p-6 pb-10 animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-5" />
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold">Choose difficulty</h3>
-              <button onClick={() => setSheetOpen(false)}>
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex flex-col gap-3">
-              <DiffBtn label="Easy" desc="2 sets · slower drops" tint="jewel-4" onClick={() => pick("easy")} />
-              <DiffBtn label="Normal" desc="3 sets · balanced" tint="jewel-5" onClick={() => pick("normal")} />
-              <DiffBtn label="Hard" desc="4 sets · fast & dense" tint="jewel-8" onClick={() => pick("hard")} />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-function ModeCard({
+function CarouselCard({
   to,
+  search,
+  tag,
+  title,
+  sub,
   Icon,
-  label,
   tint,
 }: {
   to: string;
-  Icon: typeof Play;
-  label: string;
-  tint: string;
+  search?: Record<string, unknown>;
+  tag: string;
+  title: string;
+  sub: string;
+  Icon: typeof Trophy;
+  tint: "primary" | "muted";
 }) {
   return (
     <Link
       to={to}
-      className="soft-card p-4 flex flex-col items-start gap-2 active:scale-95 transition"
+      search={search as never}
+      className="snap-start shrink-0 w-44 h-56 rounded-2xl p-4 flex flex-col justify-between bg-card border border-border shadow-soft active:scale-[0.98] transition"
     >
-      <div className={`w-10 h-10 rounded-xl bg-${tint} flex items-center justify-center`}>
-        <Icon className="w-5 h-5 text-foreground/80" />
+      <div>
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+          {tag}
+        </p>
+        <h3 className="text-xl font-bold mt-1 leading-tight">{title}</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
       </div>
-      <span className="font-bold">{label}</span>
+      <div className="flex justify-end">
+        <div
+          className={
+            tint === "primary"
+              ? "w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center"
+              : "w-14 h-14 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center"
+          }
+        >
+          <Icon className="w-7 h-7" strokeWidth={1.6} />
+        </div>
+      </div>
     </Link>
-  );
-}
-
-function DiffBtn({
-  label,
-  desc,
-  tint,
-  onClick,
-}: {
-  label: string;
-  desc: string;
-  tint: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-4 p-4 rounded-2xl bg-muted/60 hover:bg-muted active:scale-[0.98] transition text-left"
-    >
-      <div className={`w-12 h-12 rounded-2xl bg-${tint}`} style={{ boxShadow: "var(--shadow-jewel)" }} />
-      <div className="flex-1">
-        <div className="font-bold">{label}</div>
-        <div className="text-xs text-muted-foreground">{desc}</div>
-      </div>
-      <Play className="w-5 h-5 text-primary" />
-    </button>
   );
 }

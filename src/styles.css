@@ -149,3 +149,8 @@
 .animate-slide-up { animation: slide-up 280ms cubic-bezier(.2,.8,.2,1) both; }
 .animate-fade-in { animation: fade-in 200ms ease-out both; }
 .animate-pop { animation: pop 160ms cubic-bezier(.2,.9,.3,1.2) both; }
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}

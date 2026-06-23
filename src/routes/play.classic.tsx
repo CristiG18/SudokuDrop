@@ -269,13 +269,11 @@ function ClassicGame() {
 
   const startFresh = () => {
     setSession(null);
-    navigate({
-      to: "/play/classic",
-      search: { difficulty, seed: Date.now() },
-      replace: true,
-    });
-    setTimeout(() => window.location.reload(), 0);
+    if (typeof window !== "undefined") {
+      window.location.href = `/play/classic?difficulty=${difficulty}&seed=${Date.now()}`;
+    }
   };
+
 
   return (
     <div className="min-h-screen flex flex-col px-3 pt-4" onClick={unlockAudio}>

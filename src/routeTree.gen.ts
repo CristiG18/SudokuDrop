@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as ExploreRouteImport } from './routes/explore'
@@ -18,12 +20,23 @@ import { Route as DailyRouteImport } from './routes/daily'
 import { Route as ClassicRouteImport } from './routes/classic'
 import { Route as BattleRouteImport } from './routes/battle'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TutorialModeRouteImport } from './routes/tutorial.$mode'
 import { Route as PlayDropdokuRouteImport } from './routes/play.dropdoku'
 import { Route as PlayClassicRouteImport } from './routes/play.classic'
 
+const TutorialRoute = TutorialRouteImport.update({
+  id: '/tutorial',
+  path: '/tutorial',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PersonalRoute = PersonalRouteImport.update({
@@ -66,6 +79,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TutorialModeRoute = TutorialModeRouteImport.update({
+  id: '/$mode',
+  path: '/$mode',
+  getParentRoute: () => TutorialRoute,
+} as any)
 const PlayDropdokuRoute = PlayDropdokuRouteImport.update({
   id: '/play/dropdoku',
   path: '/play/dropdoku',
@@ -86,9 +104,12 @@ export interface FileRoutesByFullPath {
   '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
+  '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/tutorial': typeof TutorialRouteWithChildren
   '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
+  '/tutorial/$mode': typeof TutorialModeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,9 +120,12 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
+  '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/tutorial': typeof TutorialRouteWithChildren
   '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
+  '/tutorial/$mode': typeof TutorialModeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,9 +137,12 @@ export interface FileRoutesById {
   '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
+  '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/tutorial': typeof TutorialRouteWithChildren
   '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
+  '/tutorial/$mode': typeof TutorialModeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -128,9 +155,12 @@ export interface FileRouteTypes {
     | '/explore'
     | '/leaderboard'
     | '/personal'
+    | '/settings'
     | '/shop'
+    | '/tutorial'
     | '/play/classic'
     | '/play/dropdoku'
+    | '/tutorial/$mode'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -141,9 +171,12 @@ export interface FileRouteTypes {
     | '/explore'
     | '/leaderboard'
     | '/personal'
+    | '/settings'
     | '/shop'
+    | '/tutorial'
     | '/play/classic'
     | '/play/dropdoku'
+    | '/tutorial/$mode'
   id:
     | '__root__'
     | '/'
@@ -154,9 +187,12 @@ export interface FileRouteTypes {
     | '/explore'
     | '/leaderboard'
     | '/personal'
+    | '/settings'
     | '/shop'
+    | '/tutorial'
     | '/play/classic'
     | '/play/dropdoku'
+    | '/tutorial/$mode'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -168,18 +204,34 @@ export interface RootRouteChildren {
   ExploreRoute: typeof ExploreRoute
   LeaderboardRoute: typeof LeaderboardRoute
   PersonalRoute: typeof PersonalRoute
+  SettingsRoute: typeof SettingsRoute
   ShopRoute: typeof ShopRoute
+  TutorialRoute: typeof TutorialRouteWithChildren
   PlayClassicRoute: typeof PlayClassicRoute
   PlayDropdokuRoute: typeof PlayDropdokuRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tutorial': {
+      id: '/tutorial'
+      path: '/tutorial'
+      fullPath: '/tutorial'
+      preLoaderRoute: typeof TutorialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shop': {
       id: '/shop'
       path: '/shop'
       fullPath: '/shop'
       preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/personal': {
@@ -238,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tutorial/$mode': {
+      id: '/tutorial/$mode'
+      path: '/$mode'
+      fullPath: '/tutorial/$mode'
+      preLoaderRoute: typeof TutorialModeRouteImport
+      parentRoute: typeof TutorialRoute
+    }
     '/play/dropdoku': {
       id: '/play/dropdoku'
       path: '/play/dropdoku'
@@ -255,6 +314,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface TutorialRouteChildren {
+  TutorialModeRoute: typeof TutorialModeRoute
+}
+
+const TutorialRouteChildren: TutorialRouteChildren = {
+  TutorialModeRoute: TutorialModeRoute,
+}
+
+const TutorialRouteWithChildren = TutorialRoute._addFileChildren(
+  TutorialRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BattleRoute: BattleRoute,
@@ -264,7 +335,9 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreRoute: ExploreRoute,
   LeaderboardRoute: LeaderboardRoute,
   PersonalRoute: PersonalRoute,
+  SettingsRoute: SettingsRoute,
   ShopRoute: ShopRoute,
+  TutorialRoute: TutorialRouteWithChildren,
   PlayClassicRoute: PlayClassicRoute,
   PlayDropdokuRoute: PlayDropdokuRoute,
 }

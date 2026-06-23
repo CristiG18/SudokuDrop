@@ -1,26 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  Brain,
+  Gem,
   Crown,
   Flame,
-  HelpCircle,
-  Calendar,
+  BookOpen,
   Sparkles,
   Trophy,
   Blocks,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
-import {
-  currentMonthTheme,
-  dailyForDate,
-} from "@/game/schedule";
+import { currentMonthTheme, dailyForDate } from "@/game/schedule";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Sudoku Drop — Acasă" },
-      { name: "description", content: "Sudoku clasic, provocări zilnice, evenimente și turnee." },
+      {
+        name: "description",
+        content: "Sudoku Drop, sudoku clasic, provocări zilnice, evenimente și turnee.",
+      },
     ],
   }),
   component: Home,
@@ -28,11 +28,12 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const diamonds = useGameStore((s) => s.diamonds);
+  const streak = useGameStore((s) => s.classicStreak);
   const setTheme = useGameStore((s) => s.setTheme);
   const month = currentMonthTheme();
   const today = new Date();
   const todayDiff = dailyForDate(today);
-  const monthName = today.toLocaleDateString("ro-RO", { month: "short" });
+  const monthShort = today.toLocaleDateString("ro-RO", { month: "short" });
   const day = today.getDate();
 
   useEffect(() => {
@@ -44,32 +45,43 @@ function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Top HUD */}
-      <header className="px-5 pt-5 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/60 text-sm font-semibold text-accent-foreground">
-          <Brain className="w-4 h-4" />
-          {diamonds}
+      {/* Asymmetric header */}
+      <header className="px-5 pt-5 flex items-start justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">
+            {monthShort} · {month.name}
+          </p>
+          <h1 className="display text-2xl font-bold mt-0.5">Sudoku Drop</h1>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/60 text-sm font-semibold text-accent-foreground">
-            <Crown className="w-4 h-4" /> 0
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/60 text-sm font-semibold text-accent-foreground">
-            <Flame className="w-4 h-4" /> 0
+          <Link
+            to="/settings"
+            className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center"
+          >
+            <SettingsIcon className="w-4 h-4 text-muted-foreground" />
+          </Link>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-sm font-semibold">
+            <Gem className="w-4 h-4 text-primary" />
+            {diamonds}
           </div>
         </div>
       </header>
 
-      {/* Carousel */}
-      <div className="mt-6 -mx-1 overflow-x-auto no-scrollbar">
+      {/* Stat chips */}
+      <div className="px-5 mt-4 flex gap-2">
+        <Chip Icon={Flame} label={`${streak} consecutive`} />
+        <Chip Icon={Crown} label="0 trofee" />
+      </div>
+
+      {/* Carousel of activities */}
+      <div className="mt-5 -mx-1 overflow-x-auto no-scrollbar">
         <div className="flex gap-3 px-4 snap-x snap-mandatory">
           <CarouselCard
             to="/daily"
-            tag="Provocarea Zilnică"
-            title={`${monthName} ${day}`}
+            tag="Zilnică"
+            title={`${monthShort} ${day}`}
             sub={todayDiff.toUpperCase()}
             Icon={Trophy}
-            tint="primary"
           />
           <CarouselCard
             to="/events"
@@ -77,51 +89,64 @@ function Home() {
             title={month.name}
             sub="100 niveluri"
             Icon={Sparkles}
-            tint="muted"
           />
+          <CarouselCard to="/battle" tag="Turneu" title="Bronz" sub="Începe acum" Icon={Trophy} />
           <CarouselCard
-            to="/battle"
-            tag="Turneu"
-            title="Bronz"
-            sub="Începe acum"
-            Icon={Trophy}
-            tint="primary"
-          />
-          <CarouselCard
-            to="/play/dropdoku"
-            search={{ difficulty: "normal" as const }}
-            tag="Dropdoku"
-            title="Endless"
-            sub="Jewel falling"
+            to="/classic"
+            tag="Clasic"
+            title="Sudoku 9×9"
+            sub="Puzzle clasic"
             Icon={Blocks}
-            tint="muted"
           />
         </div>
       </div>
 
-      {/* Big classic */}
+      {/* Hero CTA: Sudoku Drop */}
       <div className="flex-1 flex flex-col items-center justify-center px-6">
-        <h1 className="text-4xl font-bold text-muted-foreground/80 tracking-tight">
-          Sudoku clasic
-        </h1>
+        <div className="relative">
+          <div
+            className="absolute inset-0 rounded-3xl blur-2xl opacity-40"
+            style={{ background: "var(--color-primary)" }}
+          />
+          <div className="relative w-32 h-32 rounded-3xl bg-card border border-border shadow-card flex items-center justify-center">
+            <Blocks className="w-16 h-16 text-primary" strokeWidth={1.4} />
+          </div>
+        </div>
+        <h2 className="display text-4xl font-bold tracking-tight mt-6">Sudoku Drop</h2>
+        <p className="text-sm text-muted-foreground mt-1.5">Piesele cad. Tu completezi.</p>
         <Link
-          to="/classic"
-          search={{ help: 1 }}
+          to="/tutorial"
           className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm font-medium text-primary shadow-soft"
         >
-          <HelpCircle className="w-4 h-4" /> Cum se joacă
+          <BookOpen className="w-4 h-4" /> Cum se joacă
         </Link>
       </div>
 
-      {/* CTA */}
-      <div className="px-6 pb-6">
+      {/* CTAs */}
+      <div className="px-6 pb-6 space-y-2">
         <Link
-          to="/classic"
+          to="/play/dropdoku"
+          search={{ difficulty: "normal" }}
           className="block w-full text-center py-4 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-card active:scale-[0.98] transition"
         >
-          Joc Nou
+          Joacă acum
+        </Link>
+        <Link
+          to="/classic"
+          className="block w-full text-center py-3 rounded-full bg-card border border-border font-semibold text-sm active:scale-[0.98] transition"
+        >
+          Sudoku Clasic
         </Link>
       </div>
+    </div>
+  );
+}
+
+function Chip({ Icon, label }: { Icon: typeof Flame; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground">
+      <Icon className="w-3.5 h-3.5" />
+      {label}
     </div>
   );
 }
@@ -133,7 +158,6 @@ function CarouselCard({
   title,
   sub,
   Icon,
-  tint,
 }: {
   to: string;
   search?: Record<string, unknown>;
@@ -141,30 +165,24 @@ function CarouselCard({
   title: string;
   sub: string;
   Icon: typeof Trophy;
-  tint: "primary" | "muted";
 }) {
   return (
     <Link
       to={to}
       search={search as never}
-      className="snap-start shrink-0 w-44 h-56 rounded-2xl p-4 flex flex-col justify-between bg-card border border-border shadow-soft active:scale-[0.98] transition"
+      className="snap-start shrink-0 w-44 h-52 rounded-2xl p-4 flex flex-col justify-between bg-card border border-border shadow-soft active:scale-[0.98] transition relative overflow-hidden"
     >
-      <div>
+      <span className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-primary" />
+      <div className="pl-2">
         <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
           {tag}
         </p>
         <h3 className="text-xl font-bold mt-1 leading-tight">{title}</h3>
         <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
       </div>
-      <div className="flex justify-end">
-        <div
-          className={
-            tint === "primary"
-              ? "w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center"
-              : "w-14 h-14 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center"
-          }
-        >
-          <Icon className="w-7 h-7" strokeWidth={1.6} />
+      <div className="flex justify-end pl-2">
+        <div className="w-12 h-12 rounded-2xl bg-accent text-primary flex items-center justify-center">
+          <Icon className="w-6 h-6" strokeWidth={1.6} />
         </div>
       </div>
     </Link>

@@ -8,14 +8,14 @@ export type Board = CellValue[][];
 export type Difficulty = "easy" | "normal" | "hard";
 
 export interface PieceCell {
-  dr: number; // delta row from anchor
+  dr: number;
   dc: number;
   value: number; // 1..9 or 0 (joker)
 }
 
 export interface Piece {
-  r: number; // anchor row (can be -1 grace)
-  c: number; // anchor col
+  r: number;
+  c: number;
   cells: PieceCell[];
   isJoker?: boolean;
 }
@@ -24,14 +24,10 @@ export function emptyBoard(): Board {
   return Array.from({ length: ROWS }, () => Array<CellValue>(COLS).fill(null));
 }
 
-// Bag system. setsPerBag: 2 easy, 3 normal, 4 hard.
 export function createBag(difficulty: Difficulty): number[] {
   const sets = difficulty === "easy" ? 2 : difficulty === "normal" ? 3 : 4;
   const bag: number[] = [];
-  for (let s = 0; s < sets; s++) {
-    for (let n = 1; n <= 9; n++) bag.push(n);
-  }
-  // Fisher-Yates
+  for (let s = 0; s < sets; s++) for (let n = 1; n <= 9; n++) bag.push(n);
   for (let i = bag.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [bag[i], bag[j]] = [bag[j], bag[i]];
@@ -39,9 +35,7 @@ export function createBag(difficulty: Difficulty): number[] {
   return bag;
 }
 
-// Spawn a piece. pieceIndex used for joker cadence.
 export function spawnPiece(bag: number[], pieceIndex: number): Piece {
-  // Joker every 12th piece (single cell, value 0).
   if (pieceIndex > 0 && pieceIndex % 12 === 0) {
     return {
       r: -1,
@@ -50,7 +44,6 @@ export function spawnPiece(bag: number[], pieceIndex: number): Piece {
       cells: [{ dr: 0, dc: 0, value: 0 }],
     };
   }
-  // Pull two values. Refill bag if empty (caller handles refill ideally).
   const a = bag.pop() ?? 1;
   const b = bag.pop() ?? 1;
   return {
@@ -58,7 +51,7 @@ export function spawnPiece(bag: number[], pieceIndex: number): Piece {
     c: 4,
     cells: [
       { dr: 0, dc: 0, value: a },
-      { dr: 0, dc: 1, value: b }, // horizontal domino
+      { dr: 0, dc: 1, value: b },
     ],
   };
 }
@@ -69,7 +62,7 @@ export function collides(board: Board, piece: Piece, dr = 0, dc = 0): boolean {
     const c = piece.c + cell.dc + dc;
     if (c < 0 || c >= COLS) return true;
     if (r >= ROWS) return true;
-    if (r < 0) continue; // grace period
+    if (r < 0) continue;
     if (board[r][c] !== null) return true;
   }
   return false;
@@ -81,26 +74,29 @@ export function tryMove(board: Board, piece: Piece, dc: number): Piece | null {
 }
 
 export function tryRotate(board: Board, piece: Piece): Piece | null {
-  if (piece.cells.length < 2) return piece; // joker: no-op
-  // Rotate 90° CW around anchor (0,0).
+  if (piece.cells.length < 2) return piece;
   const rotated = piece.cells.map((c) => ({
     dr: c.dc,
     dc: -c.dr,
     value: c.value,
   }));
-  // Normalize so min dr/dc is 0
   const minDr = Math.min(...rotated.map((c) => c.dr));
   const minDc = Math.min(...rotated.map((c) => c.dc));
   const norm = rotated.map((c) => ({ ...c, dr: c.dr - minDr, dc: c.dc - minDc }));
   const candidate: Piece = { ...piece, cells: norm };
   if (!collides(board, candidate)) return candidate;
-  // Wall-kick: try shifting +1 and -1
   for (const kick of [1, -1, 2, -2]) {
     if (!collides(board, candidate, 0, kick)) {
       return { ...candidate, c: candidate.c + kick };
     }
   }
   return null;
+}
+
+export function hardDrop(board: Board, piece: Piece): Piece {
+  let p = piece;
+  while (!collides(board, p, 1, 0)) p = { ...p, r: p.r + 1 };
+  return p;
 }
 
 export function lockPiece(board: Board, piece: Piece): Board {
@@ -115,14 +111,11 @@ export function lockPiece(board: Board, piece: Piece): Board {
   return next;
 }
 
-// A line/box is "complete" when all 9 cells are filled AND
-// the set of values forms 1..9 (joker counts as the missing number).
 function isUnitComplete(values: CellValue[]): boolean {
   if (values.some((v) => v === null)) return false;
   const nums = values.filter((v) => v !== 0) as number[];
   const set = new Set(nums);
-  if (set.size !== nums.length) return false; // duplicates
-  // missing numbers count must equal joker count
+  if (set.size !== nums.length) return false;
   const missing = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter((n) => !set.has(n)).length;
   const jokers = values.filter((v) => v === 0).length;
   return missing === jokers;
@@ -130,7 +123,7 @@ function isUnitComplete(values: CellValue[]): boolean {
 
 export interface ClearResult {
   board: Board;
-  clears: number; // number of units cleared
+  clears: number;
   cells: Array<{ r: number; c: number }>;
 }
 
@@ -176,7 +169,9 @@ export function findAndClear(board: Board): ClearResult {
   return { board: next, clears, cells: cleared };
 }
 
-// Gravity: in this game pieces above cleared cells fall down by gaps in the same column.
+// Per-column gravity: every cell falls to the bottom of its column
+// independently. This is what makes a horizontal domino landing on top of
+// a tall column "split" — the unsupported half keeps falling.
 export function applyGravity(board: Board): Board {
   const next = emptyBoard();
   for (let c = 0; c < COLS; c++) {
@@ -185,7 +180,6 @@ export function applyGravity(board: Board): Board {
       const v = board[r][c];
       if (v !== null) stack.push(v);
     }
-    // place from bottom
     for (let i = 0; i < stack.length; i++) {
       next[ROWS - 1 - i][c] = stack[stack.length - 1 - i];
     }

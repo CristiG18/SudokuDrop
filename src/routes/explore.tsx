@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Snowflake, Square, Blocks, Flame } from "lucide-react";
+import { BookOpen, Snowflake, Square, Blocks, Flame } from "lucide-react";
 
 export const Route = createFileRoute("/explore")({
   head: () => ({ meta: [{ title: "Explorează — variante Sudoku" }] }),
@@ -10,7 +10,7 @@ const VARIANTS = [
   {
     to: "/play/dropdoku",
     search: { difficulty: "normal" as const },
-    title: "Dropdoku",
+    title: "Sudoku Drop",
     sub: "Piese care cad — endless",
     Icon: Blocks,
     available: true,
@@ -41,14 +41,29 @@ const VARIANTS = [
 function Explore() {
   return (
     <div className="min-h-screen px-5 pt-5">
-      <h1 className="text-3xl font-bold">Explorează</h1>
+      <h1 className="display text-3xl font-bold">Explorează</h1>
 
-      <div className="mt-6 space-y-3">
+      <Link
+        to="/tutorial"
+        className="mt-4 flex items-center gap-3 bg-accent text-accent-foreground rounded-2xl p-4"
+      >
+        <div className="w-10 h-10 rounded-xl bg-card flex items-center justify-center text-primary">
+          <BookOpen className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <div className="font-semibold">Cum se joacă</div>
+          <div className="text-xs opacity-80">Tutoriale pentru fiecare mod</div>
+        </div>
+        <span>→</span>
+      </Link>
+
+      <div className="mt-4 space-y-3">
         {VARIANTS.map((v) => {
           const Card = (
-            <div className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4 shadow-soft">
-              <div className="w-14 h-14 rounded-2xl bg-accent/60 flex items-center justify-center text-primary">
-                <v.Icon className="w-7 h-7" strokeWidth={1.5} />
+            <div className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4 shadow-soft relative overflow-hidden">
+              <span className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-primary" />
+              <div className="ml-2 w-12 h-12 rounded-2xl bg-accent flex items-center justify-center text-primary">
+                <v.Icon className="w-6 h-6" strokeWidth={1.5} />
               </div>
               <div className="flex-1">
                 <div className="font-semibold">{v.title}</div>
@@ -68,7 +83,9 @@ function Explore() {
               {Card}
             </Link>
           ) : (
-            <div key={v.title} className="opacity-60">{Card}</div>
+            <div key={v.title} className="opacity-60">
+              {Card}
+            </div>
           );
         })}
       </div>

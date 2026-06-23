@@ -6,6 +6,7 @@ import {
   createBag,
   emptyBoard,
   findAndClear,
+  hardDrop,
   lockPiece,
   multiplierFor,
   spawnPiece,
@@ -22,23 +23,32 @@ import { Board } from "@/components/game/Board";
 import { HelperBar } from "@/components/game/HelperBar";
 import { HelperTimer } from "@/components/game/HelperTimer";
 import { useGameStore, type Helper } from "@/store/game-store";
-import { ArrowLeft, Gem, Pause, Play } from "lucide-react";
+import { ArrowLeft, ArrowDown, Gem, Pause, Play, RotateCw } from "lucide-react";
+import { sfx, unlockAudio } from "@/lib/sfx";
 
 export const Route = createFileRoute("/play/dropdoku")({
   head: () => ({
     meta: [
-      { title: "Dropdoku — Sudoku Drop" },
+      { title: "Sudoku Drop — joc" },
       { name: "description", content: "Endless falling Sudoku puzzle." },
     ],
   }),
   component: DropdokuPage,
   validateSearch: (s: Record<string, unknown>) => ({
     difficulty: (s.difficulty as Difficulty) || "normal",
+    resume: s.resume === true || s.resume === "true" ? true : undefined,
   }),
 });
 
+interface Popup {
+  id: number;
+  x: number;
+  y: number;
+  text: string;
+}
+
 function DropdokuPage() {
-  const { difficulty } = Route.useSearch();
+  const { difficulty, resume } = Route.useSearch();
   const navigate = useNavigate();
 
   const helpers = useGameStore((s) => s.helpers);
@@ -47,125 +57,168 @@ function DropdokuPage() {
   const spendDiamonds = useGameStore((s) => s.spendDiamonds);
   const setHighScore = useGameStore((s) => s.setHighScore);
   const highScore = useGameStore((s) => s.highScores.dropdoku);
+  const savedSession = useGameStore((s) => s.dropdokuSession);
+  const setSession = useGameStore((s) => s.setDropdokuSession);
+  const soundOn = useGameStore((s) => s.settings.sound);
 
-  const [board, setBoard] = useState<BoardT>(emptyBoard);
-  const [bag, setBag] = useState<number[]>(() => createBag(difficulty));
-  const [pieceIndex, setPieceIndex] = useState(0);
+  const initial = useMemo(() => {
+    if (resume && savedSession && savedSession.difficulty === difficulty) {
+      return {
+        board: savedSession.board as BoardT,
+        bag: savedSession.bag.slice(),
+        pieceIndex: savedSession.pieceIndex,
+        score: savedSession.score,
+        totalClears: savedSession.totalClears,
+      };
+    }
+    return {
+      board: emptyBoard(),
+      bag: createBag(difficulty),
+      pieceIndex: 0,
+      score: 0,
+      totalClears: 0,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [board, setBoard] = useState<BoardT>(initial.board);
+  const [bag, setBag] = useState<number[]>(initial.bag);
+  const [pieceIndex, setPieceIndex] = useState(initial.pieceIndex);
   const [piece, setPiece] = useState<Piece | null>(null);
-  const [score, setScore] = useState(0);
-  const [totalClears, setTotalClears] = useState(0);
+  const [score, setScore] = useState(initial.score);
+  const [totalClears, setTotalClears] = useState(initial.totalClears);
   const [clearingCells, setClearingCells] = useState<Array<{ r: number; c: number }>>([]);
   const [paused, setPaused] = useState(false);
+  const [backOpen, setBackOpen] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [usedFreeRevive, setUsedFreeRevive] = useState(false);
+  const [popups, setPopups] = useState<Popup[]>([]);
+  const popupId = useRef(0);
 
-  // Helper state
   const [helperMode, setHelperMode] = useState<Helper | null>(null);
-  const [helperPresses, setHelperPresses] = useState(0); // resets to 0 after a successful use
+  const [helperPresses, setHelperPresses] = useState(0);
   const [swapFirst, setSwapFirst] = useState<{ r: number; c: number } | null>(null);
 
   const baseSpeed = difficulty === "easy" ? 900 : difficulty === "normal" ? 700 : 520;
   const speed = Math.max(220, baseSpeed - totalClears * 8);
 
-  // Spawn first piece
+  // persist session
+  useEffect(() => {
+    if (gameOver) return;
+    setSession({ difficulty, board, bag, pieceIndex, score, totalClears });
+  }, [difficulty, board, bag, pieceIndex, score, totalClears, gameOver, setSession]);
+
+  // Spawn next piece
   useEffect(() => {
     if (piece || gameOver) return;
     let nextBag = bag;
-    if (nextBag.length < 2) {
-      nextBag = [...nextBag, ...createBag(difficulty)];
-    }
+    if (nextBag.length < 2) nextBag = [...nextBag, ...createBag(difficulty)];
     const p = spawnPiece(nextBag, pieceIndex);
     if (collides(board, p, 1, 0) && collides(board, p, 0, 0)) {
-      // No room at spawn -> game over
       setGameOver(true);
       setHighScore("dropdoku", score);
+      setSession(null);
+      if (soundOn) sfx.fail();
       return;
     }
     setPiece(p);
     setBag(nextBag);
     setPieceIndex((i) => i + 1);
-  }, [piece, gameOver, bag, board, difficulty, pieceIndex, score, setHighScore]);
+  }, [piece, gameOver, bag, board, difficulty, pieceIndex, score, setHighScore, setSession, soundOn]);
 
-  // Resolve clears with animation
-  const resolveClears = useCallback((b: BoardT) => {
-    const result = findAndClear(b);
-    if (result.clears === 0) {
-      setBoard(b);
-      return;
-    }
-    setClearingCells(result.cells);
-    setBoard(b);
-    const mult = multiplierFor(totalClears);
-    setScore((s) => s + Math.round(100 * result.clears * mult));
-    setTotalClears((t) => t + result.clears);
-    setTimeout(() => {
-      const dropped = applyGravity(result.board);
-      setClearingCells([]);
-      // Cascade
-      const cascade = findAndClear(dropped);
-      if (cascade.clears > 0) {
-        setTimeout(() => resolveClears(dropped), 80);
-      } else {
-        setBoard(dropped);
+  const spawnPopup = useCallback((text: string, cells: Array<{ r: number; c: number }>, cellSize: number) => {
+    if (!cells.length) return;
+    const cx = cells.reduce((a, p) => a + p.c, 0) / cells.length;
+    const cy = cells.reduce((a, p) => a + p.r, 0) / cells.length;
+    const x = (cx + 0.5) * cellSize;
+    const y = (cy + 0.5) * cellSize;
+    const id = ++popupId.current;
+    setPopups((cur) => [...cur, { id, x, y, text }]);
+    setTimeout(() => setPopups((cur) => cur.filter((p) => p.id !== id)), 900);
+  }, []);
+
+  const resolveClears = useCallback(
+    (b: BoardT) => {
+      // Always settle gravity once after lock so unsupported cells fall.
+      const settled = applyGravity(b);
+      const result = findAndClear(settled);
+      if (result.clears === 0) {
+        setBoard(settled);
+        return;
       }
-    }, 320);
-  }, [totalClears]);
+      setClearingCells(result.cells);
+      setBoard(result.board);
+      const mult = multiplierFor(totalClears);
+      const gain = Math.round(100 * result.clears * mult);
+      setScore((s) => s + gain);
+      setTotalClears((t) => t + result.clears);
+      if (soundOn) sfx.clear(result.clears);
+      spawnPopup(`+${gain} ×${mult.toFixed(1)}`, result.cells, cellSizeRef.current);
+      setTimeout(() => {
+        const dropped = applyGravity(result.board);
+        setClearingCells([]);
+        const cascade = findAndClear(dropped);
+        if (cascade.clears > 0) {
+          setTimeout(() => resolveClears(dropped), 80);
+        } else {
+          setBoard(dropped);
+        }
+      }, 320);
+    },
+    [totalClears, soundOn, spawnPopup],
+  );
 
   // Gravity tick
   useEffect(() => {
-    if (!piece || paused || gameOver || helperMode) return;
+    if (!piece || paused || backOpen || gameOver || helperMode) return;
     const id = setInterval(() => {
       setPiece((cur) => {
         if (!cur) return cur;
-        if (!collides(board, cur, 1, 0)) {
-          return { ...cur, r: cur.r + 1 };
-        }
-        // Lock
+        if (!collides(board, cur, 1, 0)) return { ...cur, r: cur.r + 1 };
         const locked = lockPiece(board, cur);
+        if (soundOn) sfx.drop();
         resolveClears(locked);
         return null;
       });
     }, speed);
     return () => clearInterval(id);
-  }, [piece, board, paused, gameOver, helperMode, speed, resolveClears]);
+  }, [piece, board, paused, backOpen, gameOver, helperMode, speed, resolveClears, soundOn]);
 
-  // Controls — split screen taps
-  const handleZoneTap = (zone: "left" | "right" | "center") => {
+  // Drag handlers
+  const onDragMove = (deltaCols: number) => {
     if (!piece || paused || gameOver || helperMode) return;
-    if (zone === "left") {
-      const moved = tryMove(board, piece, -1);
-      if (moved) setPiece(moved);
-    } else if (zone === "right") {
-      const moved = tryMove(board, piece, 1);
-      if (moved) setPiece(moved);
-    } else {
-      const rotated = tryRotate(board, piece);
-      if (rotated) setPiece(rotated);
+    let p = piece;
+    const dir = Math.sign(deltaCols);
+    for (let i = 0; i < Math.abs(deltaCols); i++) {
+      const moved = tryMove(board, p, dir);
+      if (!moved) break;
+      p = moved;
+    }
+    if (p !== piece) setPiece(p);
+  };
+  const onDragEnd = (_total: number, swipedDown: boolean, tappedShort: boolean) => {
+    unlockAudio();
+    if (!piece || paused || gameOver || helperMode) return;
+    if (swipedDown) {
+      doHardDrop();
+    } else if (tappedShort) {
+      const r = tryRotate(board, piece);
+      if (r) setPiece(r);
     }
   };
 
-  // Hard drop on swipe-down (simple double tap center)
-  const lastCenter = useRef(0);
-  const onCenterTap = () => {
-    const now = Date.now();
-    if (now - lastCenter.current < 280) {
-      // hard drop
-      if (!piece) return;
-      let p = piece;
-      while (!collides(board, p, 1, 0)) p = { ...p, r: p.r + 1 };
-      const locked = lockPiece(board, p);
-      setPiece(null);
-      resolveClears(locked);
-    } else {
-      handleZoneTap("center");
-    }
-    lastCenter.current = now;
+  const doHardDrop = () => {
+    if (!piece || paused || gameOver || helperMode) return;
+    const dropped = hardDrop(board, piece);
+    const locked = lockPiece(board, dropped);
+    setPiece(null);
+    if (soundOn) sfx.drop();
+    resolveClears(locked);
   };
 
   // Helpers
   const startHelper = (h: Helper) => {
     if (helpers[h] <= 0 || gameOver) return;
-    // pause + start timer (10/6/3 cascade)
     setHelperMode(h);
     setSwapFirst(null);
     setHelperPresses((n) => n + 1);
@@ -201,8 +254,7 @@ function DropdokuPage() {
         setSwapFirst({ r, c });
         return;
       }
-      const isAdj =
-        Math.abs(swapFirst.r - r) + Math.abs(swapFirst.c - c) === 1;
+      const isAdj = Math.abs(swapFirst.r - r) + Math.abs(swapFirst.c - c) === 1;
       if (!isAdj) {
         setSwapFirst({ r, c });
         return;
@@ -222,7 +274,6 @@ function DropdokuPage() {
       }
     } else if (helperMode === "boom") {
       const next = board.map((row) => row.slice());
-      // + cross
       for (let i = 0; i < COLS; i++) next[r][i] = null;
       for (let i = 0; i < ROWS; i++) next[i][c] = null;
       const after = applyGravity(next);
@@ -241,10 +292,11 @@ function DropdokuPage() {
     const max = Math.min(window.innerWidth - 32, 420);
     return Math.floor((max - 16) / COLS);
   }, []);
+  const cellSizeRef = useRef(cellSize);
+  cellSizeRef.current = cellSize;
 
   const mult = multiplierFor(totalClears);
 
-  // Revive
   const revive = (free: boolean) => {
     if (!free && !spendDiamonds(50)) return;
     if (free) setUsedFreeRevive(true);
@@ -253,25 +305,34 @@ function DropdokuPage() {
     setPiece(null);
   };
 
+  const startFresh = () => {
+    setSession(null);
+    setBoard(emptyBoard());
+    setBag(createBag(difficulty));
+    setPieceIndex(0);
+    setPiece(null);
+    setScore(0);
+    setTotalClears(0);
+    setGameOver(false);
+    setUsedFreeRevive(false);
+    setBackOpen(false);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* HUD */}
+    <div className="min-h-screen flex flex-col" onClick={unlockAudio}>
       <header className="px-4 pt-4 pb-2 flex items-center justify-between">
         <button
-          onClick={() => navigate({ to: "/" })}
+          onClick={() => setBackOpen(true)}
           className="soft-card w-10 h-10 flex items-center justify-center"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex gap-2">
           <div className="soft-card px-3 py-1.5 text-sm font-bold">
-            <span className="text-muted-foreground mr-1">Score</span>
+            <span className="text-muted-foreground mr-1">Scor</span>
             {score}
           </div>
-          <div className="soft-card px-3 py-1.5 text-sm font-bold">
-            <span className="text-muted-foreground mr-1">x</span>
-            {mult.toFixed(1)}
-          </div>
+          <div className="soft-card px-3 py-1.5 text-sm font-bold">×{mult.toFixed(1)}</div>
         </div>
         <button
           onClick={() => setPaused((p) => !p)}
@@ -282,58 +343,80 @@ function DropdokuPage() {
       </header>
 
       <div className="px-4 text-center text-xs text-muted-foreground">
-        Best {highScore} · {difficulty.toUpperCase()} ·{" "}
-        <Gem className="inline w-3 h-3 text-diamond" /> {diamonds}
+        Record {highScore} · {difficulty.toUpperCase()} ·{" "}
+        <Gem className="inline w-3 h-3 text-primary" /> {diamonds}
       </div>
 
-      {/* Board */}
       <div className="flex-1 flex items-center justify-center relative">
-        <Board
-          board={board}
-          piece={piece}
-          clearingCells={clearingCells}
-          helperMode={helperMode}
-          onCellTap={onCellTap}
-          swapFirst={swapFirst}
-          cellSize={cellSize}
-        />
-
-        {/* Touch zones overlay */}
-        {!helperMode && !paused && !gameOver && (
-          <div className="absolute inset-0 flex">
-            <button
-              className="flex-[3]"
-              onClick={() => handleZoneTap("left")}
-              aria-label="move left"
-            />
-            <button
-              className="flex-[4]"
-              onClick={onCenterTap}
-              aria-label="rotate / hard drop"
-            />
-            <button
-              className="flex-[3]"
-              onClick={() => handleZoneTap("right")}
-              aria-label="move right"
-            />
-          </div>
-        )}
+        <div className="relative">
+          <Board
+            board={board}
+            piece={piece}
+            clearingCells={clearingCells}
+            helperMode={helperMode}
+            onCellTap={onCellTap}
+            swapFirst={swapFirst}
+            cellSize={cellSize}
+            onDragMove={onDragMove}
+            onDragEnd={onDragEnd}
+          />
+          {/* Floating score pop-ups */}
+          {popups.map((p) => (
+            <div
+              key={p.id}
+              className="absolute pointer-events-none font-bold text-primary text-sm"
+              style={{
+                left: p.x + 8,
+                top: p.y + 8,
+                transform: "translate(-50%, -50%)",
+                animation: "popup-rise 900ms ease-out forwards",
+              }}
+            >
+              {p.text}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Helpers */}
-      <div className="p-4 pb-6">
-        <HelperBar
-          counts={helpers}
-          active={helperMode}
-          onPick={startHelper}
-          disabled={gameOver}
-        />
-        <p className="text-center text-xs text-muted-foreground mt-3">
-          ← move · tap center to rotate · double-tap to drop · → move
+      {/* Controls */}
+      <div className="px-6 pb-2 flex items-center justify-center gap-3">
+        <button
+          onClick={() => piece && setPiece(tryMove(board, piece, -1) ?? piece)}
+          className="soft-card w-14 h-14 flex items-center justify-center active:scale-95 transition"
+          aria-label="stânga"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => piece && setPiece(tryRotate(board, piece) ?? piece)}
+          className="soft-card w-14 h-14 flex items-center justify-center active:scale-95 transition"
+          aria-label="rotește"
+        >
+          <RotateCw className="w-6 h-6" />
+        </button>
+        <button
+          onClick={doHardDrop}
+          className="w-20 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-card active:scale-95 transition"
+          aria-label="aruncă"
+        >
+          <ArrowDown className="w-7 h-7" />
+        </button>
+        <button
+          onClick={() => piece && setPiece(tryMove(board, piece, 1) ?? piece)}
+          className="soft-card w-14 h-14 flex items-center justify-center active:scale-95 transition"
+          aria-label="dreapta"
+        >
+          <ArrowLeft className="w-6 h-6 rotate-180" />
+        </button>
+      </div>
+
+      <div className="px-4 pb-6 pt-2">
+        <HelperBar counts={helpers} active={helperMode} onPick={startHelper} disabled={gameOver} />
+        <p className="text-center text-[11px] text-muted-foreground mt-3">
+          Trage piesa stânga/dreapta · atinge pentru rotire · trage în jos pentru drop
         </p>
       </div>
 
-      {/* Helper Timer */}
       {helperMode && (
         <HelperTimer
           seconds={helperSeconds}
@@ -343,34 +426,66 @@ function DropdokuPage() {
         />
       )}
 
-      {/* Pause overlay */}
       {paused && !helperMode && (
-        <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm flex items-center justify-center z-30">
+        <div
+          className="fixed inset-0 bg-foreground/40 backdrop-blur-sm flex items-center justify-center z-30"
+          onClick={() => setPaused(false)}
+        >
           <div className="soft-card p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Paused</h2>
+            <h2 className="text-2xl font-bold mb-4">Pauză</h2>
             <button
               onClick={() => setPaused(false)}
               className="px-8 py-3 rounded-2xl bg-primary text-primary-foreground font-bold"
             >
-              Resume
+              Continuă
             </button>
           </div>
         </div>
       )}
 
-      {/* Game Over */}
+      {backOpen && (
+        <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-30 px-4">
+          <div className="soft-card p-6 w-full max-w-sm animate-slide-up">
+            <h2 className="text-xl font-bold text-center">Pauză</h2>
+            <p className="text-center text-sm text-muted-foreground mt-1">
+              Ce vrei să faci?
+            </p>
+            <div className="flex flex-col gap-2 mt-5">
+              <button
+                onClick={() => setBackOpen(false)}
+                className="py-3 rounded-2xl bg-primary text-primary-foreground font-semibold"
+              >
+                Continuă jocul
+              </button>
+              <button
+                onClick={startFresh}
+                className="py-3 rounded-2xl bg-muted font-semibold"
+              >
+                Joc nou
+              </button>
+              <button
+                onClick={() => navigate({ to: "/" })}
+                className="py-3 rounded-2xl text-muted-foreground"
+              >
+                Ieși la meniu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {gameOver && (
         <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-30 px-6">
           <div className="soft-card p-8 text-center w-full max-w-sm animate-slide-up">
             <h2 className="text-3xl font-bold mb-1">Game Over</h2>
-            <p className="text-muted-foreground mb-4">Score: {score}</p>
+            <p className="text-muted-foreground mb-4">Scor: {score}</p>
             <div className="flex flex-col gap-3">
               {!usedFreeRevive && (
                 <button
                   onClick={() => revive(true)}
                   className="px-6 py-3 rounded-2xl bg-accent text-accent-foreground font-bold"
                 >
-                  ▶ Watch Ad to Revive (Free)
+                  ▶ Vezi reclama — Reînvie gratuit
                 </button>
               )}
               <button
@@ -378,13 +493,19 @@ function DropdokuPage() {
                 disabled={diamonds < 50}
                 className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-bold disabled:opacity-40"
               >
-                <Gem className="inline w-4 h-4 mr-1" /> 50 — Revive
+                <Gem className="inline w-4 h-4 mr-1" /> 50 — Reînvie
+              </button>
+              <button
+                onClick={startFresh}
+                className="px-6 py-3 rounded-2xl bg-muted font-bold"
+              >
+                Joc nou
               </button>
               <button
                 onClick={() => navigate({ to: "/" })}
-                className="px-6 py-3 rounded-2xl bg-muted font-bold"
+                className="px-6 py-3 rounded-2xl text-muted-foreground font-semibold"
               >
-                Main Menu
+                Meniu
               </button>
             </div>
           </div>

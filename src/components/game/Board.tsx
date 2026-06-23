@@ -1,10 +1,5 @@
 import { useRef } from "react";
-import {
-  ROWS,
-  COLS,
-  type Board as BoardT,
-  type Piece,
-} from "@/game/engine";
+import { ROWS, COLS, type Board as BoardT, type Piece } from "@/game/engine";
 import { Jewel } from "./Jewel";
 
 interface BoardProps {
@@ -33,8 +28,7 @@ export function Board({
   onDragMove,
   onDragEnd,
 }: BoardProps) {
-  const isClearing = (r: number, c: number) =>
-    clearingCells.some((p) => p.r === r && p.c === c);
+  const isClearing = (r: number, c: number) => clearingCells.some((p) => p.r === r && p.c === c);
 
   const pieceCellAt = (r: number, c: number) => {
     if (!piece) return null;
@@ -133,7 +127,11 @@ export function Board({
                   <Jewel value={pv} size={cellSize - 2} popping />
                 ) : v !== null ? (
                   <span
-                    className={clearing ? "scale-125 transition-transform duration-300" : "transition-transform"}
+                    className={
+                      clearing
+                        ? "scale-125 transition-transform duration-300"
+                        : "transition-transform"
+                    }
                     style={{
                       color: "var(--color-cell-user)",
                       fontSize: cellSize * 0.5,

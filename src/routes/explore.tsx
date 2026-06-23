@@ -83,7 +83,9 @@ function Explore() {
               {Card}
             </Link>
           ) : (
-            <div key={v.title} className="opacity-60">{Card}</div>
+            <div key={v.title} className="opacity-60">
+              {Card}
+            </div>
           );
         })}
       </div>

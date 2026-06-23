@@ -19,12 +19,27 @@ const LESSONS: Record<string, Lesson> = {
     intro:
       "Piesele cad de sus. Tu le aranjezi astfel încât pe fiecare rând, coloană sau pătrat 3×3 să apară toate cifrele 1–9 fără să se repete.",
     steps: [
-      { title: "Mută piesa", body: "Trage cu degetul stânga sau dreapta peste tablă. Sau folosește butoanele." },
-      { title: "Rotește", body: "Atinge tabla o singură dată. Piesele orizontale devin verticale și invers." },
+      {
+        title: "Mută piesa",
+        body: "Trage cu degetul stânga sau dreapta peste tablă. Sau folosește butoanele.",
+      },
+      {
+        title: "Rotește",
+        body: "Atinge tabla o singură dată. Piesele orizontale devin verticale și invers.",
+      },
       { title: "Aruncă", body: "Apasă butonul ⬇ sau trage rapid în jos pentru drop instant." },
-      { title: "Completează", body: "Un rând, o coloană sau un pătrat 3×3 complet (1–9 fără dubluri) dispare." },
-      { title: "Joker ★", body: "La fiecare a 12-a piesă primești un joker, care înlocuiește orice cifră lipsă." },
-      { title: "Helpers", body: "Hammer șterge o celulă, Swap interschimbă două vecine, Boom curăță un + pe tablă." },
+      {
+        title: "Completează",
+        body: "Un rând, o coloană sau un pătrat 3×3 complet (1–9 fără dubluri) dispare.",
+      },
+      {
+        title: "Joker ★",
+        body: "La fiecare a 12-a piesă primești un joker, care înlocuiește orice cifră lipsă.",
+      },
+      {
+        title: "Helpers",
+        body: "Hammer șterge o celulă, Swap interschimbă două vecine, Boom curăță un + pe tablă.",
+      },
     ],
     play: { to: "/play/dropdoku", search: { difficulty: "normal" }, label: "Joacă Sudoku Drop" },
   },
@@ -34,10 +49,19 @@ const LESSONS: Record<string, Lesson> = {
       "Completează grila 9×9 astfel încât fiecare rând, fiecare coloană și fiecare pătrat 3×3 să conțină cifrele 1–9 fără repetare.",
     steps: [
       { title: "Selectează", body: "Atinge o celulă goală pentru a o evidenția." },
-      { title: "Scrie o cifră", body: "Folosește tastatura de jos. Contorul de sub fiecare cifră arată câte mai sunt de plasat." },
+      {
+        title: "Scrie o cifră",
+        body: "Folosește tastatura de jos. Contorul de sub fiecare cifră arată câte mai sunt de plasat.",
+      },
       { title: "Greșeli", body: "Ai voie 3 greșeli. La a 3-a se termină jocul." },
-      { title: "Indicii", body: "Începi cu 3 indicii. Selectează o celulă și apasă becul pentru a o completa." },
-      { title: "Auto-completare", body: "Când rămân doar câteva celule și fiecare are un singur candidat, grila se umple singură. Poți dezactiva din Setări." },
+      {
+        title: "Indicii",
+        body: "Începi cu 3 indicii. Selectează o celulă și apasă becul pentru a o completa.",
+      },
+      {
+        title: "Auto-completare",
+        body: "Când rămân doar câteva celule și fiecare are un singur candidat, grila se umple singură. Poți dezactiva din Setări.",
+      },
     ],
     play: { to: "/classic", label: "Joacă Sudoku Clasic" },
   },
@@ -66,7 +90,10 @@ const LESSONS: Record<string, Lesson> = {
     intro:
       "Joacă același puzzle împotriva altui jucător. Câștigă cine termină mai repede cu mai puține greșeli.",
     steps: [
-      { title: "Tiere", body: "Bronz, Argint, Aur, Platină, Master — câștigi puncte ca să avansezi." },
+      {
+        title: "Tiere",
+        body: "Bronz, Argint, Aur, Platină, Master — câștigi puncte ca să avansezi.",
+      },
       { title: "Premii", body: "Top fiecărui sezon primește diamante și skinuri exclusive." },
     ],
     play: { to: "/battle", label: "Intră în turneu" },
@@ -91,7 +118,10 @@ function TutorialDetail() {
   }
   return (
     <div className="min-h-screen px-5 pt-5 pb-8">
-      <Link to="/tutorial" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center">
+      <Link
+        to="/tutorial"
+        className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center"
+      >
         <ArrowLeft className="w-5 h-5" />
       </Link>
       <h1 className="display text-3xl font-bold mt-6">{lesson.title}</h1>

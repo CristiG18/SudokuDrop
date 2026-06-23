@@ -90,13 +90,7 @@ function Home() {
             sub="100 niveluri"
             Icon={Sparkles}
           />
-          <CarouselCard
-            to="/battle"
-            tag="Turneu"
-            title="Bronz"
-            sub="Începe acum"
-            Icon={Trophy}
-          />
+          <CarouselCard to="/battle" tag="Turneu" title="Bronz" sub="Începe acum" Icon={Trophy} />
           <CarouselCard
             to="/classic"
             tag="Clasic"

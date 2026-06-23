@@ -23,7 +23,10 @@ function ClassicPicker() {
 
   return (
     <div className="min-h-screen px-5 pt-5">
-      <Link to="/" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center">
+      <Link
+        to="/"
+        className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center"
+      >
         <ArrowLeft className="w-5 h-5" />
       </Link>
       <h1 className="mt-6 text-3xl font-bold">Sudoku clasic</h1>
@@ -53,9 +56,7 @@ function ClassicPicker() {
         {LEVELS.map((l) => (
           <button
             key={l.key}
-            onClick={() =>
-              navigate({ to: "/play/classic", search: { difficulty: l.key } })
-            }
+            onClick={() => navigate({ to: "/play/classic", search: { difficulty: l.key } })}
             className="w-full flex items-center bg-card border border-border rounded-2xl p-4 shadow-soft active:scale-[0.99] transition"
           >
             <span className="w-1.5 h-10 rounded-full bg-primary mr-4" />

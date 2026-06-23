@@ -52,7 +52,7 @@ function DropdokuPage() {
   const navigate = useNavigate();
 
   const helpers = useGameStore((s) => s.helpers);
-  const useHelperStore = useGameStore((s) => s.useHelper);
+  const consumeHelper = useGameStore((s) => s.useHelper);
   const diamonds = useGameStore((s) => s.diamonds);
   const spendDiamonds = useGameStore((s) => s.spendDiamonds);
   const setHighScore = useGameStore((s) => s.setHighScore);
@@ -124,18 +124,32 @@ function DropdokuPage() {
     setPiece(p);
     setBag(nextBag);
     setPieceIndex((i) => i + 1);
-  }, [piece, gameOver, bag, board, difficulty, pieceIndex, score, setHighScore, setSession, soundOn]);
+  }, [
+    piece,
+    gameOver,
+    bag,
+    board,
+    difficulty,
+    pieceIndex,
+    score,
+    setHighScore,
+    setSession,
+    soundOn,
+  ]);
 
-  const spawnPopup = useCallback((text: string, cells: Array<{ r: number; c: number }>, cellSize: number) => {
-    if (!cells.length) return;
-    const cx = cells.reduce((a, p) => a + p.c, 0) / cells.length;
-    const cy = cells.reduce((a, p) => a + p.r, 0) / cells.length;
-    const x = (cx + 0.5) * cellSize;
-    const y = (cy + 0.5) * cellSize;
-    const id = ++popupId.current;
-    setPopups((cur) => [...cur, { id, x, y, text }]);
-    setTimeout(() => setPopups((cur) => cur.filter((p) => p.id !== id)), 900);
-  }, []);
+  const spawnPopup = useCallback(
+    (text: string, cells: Array<{ r: number; c: number }>, cellSize: number) => {
+      if (!cells.length) return;
+      const cx = cells.reduce((a, p) => a + p.c, 0) / cells.length;
+      const cy = cells.reduce((a, p) => a + p.r, 0) / cells.length;
+      const x = (cx + 0.5) * cellSize;
+      const y = (cy + 0.5) * cellSize;
+      const id = ++popupId.current;
+      setPopups((cur) => [...cur, { id, x, y, text }]);
+      setTimeout(() => setPopups((cur) => cur.filter((p) => p.id !== id)), 900);
+    },
+    [],
+  );
 
   const resolveClears = useCallback(
     (b: BoardT) => {
@@ -241,7 +255,7 @@ function DropdokuPage() {
       const next = board.map((row) => row.slice());
       next[r][c] = null;
       const after = applyGravity(next);
-      if (useHelperStore("hammer")) {
+      if (consumeHelper("hammer")) {
         setBoard(after);
         setHelperPresses(0);
         setHelperMode(null);
@@ -260,11 +274,8 @@ function DropdokuPage() {
         return;
       }
       const next = board.map((row) => row.slice());
-      [next[r][c], next[swapFirst.r][swapFirst.c]] = [
-        next[swapFirst.r][swapFirst.c],
-        next[r][c],
-      ];
-      if (useHelperStore("swap")) {
+      [next[r][c], next[swapFirst.r][swapFirst.c]] = [next[swapFirst.r][swapFirst.c], next[r][c]];
+      if (consumeHelper("swap")) {
         setBoard(next);
         setSwapFirst(null);
         setHelperPresses(0);
@@ -277,7 +288,7 @@ function DropdokuPage() {
       for (let i = 0; i < COLS; i++) next[r][i] = null;
       for (let i = 0; i < ROWS; i++) next[i][c] = null;
       const after = applyGravity(next);
-      if (useHelperStore("boom")) {
+      if (consumeHelper("boom")) {
         setBoard(after);
         setHelperPresses(0);
         setHelperMode(null);
@@ -447,9 +458,7 @@ function DropdokuPage() {
         <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-30 px-4">
           <div className="soft-card p-6 w-full max-w-sm animate-slide-up">
             <h2 className="text-xl font-bold text-center">Pauză</h2>
-            <p className="text-center text-sm text-muted-foreground mt-1">
-              Ce vrei să faci?
-            </p>
+            <p className="text-center text-sm text-muted-foreground mt-1">Ce vrei să faci?</p>
             <div className="flex flex-col gap-2 mt-5">
               <button
                 onClick={() => setBackOpen(false)}
@@ -457,10 +466,7 @@ function DropdokuPage() {
               >
                 Continuă jocul
               </button>
-              <button
-                onClick={startFresh}
-                className="py-3 rounded-2xl bg-muted font-semibold"
-              >
+              <button onClick={startFresh} className="py-3 rounded-2xl bg-muted font-semibold">
                 Joc nou
               </button>
               <button
@@ -495,10 +501,7 @@ function DropdokuPage() {
               >
                 <Gem className="inline w-4 h-4 mr-1" /> 50 — Reînvie
               </button>
-              <button
-                onClick={startFresh}
-                className="px-6 py-3 rounded-2xl bg-muted font-bold"
-              >
+              <button onClick={startFresh} className="px-6 py-3 rounded-2xl bg-muted font-bold">
                 Joc nou
               </button>
               <button

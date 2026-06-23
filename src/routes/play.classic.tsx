@@ -1,7 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Eraser, Lightbulb, Pause, Play, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { generatePuzzle, type SudokuDifficulty, type SudokuGrid, type SudokuSolution } from "@/game/classic";
+import {
+  generatePuzzle,
+  type SudokuDifficulty,
+  type SudokuGrid,
+  type SudokuSolution,
+} from "@/game/classic";
 import { useGameStore } from "@/store/game-store";
 import { sfx, unlockAudio } from "@/lib/sfx";
 
@@ -103,7 +108,18 @@ function ClassicGame() {
       seconds,
       hintsLeft,
     });
-  }, [grid, mistakes, seconds, hintsLeft, won, difficulty, init.seed, puzzle, solution, setSession]);
+  }, [
+    grid,
+    mistakes,
+    seconds,
+    hintsLeft,
+    won,
+    difficulty,
+    init.seed,
+    puzzle,
+    solution,
+    setSession,
+  ]);
 
   useEffect(() => {
     if (paused || backOpen || won) return;
@@ -111,92 +127,106 @@ function ClassicGame() {
     return () => clearInterval(id);
   }, [paused, backOpen, won]);
 
-  const flashUnits = useCallback((r: number, c: number, next: SudokuGrid) => {
-    const cells: string[] = [];
-    // row
-    if (next[r].every((v) => v !== null)) for (let i = 0; i < 9; i++) cells.push(`${r},${i}`);
-    // col
-    if (next.every((row) => row[c] !== null)) for (let i = 0; i < 9; i++) cells.push(`${i},${c}`);
-    // box
-    const br = Math.floor(r / 3) * 3;
-    const bc = Math.floor(c / 3) * 3;
-    let boxFull = true;
-    for (let i = br; i < br + 3 && boxFull; i++)
-      for (let j = bc; j < bc + 3 && boxFull; j++) if (next[i][j] === null) boxFull = false;
-    if (boxFull) {
-      for (let i = br; i < br + 3; i++) for (let j = bc; j < bc + 3; j++) cells.push(`${i},${j}`);
-    }
-    if (cells.length) {
-      if (soundOn) sfx.clear(1);
-      setFlashCells(new Set(cells));
-      setTimeout(() => setFlashCells(new Set()), 600);
-    }
-  }, [soundOn]);
-
-  const checkWin = useCallback((next: SudokuGrid) => {
-    for (let i = 0; i < 9; i++)
-      for (let j = 0; j < 9; j++)
-        if (next[i][j] !== solution[i][j]) return false;
-    return true;
-  }, [solution]);
-
-  const finish = useCallback((finalGrid: SudokuGrid) => {
-    setGrid(finalGrid);
-    setWon(true);
-    setSession(null);
-    if (soundOn) sfx.win();
-    const next = bumpStreak();
-    if (next === 3) addDiamonds(20);
-    else if (next === 5) addDiamonds(50);
-    else if (next === 10) addDiamonds(150);
-  }, [bumpStreak, addDiamonds, setSession, soundOn]);
-
-  const tryAutoComplete = useCallback((next: SudokuGrid) => {
-    if (!autoCompleteOn) return false;
-    // Auto-complete kicks in when ≤ 6 empties remain and each remaining
-    // cell's only legal candidate (per row/col/box) matches the solution.
-    let empties = 0;
-    for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (next[r][c] === null) empties++;
-    if (empties === 0 || empties > 6) return false;
-
-    const candidatesOk = () => {
-      for (let r = 0; r < 9; r++) {
-        for (let c = 0; c < 9; c++) {
-          if (next[r][c] !== null) continue;
-          const used = new Set<number>();
-          for (let i = 0; i < 9; i++) {
-            if (next[r][i] !== null) used.add(next[r][i] as number);
-            if (next[i][c] !== null) used.add(next[i][c] as number);
-          }
-          const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
-          for (let i = br; i < br + 3; i++) for (let j = bc; j < bc + 3; j++)
-            if (next[i][j] !== null) used.add(next[i][j] as number);
-          let cnt = 0;
-          for (let n = 1; n <= 9; n++) if (!used.has(n)) cnt++;
-          if (cnt !== 1) return false;
-        }
+  const flashUnits = useCallback(
+    (r: number, c: number, next: SudokuGrid) => {
+      const cells: string[] = [];
+      // row
+      if (next[r].every((v) => v !== null)) for (let i = 0; i < 9; i++) cells.push(`${r},${i}`);
+      // col
+      if (next.every((row) => row[c] !== null)) for (let i = 0; i < 9; i++) cells.push(`${i},${c}`);
+      // box
+      const br = Math.floor(r / 3) * 3;
+      const bc = Math.floor(c / 3) * 3;
+      let boxFull = true;
+      for (let i = br; i < br + 3 && boxFull; i++)
+        for (let j = bc; j < bc + 3 && boxFull; j++) if (next[i][j] === null) boxFull = false;
+      if (boxFull) {
+        for (let i = br; i < br + 3; i++) for (let j = bc; j < bc + 3; j++) cells.push(`${i},${j}`);
       }
-      return true;
-    };
-    if (!candidatesOk()) return false;
+      if (cells.length) {
+        if (soundOn) sfx.clear(1);
+        setFlashCells(new Set(cells));
+        setTimeout(() => setFlashCells(new Set()), 600);
+      }
+    },
+    [soundOn],
+  );
 
-    // Cascade-fill remaining cells
-    const remaining: Array<{ r: number; c: number }> = [];
-    for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (next[r][c] === null) remaining.push({ r, c });
-    let working = next.map((row) => row.slice());
-    remaining.forEach((pos, i) => {
-      setTimeout(() => {
-        working = working.map((row) => row.slice());
-        working[pos.r][pos.c] = solution[pos.r][pos.c];
-        setGrid(working);
-        if (soundOn) sfx.click();
-        if (i === remaining.length - 1) {
-          setTimeout(() => finish(working), 200);
+  const checkWin = useCallback(
+    (next: SudokuGrid) => {
+      for (let i = 0; i < 9; i++)
+        for (let j = 0; j < 9; j++) if (next[i][j] !== solution[i][j]) return false;
+      return true;
+    },
+    [solution],
+  );
+
+  const finish = useCallback(
+    (finalGrid: SudokuGrid) => {
+      setGrid(finalGrid);
+      setWon(true);
+      setSession(null);
+      if (soundOn) sfx.win();
+      const next = bumpStreak();
+      if (next === 3) addDiamonds(20);
+      else if (next === 5) addDiamonds(50);
+      else if (next === 10) addDiamonds(150);
+    },
+    [bumpStreak, addDiamonds, setSession, soundOn],
+  );
+
+  const tryAutoComplete = useCallback(
+    (next: SudokuGrid) => {
+      if (!autoCompleteOn) return false;
+      // Auto-complete kicks in when ≤ 6 empties remain and each remaining
+      // cell's only legal candidate (per row/col/box) matches the solution.
+      let empties = 0;
+      for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (next[r][c] === null) empties++;
+      if (empties === 0 || empties > 6) return false;
+
+      const candidatesOk = () => {
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            if (next[r][c] !== null) continue;
+            const used = new Set<number>();
+            for (let i = 0; i < 9; i++) {
+              if (next[r][i] !== null) used.add(next[r][i] as number);
+              if (next[i][c] !== null) used.add(next[i][c] as number);
+            }
+            const br = Math.floor(r / 3) * 3,
+              bc = Math.floor(c / 3) * 3;
+            for (let i = br; i < br + 3; i++)
+              for (let j = bc; j < bc + 3; j++)
+                if (next[i][j] !== null) used.add(next[i][j] as number);
+            let cnt = 0;
+            for (let n = 1; n <= 9; n++) if (!used.has(n)) cnt++;
+            if (cnt !== 1) return false;
+          }
         }
-      }, 80 * i);
-    });
-    return true;
-  }, [autoCompleteOn, solution, finish, soundOn]);
+        return true;
+      };
+      if (!candidatesOk()) return false;
+
+      // Cascade-fill remaining cells
+      const remaining: Array<{ r: number; c: number }> = [];
+      for (let r = 0; r < 9; r++)
+        for (let c = 0; c < 9; c++) if (next[r][c] === null) remaining.push({ r, c });
+      let working = next.map((row) => row.slice());
+      remaining.forEach((pos, i) => {
+        setTimeout(() => {
+          working = working.map((row) => row.slice());
+          working[pos.r][pos.c] = solution[pos.r][pos.c];
+          setGrid(working);
+          if (soundOn) sfx.click();
+          if (i === remaining.length - 1) {
+            setTimeout(() => finish(working), 200);
+          }
+        }, 80 * i);
+      });
+      return true;
+    },
+    [autoCompleteOn, solution, finish, soundOn],
+  );
 
   const enter = (n: number | null) => {
     if (!sel || won) return;
@@ -273,7 +303,6 @@ function ClassicGame() {
       window.location.href = `/play/classic?difficulty=${difficulty}&seed=${Date.now()}`;
     }
   };
-
 
   return (
     <div className="min-h-screen flex flex-col px-3 pt-4" onClick={unlockAudio}>
@@ -440,10 +469,7 @@ function ClassicGame() {
               >
                 Continuă jocul
               </button>
-              <button
-                onClick={startFresh}
-                className="py-3 rounded-2xl bg-muted font-semibold"
-              >
+              <button onClick={startFresh} className="py-3 rounded-2xl bg-muted font-semibold">
                 Joc nou
               </button>
               <button

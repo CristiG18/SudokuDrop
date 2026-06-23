@@ -80,8 +80,7 @@ export const useGameStore = create<GameState>()(
         set({ diamonds: get().diamonds - n });
         return true;
       },
-      addHelpers: (h, n) =>
-        set({ helpers: { ...get().helpers, [h]: get().helpers[h] + n } }),
+      addHelpers: (h, n) => set({ helpers: { ...get().helpers, [h]: get().helpers[h] + n } }),
       useHelper: (h) => {
         if (get().helpers[h] <= 0) return false;
         set({ helpers: { ...get().helpers, [h]: get().helpers[h] - 1 } });
@@ -94,14 +93,11 @@ export const useGameStore = create<GameState>()(
       },
       unlockSkin: (s) =>
         set({
-          ownedSkins: get().ownedSkins.includes(s)
-            ? get().ownedSkins
-            : [...get().ownedSkins, s],
+          ownedSkins: get().ownedSkins.includes(s) ? get().ownedSkins : [...get().ownedSkins, s],
         }),
       setSkin: (s) => set({ activeSkin: s }),
       setTheme: (t) => set({ activeTheme: t }),
-      setSetting: (key, value) =>
-        set({ settings: { ...get().settings, [key]: value } }),
+      setSetting: (key, value) => set({ settings: { ...get().settings, [key]: value } }),
       setClassicSession: (s) => set({ classicSession: s }),
       setDropdokuSession: (s) => set({ dropdokuSession: s }),
       bumpClassicStreak: () => {

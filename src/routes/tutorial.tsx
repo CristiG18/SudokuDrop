@@ -20,7 +20,10 @@ function TutorialLayout() {
   if (!onIndex) return <Outlet />;
   return (
     <div className="min-h-screen px-5 pt-5">
-      <Link to="/" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center">
+      <Link
+        to="/"
+        className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center"
+      >
         <ArrowLeft className="w-5 h-5" />
       </Link>
       <h1 className="display text-3xl font-bold mt-6">Cum se joacă</h1>

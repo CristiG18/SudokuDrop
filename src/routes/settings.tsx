@@ -23,6 +23,16 @@ function SettingsPage() {
 
       <div className="mt-6 space-y-3">
         <Row
+          title="Mod control"
+          desc={
+            settings.controlMode === "gestures"
+              ? "Gesturi: glisare = mută, swipe jos = drop, tap margini/centru = mută/rotire."
+              : "Butoane: săgeți + rotire + drop. Gesturile sunt dezactivate."
+          }
+          value={settings.controlMode === "gestures"}
+          onToggle={(v) => setSetting("controlMode", v ? "gestures" : "buttons")}
+        />
+        <Row
           title="Auto-completare"
           desc="Când mai rămân puține celule cu un singur candidat, se completează singure (Sudoku Clasic)."
           value={settings.autoComplete}

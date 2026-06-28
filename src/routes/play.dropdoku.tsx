@@ -47,6 +47,30 @@ interface Popup {
   text: string;
 }
 
+function previewForHelper(
+  helper: Helper,
+  r: number,
+  c: number,
+): Array<{ r: number; c: number }> {
+  if (helper === "hammer" || helper === "swap") return [{ r, c }];
+  if (helper === "boom") {
+    // 2x2 anchored so it stays on board
+    const sr = Math.min(r, ROWS - 2);
+    const sc = Math.min(c, COLS - 2);
+    return [
+      { r: sr, c: sc },
+      { r: sr, c: sc + 1 },
+      { r: sr + 1, c: sc },
+      { r: sr + 1, c: sc + 1 },
+    ];
+  }
+  // cross: full row + full column
+  const cells: Array<{ r: number; c: number }> = [];
+  for (let i = 0; i < COLS; i++) cells.push({ r, c: i });
+  for (let i = 0; i < ROWS; i++) if (i !== r) cells.push({ r: i, c });
+  return cells;
+}
+
 function DropdokuPage() {
   const { difficulty, resume } = Route.useSearch();
   const navigate = useNavigate();
@@ -60,6 +84,8 @@ function DropdokuPage() {
   const savedSession = useGameStore((s) => s.dropdokuSession);
   const setSession = useGameStore((s) => s.setDropdokuSession);
   const soundOn = useGameStore((s) => s.settings.sound);
+  const controlMode = useGameStore((s) => s.settings.controlMode);
+  const setSetting = useGameStore((s) => s.setSetting);
 
   const initial = useMemo(() => {
     if (resume && savedSession && savedSession.difficulty === difficulty) {
@@ -98,17 +124,16 @@ function DropdokuPage() {
   const [helperMode, setHelperMode] = useState<Helper | null>(null);
   const [helperPresses, setHelperPresses] = useState(0);
   const [swapFirst, setSwapFirst] = useState<{ r: number; c: number } | null>(null);
+  const [previewCells, setPreviewCells] = useState<Array<{ r: number; c: number }>>([]);
 
   const baseSpeed = difficulty === "easy" ? 900 : difficulty === "normal" ? 700 : 520;
   const speed = Math.max(220, baseSpeed - totalClears * 8);
 
-  // persist session
   useEffect(() => {
     if (gameOver) return;
     setSession({ difficulty, board, bag, pieceIndex, score, totalClears });
   }, [difficulty, board, bag, pieceIndex, score, totalClears, gameOver, setSession]);
 
-  // Spawn next piece
   useEffect(() => {
     if (piece || gameOver) return;
     let nextBag = bag;
@@ -137,13 +162,21 @@ function DropdokuPage() {
     soundOn,
   ]);
 
+  const cellSize = useMemo(() => {
+    if (typeof window === "undefined") return 36;
+    const max = Math.min(window.innerWidth - 32, 420);
+    return Math.floor((max - 16) / COLS);
+  }, []);
+  const cellSizeRef = useRef(cellSize);
+  cellSizeRef.current = cellSize;
+
   const spawnPopup = useCallback(
-    (text: string, cells: Array<{ r: number; c: number }>, cellSize: number) => {
+    (text: string, cells: Array<{ r: number; c: number }>, cs: number) => {
       if (!cells.length) return;
       const cx = cells.reduce((a, p) => a + p.c, 0) / cells.length;
       const cy = cells.reduce((a, p) => a + p.r, 0) / cells.length;
-      const x = (cx + 0.5) * cellSize;
-      const y = (cy + 0.5) * cellSize;
+      const x = (cx + 0.5) * cs;
+      const y = (cy + 0.5) * cs;
       const id = ++popupId.current;
       setPopups((cur) => [...cur, { id, x, y, text }]);
       setTimeout(() => setPopups((cur) => cur.filter((p) => p.id !== id)), 900);
@@ -153,7 +186,6 @@ function DropdokuPage() {
 
   const resolveClears = useCallback(
     (b: BoardT) => {
-      // Always settle gravity once after lock so unsupported cells fall.
       const settled = applyGravity(b);
       const result = findAndClear(settled);
       if (result.clears === 0) {
@@ -167,7 +199,7 @@ function DropdokuPage() {
       setScore((s) => s + gain);
       setTotalClears((t) => t + result.clears);
       if (soundOn) sfx.clear(result.clears);
-      spawnPopup(`+${gain} ×${mult.toFixed(1)}`, result.cells, cellSizeRef.current);
+      spawnPopup(`+${gain}`, result.cells, cellSizeRef.current);
       setTimeout(() => {
         const dropped = applyGravity(result.board);
         setClearingCells([]);
@@ -182,7 +214,6 @@ function DropdokuPage() {
     [totalClears, soundOn, spawnPopup],
   );
 
-  // Gravity tick
   useEffect(() => {
     if (!piece || paused || backOpen || gameOver || helperMode) return;
     const id = setInterval(() => {
@@ -198,27 +229,22 @@ function DropdokuPage() {
     return () => clearInterval(id);
   }, [piece, board, paused, backOpen, gameOver, helperMode, speed, resolveClears, soundOn]);
 
-  // Drag handlers
-  const onDragMove = (deltaCols: number) => {
+  const moveBy = (dc: number) => {
     if (!piece || paused || gameOver || helperMode) return;
     let p = piece;
-    const dir = Math.sign(deltaCols);
-    for (let i = 0; i < Math.abs(deltaCols); i++) {
+    const dir = Math.sign(dc);
+    for (let i = 0; i < Math.abs(dc); i++) {
       const moved = tryMove(board, p, dir);
       if (!moved) break;
       p = moved;
     }
     if (p !== piece) setPiece(p);
   };
-  const onDragEnd = (_total: number, swipedDown: boolean, tappedShort: boolean) => {
-    unlockAudio();
+
+  const doRotate = () => {
     if (!piece || paused || gameOver || helperMode) return;
-    if (swipedDown) {
-      doHardDrop();
-    } else if (tappedShort) {
-      const r = tryRotate(board, piece);
-      if (r) setPiece(r);
-    }
+    const r = tryRotate(board, piece);
+    if (r) setPiece(r);
   };
 
   const doHardDrop = () => {
@@ -230,11 +256,36 @@ function DropdokuPage() {
     resolveClears(locked);
   };
 
+  // Gesture handlers (only active in gesture mode)
+  const onDragMove = (delta: number) => moveBy(delta);
+  const onDragEnd = (
+    _total: number,
+    swipedDown: boolean,
+    tappedShort: boolean,
+    tapX: number,
+    _tapY: number,
+    width: number,
+  ) => {
+    unlockAudio();
+    if (!piece || paused || gameOver || helperMode) return;
+    if (swipedDown) {
+      doHardDrop();
+      return;
+    }
+    if (tappedShort) {
+      const pct = tapX / width;
+      if (pct < 0.3) moveBy(-1);
+      else if (pct > 0.7) moveBy(1);
+      else doRotate();
+    }
+  };
+
   // Helpers
   const startHelper = (h: Helper) => {
     if (helpers[h] <= 0 || gameOver) return;
     setHelperMode(h);
     setSwapFirst(null);
+    setPreviewCells([]);
     setHelperPresses((n) => n + 1);
     setPaused(true);
   };
@@ -245,68 +296,87 @@ function DropdokuPage() {
   const cancelHelper = () => {
     setHelperMode(null);
     setSwapFirst(null);
+    setPreviewCells([]);
     setPaused(false);
   };
 
-  const onCellTap = (r: number, c: number) => {
+  const onHelperHover = (r: number, c: number | null) => {
+    if (!helperMode) return;
+    if (c === null || r < 0) {
+      // keep preview, will commit on release
+      return;
+    }
+    if (helperMode === "swap") {
+      // just highlight current cell
+      setPreviewCells([{ r, c }]);
+      return;
+    }
+    setPreviewCells(previewForHelper(helperMode, r, c));
+  };
+
+  const applyHelperAt = (r: number, c: number) => {
     if (!helperMode) return;
     if (helperMode === "hammer") {
-      if (board[r][c] === null) return;
+      if (board[r][c] === null) {
+        setPreviewCells([]);
+        return;
+      }
       const next = board.map((row) => row.slice());
       next[r][c] = null;
-      const after = applyGravity(next);
       if (consumeHelper("hammer")) {
+        const after = applyGravity(next);
         setBoard(after);
         setHelperPresses(0);
         setHelperMode(null);
+        setPreviewCells([]);
         setPaused(false);
         resolveClears(after);
       }
     } else if (helperMode === "swap") {
-      if (board[r][c] === null) return;
-      if (!swapFirst) {
-        setSwapFirst({ r, c });
+      if (board[r][c] === null) {
+        setPreviewCells([]);
         return;
       }
-      const isAdj = Math.abs(swapFirst.r - r) + Math.abs(swapFirst.c - c) === 1;
-      if (!isAdj) {
+      if (!swapFirst) {
         setSwapFirst({ r, c });
+        setPreviewCells([{ r, c }]);
+        return;
+      }
+      if (swapFirst.r === r && swapFirst.c === c) {
+        // cancel selection
+        setSwapFirst(null);
+        setPreviewCells([]);
         return;
       }
       const next = board.map((row) => row.slice());
-      [next[r][c], next[swapFirst.r][swapFirst.c]] = [next[swapFirst.r][swapFirst.c], next[r][c]];
+      [next[r][c], next[swapFirst.r][swapFirst.c]] = [
+        next[swapFirst.r][swapFirst.c],
+        next[r][c],
+      ];
       if (consumeHelper("swap")) {
         setBoard(next);
         setSwapFirst(null);
         setHelperPresses(0);
         setHelperMode(null);
+        setPreviewCells([]);
         setPaused(false);
         resolveClears(next);
       }
-    } else if (helperMode === "boom") {
+    } else if (helperMode === "boom" || helperMode === "cross") {
+      const cells = previewForHelper(helperMode, r, c);
       const next = board.map((row) => row.slice());
-      for (let i = 0; i < COLS; i++) next[r][i] = null;
-      for (let i = 0; i < ROWS; i++) next[i][c] = null;
-      const after = applyGravity(next);
-      if (consumeHelper("boom")) {
+      for (const p of cells) next[p.r][p.c] = null;
+      if (consumeHelper(helperMode)) {
+        const after = applyGravity(next);
         setBoard(after);
         setHelperPresses(0);
         setHelperMode(null);
+        setPreviewCells([]);
         setPaused(false);
         resolveClears(after);
       }
     }
   };
-
-  const cellSize = useMemo(() => {
-    if (typeof window === "undefined") return 36;
-    const max = Math.min(window.innerWidth - 32, 420);
-    return Math.floor((max - 16) / COLS);
-  }, []);
-  const cellSizeRef = useRef(cellSize);
-  cellSizeRef.current = cellSize;
-
-  const mult = multiplierFor(totalClears);
 
   const revive = (free: boolean) => {
     if (!free && !spendDiamonds(50)) return;
@@ -338,12 +408,9 @@ function DropdokuPage() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex gap-2">
-          <div className="soft-card px-3 py-1.5 text-sm font-bold">
-            <span className="text-muted-foreground mr-1">Scor</span>
-            {score}
-          </div>
-          <div className="soft-card px-3 py-1.5 text-sm font-bold">×{mult.toFixed(1)}</div>
+        <div className="soft-card px-4 py-1.5 text-base font-bold">
+          <span className="text-muted-foreground mr-2 text-xs font-medium">SCOR</span>
+          {score}
         </div>
         <button
           onClick={() => setPaused((p) => !p)}
@@ -353,9 +420,21 @@ function DropdokuPage() {
         </button>
       </header>
 
-      <div className="px-4 text-center text-xs text-muted-foreground">
-        Record {highScore} · {difficulty.toUpperCase()} ·{" "}
-        <Gem className="inline w-3 h-3 text-primary" /> {diamonds}
+      <div className="px-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
+        <span>Record {highScore}</span>
+        <span>·</span>
+        <span>{difficulty.toUpperCase()}</span>
+        <span>·</span>
+        <span><Gem className="inline w-3 h-3 text-primary" /> {diamonds}</span>
+        <span>·</span>
+        <button
+          onClick={() =>
+            setSetting("controlMode", controlMode === "buttons" ? "gestures" : "buttons")
+          }
+          className="underline underline-offset-2"
+        >
+          {controlMode === "buttons" ? "Butoane" : "Gesturi"}
+        </button>
       </div>
 
       <div className="flex-1 flex items-center justify-center relative">
@@ -365,13 +444,15 @@ function DropdokuPage() {
             piece={piece}
             clearingCells={clearingCells}
             helperMode={helperMode}
-            onCellTap={onCellTap}
             swapFirst={swapFirst}
+            previewCells={previewCells}
             cellSize={cellSize}
+            controlMode={controlMode}
             onDragMove={onDragMove}
             onDragEnd={onDragEnd}
+            onHelperHoverCell={onHelperHover}
+            onHelperCommit={applyHelperAt}
           />
-          {/* Floating score pop-ups */}
           {popups.map((p) => (
             <div
               key={p.id}
@@ -389,49 +470,70 @@ function DropdokuPage() {
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="px-6 pb-2 flex items-center justify-center gap-3">
-        <button
-          onClick={() => piece && setPiece(tryMove(board, piece, -1) ?? piece)}
-          className="soft-card w-14 h-14 flex items-center justify-center active:scale-95 transition"
-          aria-label="stânga"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <button
-          onClick={() => piece && setPiece(tryRotate(board, piece) ?? piece)}
-          className="soft-card w-14 h-14 flex items-center justify-center active:scale-95 transition"
-          aria-label="rotește"
-        >
-          <RotateCw className="w-6 h-6" />
-        </button>
-        <button
-          onClick={doHardDrop}
-          className="w-20 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-card active:scale-95 transition"
-          aria-label="aruncă"
-        >
-          <ArrowDown className="w-7 h-7" />
-        </button>
-        <button
-          onClick={() => piece && setPiece(tryMove(board, piece, 1) ?? piece)}
-          className="soft-card w-14 h-14 flex items-center justify-center active:scale-95 transition"
-          aria-label="dreapta"
-        >
-          <ArrowLeft className="w-6 h-6 rotate-180" />
-        </button>
-      </div>
+      {/* Controls — only when buttons mode */}
+      {controlMode === "buttons" && (
+        <div className="px-6 pb-2 flex items-center justify-center gap-3">
+          <button
+            onClick={() => moveBy(-1)}
+            className="soft-card w-14 h-14 flex items-center justify-center active:scale-95 transition"
+            aria-label="stânga"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <button
+            onClick={doRotate}
+            className="soft-card w-14 h-14 flex items-center justify-center active:scale-95 transition"
+            aria-label="rotește"
+          >
+            <RotateCw className="w-6 h-6" />
+          </button>
+          <button
+            onClick={doHardDrop}
+            className="w-20 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-card active:scale-95 transition"
+            aria-label="aruncă"
+          >
+            <ArrowDown className="w-7 h-7" />
+          </button>
+          <button
+            onClick={() => moveBy(1)}
+            className="soft-card w-14 h-14 flex items-center justify-center active:scale-95 transition"
+            aria-label="dreapta"
+          >
+            <ArrowLeft className="w-6 h-6 rotate-180" />
+          </button>
+        </div>
+      )}
+      {controlMode === "gestures" && (
+        <div className="px-6 pb-2 flex items-center justify-center">
+          <button
+            onClick={doHardDrop}
+            className="w-24 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-card active:scale-95 transition"
+            aria-label="drop"
+          >
+            <ArrowDown className="w-6 h-6" />
+          </button>
+        </div>
+      )}
 
       <div className="px-4 pb-6 pt-2">
         <HelperBar counts={helpers} active={helperMode} onPick={startHelper} disabled={gameOver} />
         <p className="text-center text-[11px] text-muted-foreground mt-3">
-          Trage piesa stânga/dreapta · atinge pentru rotire · trage în jos pentru drop
+          {controlMode === "gestures"
+            ? "Glisare stânga/dreapta · click 30% margini = 1 căsuță · click centru = rotire · swipe jos = drop"
+            : "Butoane: stânga · rotire · drop · dreapta"}
         </p>
       </div>
 
       {helperMode && (
         <HelperTimer
           seconds={helperSeconds}
-          label={helperMode.toUpperCase()}
+          label={
+            helperMode === "swap"
+              ? swapFirst
+                ? "SWAP — alege a 2-a piesă"
+                : "SWAP — alege prima piesă"
+              : `${helperMode.toUpperCase()} — ține apăsat pentru previzualizare`
+          }
           onExpire={cancelHelper}
           onCancel={cancelHelper}
         />

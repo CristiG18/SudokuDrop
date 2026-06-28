@@ -36,16 +36,21 @@ export function createBag(difficulty: Difficulty): number[] {
 }
 
 export function spawnPiece(bag: number[], pieceIndex: number): Piece {
+  const a = bag.pop() ?? 1;
+  const b = bag.pop() ?? 1;
+  // Every 12th piece: one half is a joker (0), the other half a number.
   if (pieceIndex > 0 && pieceIndex % 12 === 0) {
+    const jokerLeft = Math.random() < 0.5;
     return {
       r: -1,
       c: 4,
       isJoker: true,
-      cells: [{ dr: 0, dc: 0, value: 0 }],
+      cells: [
+        { dr: 0, dc: 0, value: jokerLeft ? 0 : a },
+        { dr: 0, dc: 1, value: jokerLeft ? a : 0 },
+      ],
     };
   }
-  const a = bag.pop() ?? 1;
-  const b = bag.pop() ?? 1;
   return {
     r: -1,
     c: 4,

@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type Helper = "hammer" | "swap" | "boom";
+export type Helper = "hammer" | "swap" | "boom" | "cross";
+export type ControlMode = "buttons" | "gestures";
 export type Skin = "default" | "glass" | "neon" | "wood";
 export type ThemeKey = "default" | "ice" | "amber" | "rose";
 
@@ -33,6 +34,7 @@ interface Settings {
   autoComplete: boolean;
   sound: boolean;
   haptics: boolean;
+  controlMode: ControlMode;
 }
 
 interface GameState {
@@ -66,11 +68,11 @@ export const useGameStore = create<GameState>()(
     (set, get) => ({
       diamonds: 250,
       highScores: { dropdoku: 0 },
-      helpers: { hammer: 2, swap: 2, boom: 2 },
+      helpers: { hammer: 2, swap: 2, boom: 2, cross: 2 },
       ownedSkins: ["default"],
       activeSkin: "default",
       activeTheme: "default",
-      settings: { autoComplete: true, sound: true, haptics: true },
+      settings: { autoComplete: true, sound: true, haptics: true, controlMode: "gestures" },
       classicStreak: 0,
       classicSession: null,
       dropdokuSession: null,

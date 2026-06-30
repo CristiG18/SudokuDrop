@@ -156,7 +156,7 @@ function DropdokuPage() {
     const p = spawnPiece(nextBag, pieceIndex);
     if (collides(board, p, 1, 0) && collides(board, p, 0, 0)) {
       setGameOver(true);
-      setHighScore("dropdoku", score);
+      setHighScore(score);
       setSession(null);
       if (soundOn) sfx.fail();
       return;

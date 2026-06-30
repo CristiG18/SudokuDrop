@@ -25,6 +25,8 @@ import { HelperTimer } from "@/components/game/HelperTimer";
 import { useGameStore, type Helper } from "@/store/game-store";
 import { ArrowLeft, ArrowDown, Gem, Pause, Play, RotateCw } from "lucide-react";
 import { sfx, unlockAudio } from "@/lib/sfx";
+import { PauseSheet } from "@/components/PauseSheet";
+import { RewardedHelperModal } from "@/components/RewardedHelperModal";
 
 export const Route = createFileRoute("/play/dropdoku")({
   head: () => ({

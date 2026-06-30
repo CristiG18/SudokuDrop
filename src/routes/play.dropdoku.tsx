@@ -531,13 +531,21 @@ function DropdokuPage() {
       )}
 
       <div className="px-4 pb-6 pt-2">
-        <HelperBar counts={helpers} active={helperMode} onPick={startHelper} disabled={gameOver} />
+        <HelperBar
+          counts={helpers}
+          active={helperMode}
+          onPick={startHelper}
+          onEmpty={(h) => setRewardHelper(h)}
+          disabled={gameOver}
+        />
         <p className="text-center text-[11px] text-muted-foreground mt-3">
           {controlMode === "gestures"
             ? "Glisare stânga/dreapta · click 30% margini = 1 căsuță · click centru = rotire · swipe jos = drop"
             : "Butoane: stânga · rotire · drop · dreapta"}
         </p>
       </div>
+
+      <RewardedHelperModal helper={rewardHelper} onClose={() => setRewardHelper(null)} />
 
       {helperMode && (
         <HelperTimer
@@ -554,48 +562,28 @@ function DropdokuPage() {
         />
       )}
 
-      {paused && !helperMode && (
-        <div
-          className="fixed inset-0 bg-foreground/40 backdrop-blur-sm flex items-center justify-center z-30"
-          onClick={() => setPaused(false)}
-        >
-          <div className="soft-card p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Pauză</h2>
-            <button
-              onClick={() => setPaused(false)}
-              className="px-8 py-3 rounded-2xl bg-primary text-primary-foreground font-bold"
-            >
-              Continuă
-            </button>
-          </div>
-        </div>
-      )}
+      <PauseSheet
+        open={paused && !helperMode && !backOpen}
+        onResume={() => setPaused(false)}
+        onRestart={startFresh}
+        onMenu={() => navigate({ to: "/" })}
+        onExit={() => {
+          setSession(null);
+          navigate({ to: "/" });
+        }}
+      />
 
-      {backOpen && (
-        <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-30 px-4">
-          <div className="soft-card p-6 w-full max-w-sm animate-slide-up">
-            <h2 className="text-xl font-bold text-center">Pauză</h2>
-            <p className="text-center text-sm text-muted-foreground mt-1">Ce vrei să faci?</p>
-            <div className="flex flex-col gap-2 mt-5">
-              <button
-                onClick={() => setBackOpen(false)}
-                className="py-3 rounded-2xl bg-primary text-primary-foreground font-semibold"
-              >
-                Continuă jocul
-              </button>
-              <button onClick={startFresh} className="py-3 rounded-2xl bg-muted font-semibold">
-                Joc nou
-              </button>
-              <button
-                onClick={() => navigate({ to: "/" })}
-                className="py-3 rounded-2xl text-muted-foreground"
-              >
-                Ieși la meniu
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PauseSheet
+        open={backOpen}
+        title="Meniu pauză"
+        onResume={() => setBackOpen(false)}
+        onRestart={startFresh}
+        onMenu={() => navigate({ to: "/" })}
+        onExit={() => {
+          setSession(null);
+          navigate({ to: "/" });
+        }}
+      />
 
       {gameOver && (
         <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-30 px-6">

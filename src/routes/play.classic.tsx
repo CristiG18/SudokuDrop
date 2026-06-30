@@ -9,6 +9,7 @@ import {
 } from "@/game/classic";
 import { useGameStore } from "@/store/game-store";
 import { sfx, unlockAudio } from "@/lib/sfx";
+import { PauseSheet } from "@/components/PauseSheet";
 
 export const Route = createFileRoute("/play/classic")({
   head: () => ({ meta: [{ title: "Sudoku Clasic — joc" }] }),
@@ -20,29 +21,36 @@ export const Route = createFileRoute("/play/classic")({
   }),
 });
 
-// Baseline target times (seconds) used for local percentile until backend lands.
-const BASELINES: Record<SudokuDifficulty, number> = {
-  easy: 240,
-  medium: 420,
-  hard: 600,
-  expert: 900,
-  extreme: 1200,
+// Maximum allowed time per difficulty (seconds). Hit it and you lose.
+const TIME_LIMIT: Record<SudokuDifficulty, number> = {
+  easy: 30 * 60,
+  medium: 25 * 60,
+  hard: 20 * 60,
+  expert: 17 * 60,
+  extreme: 12 * 60,
 };
 
-const PERCENTILE_BUCKETS = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+// Base score awarded at perfect run, scaled down by time used / mistakes / hints.
+const BASE_SCORE: Record<SudokuDifficulty, number> = {
+  easy: 1500,
+  medium: 2500,
+  hard: 4000,
+  expert: 6000,
+  extreme: 9000,
+};
 
-function computePercentile(difficulty: SudokuDifficulty, seconds: number, mistakes: number) {
-  const baseline = BASELINES[difficulty];
-  // ratio < 1 = faster than baseline -> better percentile
-  const ratio = seconds / baseline + mistakes * 0.05;
-  let pct = Math.round(ratio * 50); // 1.0 ratio -> top 50%
-  if (pct < 1) pct = 1;
-  if (pct > 100) pct = 100;
-  return PERCENTILE_BUCKETS.find((b) => pct <= b) ?? 100;
+function computeFinalScore(d: SudokuDifficulty, seconds: number, mistakes: number, hintsUsed: number) {
+  const limit = TIME_LIMIT[d];
+  const ratio = Math.max(0, (limit - seconds) / limit);
+  const score = Math.round(BASE_SCORE[d] * ratio - mistakes * 200 - hintsUsed * 100);
+  return Math.max(0, score);
 }
 
 function ClassicGame() {
-  const { difficulty, seed, resume } = Route.useSearch();
+  const search = Route.useSearch();
+  const difficulty = search.difficulty as SudokuDifficulty;
+  const seed = search.seed;
+  const resume = search.resume;
   const navigate = useNavigate();
   const session = useGameStore((s) => s.classicSession);
   const setSession = useGameStore((s) => s.setClassicSession);
@@ -52,8 +60,9 @@ function ClassicGame() {
   const resetStreak = useGameStore((s) => s.resetClassicStreak);
   const streak = useGameStore((s) => s.classicStreak);
   const addDiamonds = useGameStore((s) => s.addDiamonds);
+  const setClassicHighScore = useGameStore((s) => s.setClassicHighScore);
+  const highScore = useGameStore((s) => s.highScores.classic[difficulty]);
 
-  // Init either from resume session, or generate.
   const init = useMemo(() => {
     if (resume && session && session.difficulty === difficulty) {
       return {
@@ -65,6 +74,7 @@ function ClassicGame() {
         seconds: session.seconds,
         hintsLeft: session.hintsLeft,
         seed: session.seed,
+        startedAt: session.startedAt,
       };
     }
     const s = seed ?? Date.now();
@@ -79,6 +89,7 @@ function ClassicGame() {
       seconds: 0,
       hintsLeft: 3,
       seed: s,
+      startedAt: Date.now(),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -91,13 +102,17 @@ function ClassicGame() {
   const [backOpen, setBackOpen] = useState(false);
   const [won, setWon] = useState(false);
   const [hintsLeft, setHintsLeft] = useState(init.hintsLeft);
+  const [hintsUsed, setHintsUsed] = useState(0);
   const [flashCells, setFlashCells] = useState<Set<string>>(new Set());
+  const startedAtRef = useRef(init.startedAt);
+  const [finalScore, setFinalScore] = useState<number | null>(null);
 
   const { puzzle, solution, fixed } = init;
+  const limit = TIME_LIMIT[difficulty];
+  const lost = (mistakes >= 3 || seconds >= limit) && !won;
 
-  // Persist session
   useEffect(() => {
-    if (won) return;
+    if (won || lost) return;
     setSession({
       difficulty,
       seed: init.seed,
@@ -107,34 +122,33 @@ function ClassicGame() {
       mistakes,
       seconds,
       hintsLeft,
+      startedAt: startedAtRef.current,
     });
   }, [
-    grid,
-    mistakes,
-    seconds,
-    hintsLeft,
-    won,
-    difficulty,
-    init.seed,
-    puzzle,
-    solution,
-    setSession,
+    grid, mistakes, seconds, hintsLeft, won, lost,
+    difficulty, init.seed, puzzle, solution, setSession,
   ]);
 
   useEffect(() => {
-    if (paused || backOpen || won) return;
+    if (paused || backOpen || won || lost) return;
     const id = setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => clearInterval(id);
-  }, [paused, backOpen, won]);
+  }, [paused, backOpen, won, lost]);
+
+  // Clear session if we lost
+  useEffect(() => {
+    if (lost) {
+      resetStreak();
+      setSession(null);
+      if (soundOn) sfx.fail();
+    }
+  }, [lost, resetStreak, setSession, soundOn]);
 
   const flashUnits = useCallback(
     (r: number, c: number, next: SudokuGrid) => {
       const cells: string[] = [];
-      // row
       if (next[r].every((v) => v !== null)) for (let i = 0; i < 9; i++) cells.push(`${r},${i}`);
-      // col
       if (next.every((row) => row[c] !== null)) for (let i = 0; i < 9; i++) cells.push(`${i},${c}`);
-      // box
       const br = Math.floor(r / 3) * 3;
       const bc = Math.floor(c / 3) * 3;
       let boxFull = true;
@@ -162,28 +176,28 @@ function ClassicGame() {
   );
 
   const finish = useCallback(
-    (finalGrid: SudokuGrid) => {
+    (finalGrid: SudokuGrid, mistakesUsed: number, hintsUsedFinal: number, secondsUsed: number) => {
       setGrid(finalGrid);
       setWon(true);
       setSession(null);
       if (soundOn) sfx.win();
+      const score = computeFinalScore(difficulty, secondsUsed, mistakesUsed, hintsUsedFinal);
+      setFinalScore(score);
+      setClassicHighScore(difficulty, score);
       const next = bumpStreak();
       if (next === 3) addDiamonds(20);
       else if (next === 5) addDiamonds(50);
       else if (next === 10) addDiamonds(150);
     },
-    [bumpStreak, addDiamonds, setSession, soundOn],
+    [bumpStreak, addDiamonds, setSession, soundOn, difficulty, setClassicHighScore],
   );
 
   const tryAutoComplete = useCallback(
-    (next: SudokuGrid) => {
+    (next: SudokuGrid, mistakesUsed: number, hintsUsedFinal: number) => {
       if (!autoCompleteOn) return false;
-      // Auto-complete kicks in when ≤ 6 empties remain and each remaining
-      // cell's only legal candidate (per row/col/box) matches the solution.
       let empties = 0;
       for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (next[r][c] === null) empties++;
       if (empties === 0 || empties > 6) return false;
-
       const candidatesOk = () => {
         for (let r = 0; r < 9; r++) {
           for (let c = 0; c < 9; c++) {
@@ -206,8 +220,6 @@ function ClassicGame() {
         return true;
       };
       if (!candidatesOk()) return false;
-
-      // Cascade-fill remaining cells
       const remaining: Array<{ r: number; c: number }> = [];
       for (let r = 0; r < 9; r++)
         for (let c = 0; c < 9; c++) if (next[r][c] === null) remaining.push({ r, c });
@@ -219,17 +231,17 @@ function ClassicGame() {
           setGrid(working);
           if (soundOn) sfx.click();
           if (i === remaining.length - 1) {
-            setTimeout(() => finish(working), 200);
+            setTimeout(() => finish(working, mistakesUsed, hintsUsedFinal, seconds), 200);
           }
         }, 80 * i);
       });
       return true;
     },
-    [autoCompleteOn, solution, finish, soundOn],
+    [autoCompleteOn, solution, finish, soundOn, seconds],
   );
 
   const enter = (n: number | null) => {
-    if (!sel || won) return;
+    if (!sel || won || lost) return;
     const { r, c } = sel;
     if (fixed[r][c]) return;
     const next = grid.map((row) => row.slice());
@@ -238,15 +250,11 @@ function ClassicGame() {
       setGrid(next);
       return;
     }
+    let nextMistakes = mistakes;
     if (solution[r][c] !== n) {
-      const nextMistakes = mistakes + 1;
+      nextMistakes = mistakes + 1;
       setMistakes(nextMistakes);
       if (soundOn) sfx.fail();
-      if (nextMistakes >= 3) {
-        // game lost
-        resetStreak();
-        setSession(null);
-      }
     } else if (soundOn) {
       sfx.click();
     }
@@ -254,29 +262,32 @@ function ClassicGame() {
     setGrid(next);
     flashUnits(r, c, next);
     if (checkWin(next)) {
-      finish(next);
+      finish(next, nextMistakes, hintsUsed, seconds);
     } else {
-      tryAutoComplete(next);
+      tryAutoComplete(next, nextMistakes, hintsUsed);
     }
   };
 
   const useHint = () => {
-    if (!sel || hintsLeft <= 0 || won) return;
+    if (!sel || hintsLeft <= 0 || won || lost) return;
     if (fixed[sel.r][sel.c]) return;
     const next = grid.map((row) => row.slice());
     next[sel.r][sel.c] = solution[sel.r][sel.c];
     setGrid(next);
     setHintsLeft((h) => h - 1);
+    const hu = hintsUsed + 1;
+    setHintsUsed(hu);
     if (soundOn) sfx.click();
     flashUnits(sel.r, sel.c, next);
-    if (checkWin(next)) finish(next);
-    else tryAutoComplete(next);
+    if (checkWin(next)) finish(next, mistakes, hu, seconds);
+    else tryAutoComplete(next, mistakes, hu);
   };
 
   const reset = () => {
     setGrid(puzzle.map((r) => r.slice()));
     setMistakes(0);
     setHintsLeft(3);
+    setHintsUsed(0);
   };
 
   const counts = useMemo(() => {
@@ -286,16 +297,15 @@ function ClassicGame() {
     return c;
   }, [grid]);
 
-  const cellSizeRef = useRef(38);
   const cellSize = useMemo(() => {
     if (typeof window === "undefined") return 38;
     return Math.min(40, Math.floor((window.innerWidth - 24) / 9));
   }, []);
-  cellSizeRef.current = cellSize;
   const inner = cellSize * 9;
+  const remaining = Math.max(0, limit - seconds);
   const time = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-  const lost = mistakes >= 3 && !won;
-  const percentile = won ? computePercentile(difficulty, seconds, mistakes) : null;
+  const timeLeft = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`;
+  const timeWarn = remaining <= 60;
 
   const startFresh = () => {
     setSession(null);
@@ -315,9 +325,14 @@ function ClassicGame() {
         </button>
         <div className="text-center">
           <div className="text-xs text-muted-foreground capitalize">{difficulty}</div>
+          <div className="text-[10px] text-muted-foreground">Record: {highScore}</div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground tabular-nums">{time}</span>
+          <span
+            className={`text-sm tabular-nums font-semibold ${timeWarn ? "text-destructive" : "text-muted-foreground"}`}
+          >
+            {timeLeft}
+          </span>
           <button
             onClick={() => setPaused((p) => !p)}
             className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center"
@@ -336,8 +351,8 @@ function ClassicGame() {
             🔥 {streak}
           </span>
         )}
-        <span className="text-primary font-bold">
-          Scor: {Math.max(0, 1000 - mistakes * 100 - seconds)}
+        <span className="text-primary font-bold tabular-nums">
+          {computeFinalScore(difficulty, seconds, mistakes, hintsUsed)}p
         </span>
       </div>
 
@@ -373,21 +388,23 @@ function ClassicGame() {
                 const isFlash = flashCells.has(`${r},${c}`);
                 const rightThick = (c + 1) % 3 === 0 && c !== 8;
                 const bottomThick = (r + 1) % 3 === 0 && r !== 8;
+                // Background fill (no borders here — highlight uses tints only)
+                const bg = isFlash
+                  ? "var(--color-accent)"
+                  : selected
+                    ? "var(--color-cell-selected)"
+                    : sameValue
+                      ? "color-mix(in oklab, var(--color-cell-selected) 60%, white)"
+                      : highlight
+                        ? "color-mix(in oklab, var(--color-primary) 6%, white)"
+                        : "transparent";
                 return (
                   <button
                     key={`${r}-${c}`}
                     onClick={() => setSel({ r, c })}
                     className="flex items-center justify-center"
                     style={{
-                      backgroundColor: isFlash
-                        ? "var(--color-accent)"
-                        : selected
-                          ? "var(--color-cell-selected)"
-                          : sameValue
-                            ? "color-mix(in oklab, var(--color-cell-selected) 60%, white)"
-                            : highlight
-                              ? "var(--color-muted)"
-                              : "transparent",
+                      backgroundColor: bg,
                       color: wrong
                         ? "var(--color-destructive)"
                         : fixed[r][c]
@@ -424,70 +441,66 @@ function ClassicGame() {
       <div className="mt-5 px-2 pb-6 grid grid-cols-9 gap-1.5">
         {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => {
           const left = 9 - counts[n];
+          const done = left <= 0;
+          const isSelVal = sel && grid[sel.r][sel.c] === n;
           return (
             <button
               key={n}
               onClick={() => enter(n)}
-              disabled={left <= 0}
-              className="aspect-[3/4] rounded-xl bg-card border border-border shadow-soft flex flex-col items-center justify-center disabled:opacity-30"
+              disabled={done}
+              className={`relative aspect-[3/4] rounded-xl flex flex-col items-center justify-center transition ${
+                done
+                  ? "bg-muted text-muted-foreground opacity-50"
+                  : isSelVal
+                    ? "bg-primary text-primary-foreground shadow-card"
+                    : "bg-accent text-primary shadow-soft"
+              }`}
             >
-              <span className="text-xl font-bold text-primary leading-none">{n}</span>
-              <span className="text-[10px] text-muted-foreground mt-0.5">{left}</span>
+              <span className="text-2xl font-bold leading-none">{n}</span>
+              <span
+                className={`absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center shadow ${
+                  done
+                    ? "bg-muted text-muted-foreground"
+                    : "bg-card border border-border text-foreground"
+                }`}
+              >
+                {done ? "✓" : left}
+              </span>
             </button>
           );
         })}
       </div>
 
-      {paused && !won && (
-        <div
-          className="fixed inset-0 bg-foreground/40 backdrop-blur-sm flex items-center justify-center z-30"
-          onClick={() => setPaused(false)}
-        >
-          <div className="bg-card rounded-2xl p-8 text-center shadow-card">
-            <h2 className="text-xl font-bold mb-3">Pauză</h2>
-            <button
-              onClick={() => setPaused(false)}
-              className="px-6 py-2 rounded-full bg-primary text-primary-foreground font-semibold"
-            >
-              Continuă
-            </button>
-          </div>
-        </div>
-      )}
+      <PauseSheet
+        open={paused && !backOpen && !won && !lost}
+        onResume={() => setPaused(false)}
+        onRestart={startFresh}
+        onMenu={() => navigate({ to: "/" })}
+        onExit={() => {
+          setSession(null);
+          navigate({ to: "/" });
+        }}
+      />
 
-      {backOpen && (
-        <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-30 px-4">
-          <div className="bg-card rounded-3xl p-6 w-full max-w-sm shadow-card animate-slide-up">
-            <h2 className="text-xl font-bold text-center">Pauză</h2>
-            <p className="text-center text-sm text-muted-foreground mt-1">
-              Vrei să continui sau să începi un joc nou?
-            </p>
-            <div className="flex flex-col gap-2 mt-5">
-              <button
-                onClick={() => setBackOpen(false)}
-                className="py-3 rounded-2xl bg-primary text-primary-foreground font-semibold"
-              >
-                Continuă jocul
-              </button>
-              <button onClick={startFresh} className="py-3 rounded-2xl bg-muted font-semibold">
-                Joc nou
-              </button>
-              <button
-                onClick={() => navigate({ to: "/" })}
-                className="py-3 rounded-2xl text-muted-foreground"
-              >
-                Ieși la meniu
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PauseSheet
+        open={backOpen && !won && !lost}
+        title="Meniu pauză"
+        onResume={() => setBackOpen(false)}
+        onRestart={startFresh}
+        onMenu={() => navigate({ to: "/" })}
+        onExit={() => {
+          setSession(null);
+          navigate({ to: "/" });
+        }}
+      />
 
       {lost && (
         <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-30 px-6">
           <div className="bg-card rounded-3xl p-8 text-center w-full max-w-sm shadow-card animate-slide-up">
             <h2 className="text-2xl font-bold">Ai pierdut</h2>
-            <p className="text-sm text-muted-foreground mt-2">3 greșeli</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {mistakes >= 3 ? "3 greșeli" : "Timpul a expirat"}
+            </p>
             <div className="flex flex-col gap-2 mt-5">
               <button
                 onClick={startFresh}
@@ -513,9 +526,10 @@ function ClassicGame() {
             <p className="text-sm text-muted-foreground mt-2">
               Timp: {time} · Greșeli: {mistakes}
             </p>
-            {percentile !== null && (
-              <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-accent-foreground font-bold">
-                ✨ Ești în top {percentile}%
+            {finalScore !== null && (
+              <div className="mt-4 inline-flex flex-col items-center gap-1 px-6 py-3 rounded-2xl bg-accent text-accent-foreground">
+                <span className="text-xs uppercase tracking-wide">Scor final</span>
+                <span className="text-3xl font-bold">{finalScore}</span>
               </div>
             )}
             {streak > 1 && (

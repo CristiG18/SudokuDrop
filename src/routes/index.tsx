@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Gem,
   Crown,
@@ -8,10 +8,13 @@ import {
   Trophy,
   Blocks,
   Settings as SettingsIcon,
+  ShoppingBag,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useGameStore } from "@/store/game-store";
 import { currentMonthTheme, dailyForDate } from "@/game/schedule";
-import { useEffect } from "react";
+import { DifficultySheet, type DropDifficulty } from "@/components/DifficultySheet";
+import { ContinueCard } from "@/components/ContinueCard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,6 +38,8 @@ function Home() {
   const todayDiff = dailyForDate(today);
   const monthShort = today.toLocaleDateString("ro-RO", { month: "short" });
   const day = today.getDate();
+  const navigate = useNavigate();
+  const [sheet, setSheet] = useState(false);
 
   useEffect(() => {
     setTheme(month.key);
@@ -43,8 +48,13 @@ function Home() {
     }
   }, [month.key, setTheme]);
 
+  const pick = (d: DropDifficulty, resume: boolean) => {
+    setSheet(false);
+    navigate({ to: "/play/dropdoku", search: { difficulty: d, ...(resume ? { resume: true } : {}) } });
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-6">
       {/* Asymmetric header */}
       <header className="px-5 pt-5 flex items-start justify-between">
         <div>
@@ -54,6 +64,12 @@ function Home() {
           <h1 className="display text-2xl font-bold mt-0.5">Sudoku Drop</h1>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            to="/shop"
+            className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center"
+          >
+            <ShoppingBag className="w-4 h-4 text-muted-foreground" />
+          </Link>
           <Link
             to="/settings"
             className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center"
@@ -70,8 +86,13 @@ function Home() {
       {/* Stat chips */}
       <div className="px-5 mt-4 flex gap-2">
         <Chip Icon={Flame} label={`${streak} consecutive`} />
-        <Chip Icon={Crown} label="0 trofee" />
+        <Link to="/leaderboard" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground">
+          <Crown className="w-3.5 h-3.5" /> Clasament
+        </Link>
       </div>
+
+      {/* Continue session card */}
+      <ContinueCard />
 
       {/* Carousel of activities */}
       <div className="mt-5 -mx-1 overflow-x-auto no-scrollbar">
@@ -102,7 +123,7 @@ function Home() {
       </div>
 
       {/* Hero CTA: Sudoku Drop */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
         <div className="relative">
           <div
             className="absolute inset-0 rounded-3xl blur-2xl opacity-40"
@@ -122,22 +143,23 @@ function Home() {
         </Link>
       </div>
 
-      {/* CTAs */}
-      <div className="px-6 pb-6 space-y-2">
-        <Link
-          to="/play/dropdoku"
-          search={{ difficulty: "normal" }}
-          className="block w-full text-center py-4 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-card active:scale-[0.98] transition"
+      {/* CTAs — generous spacing for a premium feel */}
+      <div className="px-6 space-y-3">
+        <button
+          onClick={() => setSheet(true)}
+          className="block w-full text-center py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-card active:scale-[0.98] transition"
         >
           Joacă acum
-        </Link>
+        </button>
         <Link
           to="/classic"
-          className="block w-full text-center py-3 rounded-full bg-card border border-border font-semibold text-sm active:scale-[0.98] transition"
+          className="block w-full text-center py-3.5 rounded-2xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition"
         >
           Sudoku Clasic
         </Link>
       </div>
+
+      <DifficultySheet open={sheet} onClose={() => setSheet(false)} onPick={pick} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ interface HelperBarProps {
   counts: Record<Helper, number>;
   active: Helper | null;
   onPick: (h: Helper) => void;
+  onEmpty?: (h: Helper) => void;
   disabled?: boolean;
 }
 
@@ -16,29 +17,38 @@ const META: Record<Helper, { label: string; Icon: typeof Hammer }> = {
   cross: { label: "Cruce", Icon: Plus },
 };
 
-export function HelperBar({ counts, active, onPick, disabled }: HelperBarProps) {
+export function HelperBar({ counts, active, onPick, onEmpty, disabled }: HelperBarProps) {
   return (
-    <div className="flex justify-center gap-2 flex-wrap">
+    <div className="flex justify-center gap-2 flex-wrap overflow-visible">
       {(Object.keys(META) as Helper[]).map((h) => {
         const { label, Icon } = META[h];
         const isActive = active === h;
-        const count = counts[h];
+        const count = counts[h] ?? 0;
+        const empty = count <= 0;
         return (
           <button
             key={h}
-            onClick={() => onPick(h)}
-            disabled={disabled || count <= 0}
+            onClick={() => (empty ? onEmpty?.(h) : onPick(h))}
+            disabled={disabled}
             className={cn(
               "relative flex flex-col items-center justify-center w-[72px] h-[72px] rounded-2xl transition",
-              "soft-card",
+              "soft-card overflow-visible",
               isActive && "ring-4 ring-primary scale-105",
-              (disabled || count <= 0) && "opacity-40",
+              disabled && "opacity-40",
+              empty && !disabled && "opacity-60",
             )}
           >
             <Icon className="w-7 h-7 text-primary" />
             <span className="text-xs mt-1 font-semibold">{label}</span>
-            <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow">
-              {count}
+            <span
+              className={cn(
+                "absolute -top-1.5 -right-1.5 text-xs font-bold rounded-full min-w-[22px] h-[22px] px-1 flex items-center justify-center shadow z-10",
+                empty
+                  ? "bg-muted text-muted-foreground border border-border"
+                  : "bg-primary text-primary-foreground",
+              )}
+            >
+              {empty ? "+" : count}
             </span>
           </button>
         );

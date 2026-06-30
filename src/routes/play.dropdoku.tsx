@@ -81,7 +81,7 @@ function DropdokuPage() {
   const consumeHelper = useGameStore((s) => s.useHelper);
   const diamonds = useGameStore((s) => s.diamonds);
   const spendDiamonds = useGameStore((s) => s.spendDiamonds);
-  const setHighScore = useGameStore((s) => s.setHighScore);
+  const setHighScore = useGameStore((s) => s.setDropdokuHighScore);
   const highScore = useGameStore((s) => s.highScores.dropdoku);
   const savedSession = useGameStore((s) => s.dropdokuSession);
   const setSession = useGameStore((s) => s.setDropdokuSession);
@@ -97,6 +97,7 @@ function DropdokuPage() {
         pieceIndex: savedSession.pieceIndex,
         score: savedSession.score,
         totalClears: savedSession.totalClears,
+        startedAt: savedSession.startedAt,
       };
     }
     return {
@@ -105,6 +106,7 @@ function DropdokuPage() {
       pieceIndex: 0,
       score: 0,
       totalClears: 0,
+      startedAt: Date.now(),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -131,9 +133,20 @@ function DropdokuPage() {
   const baseSpeed = difficulty === "easy" ? 900 : difficulty === "normal" ? 700 : 520;
   const speed = Math.max(220, baseSpeed - totalClears * 8);
 
+  const startedAtRef = useRef(initial.startedAt);
+  const [rewardHelper, setRewardHelper] = useState<Helper | null>(null);
+
   useEffect(() => {
     if (gameOver) return;
-    setSession({ difficulty, board, bag, pieceIndex, score, totalClears });
+    setSession({
+      difficulty,
+      board,
+      bag,
+      pieceIndex,
+      score,
+      totalClears,
+      startedAt: startedAtRef.current,
+    });
   }, [difficulty, board, bag, pieceIndex, score, totalClears, gameOver, setSession]);
 
   useEffect(() => {

@@ -403,6 +403,7 @@ function DropdokuPage() {
 
   const startFresh = () => {
     setSession(null);
+    startedAtRef.current = Date.now();
     setBoard(emptyBoard());
     setBag(createBag(difficulty));
     setPieceIndex(0);
@@ -412,6 +413,7 @@ function DropdokuPage() {
     setGameOver(false);
     setUsedFreeRevive(false);
     setBackOpen(false);
+    setPaused(false);
   };
 
   return (

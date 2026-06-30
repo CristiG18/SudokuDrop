@@ -47,7 +47,10 @@ function computeFinalScore(d: SudokuDifficulty, seconds: number, mistakes: numbe
 }
 
 function ClassicGame() {
-  const { difficulty, seed, resume } = Route.useSearch();
+  const search = Route.useSearch();
+  const difficulty = search.difficulty as SudokuDifficulty;
+  const seed = search.seed;
+  const resume = search.resume;
   const navigate = useNavigate();
   const session = useGameStore((s) => s.classicSession);
   const setSession = useGameStore((s) => s.setClassicSession);

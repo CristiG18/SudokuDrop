@@ -19,6 +19,7 @@ import { Route as EventsRouteImport } from './routes/events'
 import { Route as DailyRouteImport } from './routes/daily'
 import { Route as ClassicRouteImport } from './routes/classic'
 import { Route as BattleRouteImport } from './routes/battle'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TutorialModeRouteImport } from './routes/tutorial.$mode'
 import { Route as PlayDropdokuRouteImport } from './routes/play.dropdoku'
@@ -74,6 +75,11 @@ const BattleRoute = BattleRouteImport.update({
   path: '/battle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -97,6 +103,7 @@ const PlayClassicRoute = PlayClassicRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
@@ -130,6 +138,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/battle'
     | '/classic'
     | '/daily'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/battle'
     | '/classic'
     | '/daily'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/battle'
     | '/classic'
     | '/daily'
@@ -197,6 +209,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   BattleRoute: typeof BattleRoute
   ClassicRoute: typeof ClassicRoute
   DailyRoute: typeof DailyRoute
@@ -283,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BattleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -328,6 +348,7 @@ const TutorialRouteWithChildren = TutorialRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   BattleRoute: BattleRoute,
   ClassicRoute: ClassicRoute,
   DailyRoute: DailyRoute,

@@ -295,6 +295,78 @@ function DropdokuPage() {
     }
   };
 
+  // Global window gestures: work anywhere on screen when in gesture mode and not in helper mode.
+  const boardWrapRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (controlMode !== "gestures") return;
+    let startX = 0;
+    let startY = 0;
+    let lastCols = 0;
+    let moved = false;
+    let startedAt = 0;
+    let active = false;
+
+    const isBlocked = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) return false;
+      if (target.closest("button, a, input, [data-no-gesture]")) return true;
+      if (boardWrapRef.current && boardWrapRef.current.contains(target)) return true; // board owns its own handling
+      return false;
+    };
+
+    const onDown = (e: PointerEvent) => {
+      if (helperMode || paused || gameOver || !piece) return;
+      if (isBlocked(e.target)) return;
+      active = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      lastCols = 0;
+      moved = false;
+      startedAt = Date.now();
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!active) return;
+      const dx = e.clientX - startX;
+      const cols = Math.round(dx / cellSizeRef.current);
+      if (cols !== lastCols) {
+        const delta = cols - lastCols;
+        lastCols = cols;
+        moved = true;
+        moveBy(delta);
+      }
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!active) return;
+      active = false;
+      const dy = e.clientY - startY;
+      const dx = e.clientX - startX;
+      const elapsed = Date.now() - startedAt;
+      const swipedDown = dy > cellSizeRef.current * 2.5 && Math.abs(dy) > Math.abs(dx);
+      const tappedShort = !moved && elapsed < 250 && Math.abs(dx) < 10 && Math.abs(dy) < 10;
+      if (swipedDown) {
+        doHardDrop();
+        return;
+      }
+      if (tappedShort) {
+        const pct = e.clientX / window.innerWidth;
+        if (pct < 0.3) moveBy(-1);
+        else if (pct > 0.7) moveBy(1);
+        else doRotate();
+      }
+    };
+
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controlMode, helperMode, paused, gameOver, piece, board]);
+
   // Helpers
   const startHelper = (h: Helper) => {
     if (helpers[h] <= 0 || gameOver) return;

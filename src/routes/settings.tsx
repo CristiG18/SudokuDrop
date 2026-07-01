@@ -1,6 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, LogIn, LogOut, UserCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/game-store";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Setări — Sudoku Drop" }] }),
@@ -10,6 +13,21 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const settings = useGameStore((s) => s.settings);
   const setSetting = useGameStore((s) => s.setSetting);
+  const navigate = useNavigate();
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setEmail(session?.user.email ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Deconectat");
+  };
 
   return (
     <div className="min-h-screen px-5 pt-5 pb-8">
@@ -21,7 +39,36 @@ function SettingsPage() {
       </Link>
       <h1 className="display text-3xl font-bold mt-6">Setări</h1>
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-6 rounded-2xl bg-card border border-border p-4 shadow-soft flex items-center gap-3">
+        <div className="w-11 h-11 rounded-full bg-accent flex items-center justify-center">
+          <UserCircle2 className="w-6 h-6 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-sm truncate">
+            {email ?? "Nu ești autentificat"}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {email ? "Progresul se sincronizează în cloud" : "Autentifică-te pentru a salva progresul"}
+          </div>
+        </div>
+        {email ? (
+          <button
+            onClick={signOut}
+            className="px-3 py-1.5 rounded-full bg-muted text-xs font-semibold flex items-center gap-1"
+          >
+            <LogOut className="w-3.5 h-3.5" /> Ieși
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate({ to: "/auth" })}
+            className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center gap-1"
+          >
+            <LogIn className="w-3.5 h-3.5" /> Intră
+          </button>
+        )}
+      </div>
+
+      <div className="mt-4 space-y-3">
         <Row
           title="Mod control"
           desc={

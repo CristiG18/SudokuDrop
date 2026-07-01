@@ -9,12 +9,15 @@ import {
   Blocks,
   Settings as SettingsIcon,
   ShoppingBag,
+  Ticket,
+  Coins,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useGameStore } from "@/store/game-store";
 import { currentMonthTheme, dailyForDate } from "@/game/schedule";
 import { DifficultySheet, type DropDifficulty } from "@/components/DifficultySheet";
 import { ContinueCard } from "@/components/ContinueCard";
+import { DailyRewardModal } from "@/components/DailyRewardModal";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,6 +34,8 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const diamonds = useGameStore((s) => s.diamonds);
+  const coins = useGameStore((s) => s.coins);
+  const tickets = useGameStore((s) => s.tickets);
   const streak = useGameStore((s) => s.classicStreak);
   const setTheme = useGameStore((s) => s.setTheme);
   const month = currentMonthTheme();
@@ -55,7 +60,6 @@ function Home() {
 
   return (
     <div className="min-h-screen flex flex-col pb-6">
-      {/* Asymmetric header */}
       <header className="px-5 pt-5 flex items-start justify-between">
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -83,46 +87,29 @@ function Home() {
         </div>
       </header>
 
-      {/* Stat chips */}
-      <div className="px-5 mt-4 flex gap-2">
+      <div className="px-5 mt-4 flex flex-wrap gap-2">
         <Chip Icon={Flame} label={`${streak} consecutive`} />
-        <Link to="/leaderboard" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground">
+        <Chip Icon={Coins} label={`${coins}`} tint="amber" />
+        <Chip Icon={Ticket} label={`${tickets} tichete`} />
+        <Link
+          to="/leaderboard"
+          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground"
+        >
           <Crown className="w-3.5 h-3.5" /> Clasament
         </Link>
       </div>
 
-      {/* Continue session card */}
       <ContinueCard />
 
-      {/* Carousel of activities */}
       <div className="mt-5 -mx-1 overflow-x-auto no-scrollbar">
         <div className="flex gap-3 px-4 snap-x snap-mandatory">
-          <CarouselCard
-            to="/daily"
-            tag="Zilnică"
-            title={`${monthShort} ${day}`}
-            sub={todayDiff.toUpperCase()}
-            Icon={Trophy}
-          />
-          <CarouselCard
-            to="/events"
-            tag="Eveniment"
-            title={month.name}
-            sub="100 niveluri"
-            Icon={Sparkles}
-          />
+          <CarouselCard to="/daily" tag="Zilnică" title={`${monthShort} ${day}`} sub={todayDiff.toUpperCase()} Icon={Trophy} />
+          <CarouselCard to="/events" tag="Eveniment" title={month.name} sub="100 niveluri" Icon={Sparkles} />
           <CarouselCard to="/battle" tag="Turneu" title="Bronz" sub="Începe acum" Icon={Trophy} />
-          <CarouselCard
-            to="/classic"
-            tag="Clasic"
-            title="Sudoku 9×9"
-            sub="Puzzle clasic"
-            Icon={Blocks}
-          />
+          <CarouselCard to="/classic" tag="Clasic" title="Sudoku 9×9" sub="Puzzle clasic" Icon={Blocks} />
         </div>
       </div>
 
-      {/* Hero CTA: Sudoku Drop */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
         <div className="relative">
           <div
@@ -143,7 +130,6 @@ function Home() {
         </Link>
       </div>
 
-      {/* CTAs — generous spacing for a premium feel */}
       <div className="px-6 space-y-3">
         <button
           onClick={() => setSheet(true)}
@@ -160,14 +146,15 @@ function Home() {
       </div>
 
       <DifficultySheet open={sheet} onClose={() => setSheet(false)} onPick={pick} />
+      <DailyRewardModal />
     </div>
   );
 }
 
-function Chip({ Icon, label }: { Icon: typeof Flame; label: string }) {
+function Chip({ Icon, label, tint }: { Icon: typeof Flame; label: string; tint?: string }) {
   return (
     <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground">
-      <Icon className="w-3.5 h-3.5" />
+      <Icon className={`w-3.5 h-3.5 ${tint === "amber" ? "text-amber-500" : ""}`} />
       {label}
     </div>
   );
@@ -196,9 +183,7 @@ function CarouselCard({
     >
       <span className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-primary" />
       <div className="pl-2">
-        <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
-          {tag}
-        </p>
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">{tag}</p>
         <h3 className="text-xl font-bold mt-1 leading-tight">{title}</h3>
         <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
       </div>

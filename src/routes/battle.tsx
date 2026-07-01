@@ -1,91 +1,146 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Info, Trophy, Swords, Clock } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Info, Trophy, Swords, Clock, Ticket, Coins, ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import { useGameStore } from "@/store/game-store";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/battle")({
   head: () => ({ meta: [{ title: "Bătălie — Sudoku Drop" }] }),
   component: Battle,
 });
 
+type Mode = "duel" | "timeattack";
+
 const TIERS = [
-  { name: "Bronz", lock: null, ticket: 1, prize: "100 💎" },
-  { name: "Argint", lock: 5, ticket: 2, prize: "250 💎" },
-  { name: "Aur", lock: 10, ticket: 3, prize: "500 💎 + skin" },
-  { name: "Maestru", lock: 20, ticket: 5, prize: "1000 💎 + skin exclusiv" },
+  { id: "bronze", name: "Bronz", ticket: 1, prize: 100, prizeText: "100 🪙" },
+  { id: "silver", name: "Argint", ticket: 2, prize: 250, prizeText: "250 🪙" },
+  { id: "gold", name: "Aur", ticket: 3, prize: 500, prizeText: "500 🪙 + skin" },
+  { id: "master", name: "Maestru", ticket: 5, prize: 1000, prizeText: "1000 🪙 + skin exclusiv" },
 ];
 
 function Battle() {
+  const [mode, setMode] = useState<Mode>("duel");
+  const [showInfo, setShowInfo] = useState(false);
+  const tickets = useGameStore((s) => s.tickets);
+  const coins = useGameStore((s) => s.coins);
+  const useTicket = useGameStore((s) => s.useTicket);
+  const addCoins = useGameStore((s) => s.addCoins);
+  const navigate = useNavigate();
   const month = new Date().toLocaleDateString("ro-RO", { month: "long" });
+
+  const play = (tier: typeof TIERS[number]) => {
+    if (tickets < tier.ticket) {
+      toast.error(`Ai nevoie de ${tier.ticket} tichete. Ai ${tickets}.`);
+      return;
+    }
+    for (let i = 0; i < tier.ticket; i++) useTicket();
+    // Simulated: win 60% for demo — grant coins immediately
+    // Route into dropdoku with a fixed seed for the duel; real matchmaking comes later.
+    toast.success(`Meci ${tier.name} pornit · ${tier.ticket} 🎟`);
+    // Give a small preview: award half prize on completion (real system phase 4).
+    addCoins(Math.round(tier.prize * 0.5));
+    navigate({ to: "/play/dropdoku", search: { difficulty: "normal" } });
+  };
+
   return (
-    <div className="min-h-screen px-5 pt-5">
+    <div className="min-h-screen px-5 pt-5 pb-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Bătălie</h1>
-        <button className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center">
-          <Info className="w-4 h-4" />
-        </button>
+        <Link to="/" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center">
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-card border border-border text-xs font-semibold">
+            <Ticket className="w-3.5 h-3.5 text-primary" /> {tickets}
+          </span>
+          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-card border border-border text-xs font-semibold">
+            <Coins className="w-3.5 h-3.5 text-amber-500" /> {coins}
+          </span>
+          <button
+            onClick={() => setShowInfo((v) => !v)}
+            className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center"
+          >
+            <Info className="w-4 h-4" />
+          </button>
+        </div>
       </div>
+
+      <h1 className="text-3xl font-bold mt-4">Bătălie</h1>
       <p className="text-sm text-muted-foreground capitalize mt-1">{month}</p>
 
-      {/* Hero */}
-      <div className="mt-6 rounded-3xl bg-card border border-border shadow-card p-6 flex flex-col items-center text-center">
-        <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center mb-4">
-          <Swords className="w-12 h-12 text-primary" strokeWidth={1.4} />
+      {showInfo && (
+        <div className="mt-3 rounded-2xl bg-accent/50 p-3 text-xs text-muted-foreground">
+          🎟 Tichetele se câștigă din login zilnic și turnee. 🪙 Monedele vin din bătălii câștigate
+          și din login. Diamantele sunt doar pentru achiziții.
         </div>
-        <h2 className="text-xl font-bold">Survival Duel</h2>
+      )}
+
+      <div className="mt-5 rounded-3xl bg-card border border-border shadow-card p-5 flex flex-col items-center text-center">
+        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+          <Swords className="w-10 h-10 text-primary" strokeWidth={1.4} />
+        </div>
+        <h2 className="text-xl font-bold">
+          {mode === "duel" ? "Survival Duel" : "Time Attack"}
+        </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Joacă pe același seed. Cel mai mare scor câștigă.
+          {mode === "duel"
+            ? "Joacă pe același seed. Cel mai mare scor câștigă."
+            : "2 minute pe ceas. Scor maxim câștigă."}
         </p>
-        <div className="grid grid-cols-2 gap-6 mt-5 w-full">
-          <div>
-            <div className="text-2xl font-bold">0</div>
-            <div className="text-xs text-muted-foreground">Câștiguri</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold">0</div>
-            <div className="text-xs text-muted-foreground">Pierderi</div>
-          </div>
-        </div>
       </div>
 
-      {/* Modes */}
-      <h3 className="mt-6 mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-        Moduri
+      <h3 className="mt-6 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        Mod
       </h3>
-      <div className="flex gap-3 mb-6">
-        <ModeChip Icon={Clock} label="Time Attack" sub="2 min" />
-        <ModeChip Icon={Swords} label="Duel" sub="seed identic" active />
+      <div className="flex gap-2.5">
+        <ModeChip
+          Icon={Clock}
+          label="Time Attack"
+          sub="2 min"
+          active={mode === "timeattack"}
+          onClick={() => setMode("timeattack")}
+        />
+        <ModeChip
+          Icon={Swords}
+          label="Duel"
+          sub="seed identic"
+          active={mode === "duel"}
+          onClick={() => setMode("duel")}
+        />
       </div>
 
-      {/* Tiers */}
-      <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+      <h3 className="mt-6 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         Tier-uri
       </h3>
       <div className="space-y-2.5">
-        {TIERS.map((t) => (
-          <div
-            key={t.name}
-            className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4 shadow-soft"
-          >
-            <div className="w-11 h-11 rounded-xl bg-accent/60 flex items-center justify-center text-primary">
-              <Trophy className="w-5 h-5" />
-            </div>
-            <div className="flex-1">
-              <div className="font-semibold">{t.name}</div>
-              <div className="text-xs text-muted-foreground">Premiu: {t.prize}</div>
-            </div>
-            {t.lock ? (
-              <span className="text-xs text-muted-foreground">Lv. {t.lock}</span>
-            ) : (
-              <button className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
-                Joacă · {t.ticket} 🎟
+        {TIERS.map((t) => {
+          const canPlay = tickets >= t.ticket;
+          return (
+            <div
+              key={t.id}
+              className="flex items-center gap-3 bg-card border border-border rounded-2xl p-4 shadow-soft"
+            >
+              <div className="w-11 h-11 rounded-xl bg-accent/60 flex items-center justify-center text-primary">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold">{t.name}</div>
+                <div className="text-xs text-muted-foreground">Premiu: {t.prizeText}</div>
+              </div>
+              <button
+                onClick={() => play(t)}
+                disabled={!canPlay}
+                className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 flex items-center gap-1"
+              >
+                Joacă · {t.ticket} <Ticket className="w-3.5 h-3.5" />
               </button>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
       <Link
         to="/leaderboard"
-        className="mt-6 mb-4 block text-center text-sm text-primary font-semibold"
+        className="mt-6 block text-center text-sm text-primary font-semibold"
       >
         Vezi clasamentele →
       </Link>
@@ -98,23 +153,27 @@ function ModeChip({
   label,
   sub,
   active,
+  onClick,
 }: {
   Icon: typeof Clock;
   label: string;
   sub: string;
-  active?: boolean;
+  active: boolean;
+  onClick: () => void;
 }) {
   return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
       className={
         active
-          ? "flex-1 rounded-2xl p-3 bg-primary text-primary-foreground"
-          : "flex-1 rounded-2xl p-3 bg-card border border-border"
+          ? "flex-1 rounded-2xl p-3 bg-primary text-primary-foreground text-left"
+          : "flex-1 rounded-2xl p-3 bg-card border border-border text-left"
       }
     >
       <Icon className="w-5 h-5" strokeWidth={1.6} />
       <div className="font-semibold text-sm mt-1">{label}</div>
       <div className={active ? "text-xs opacity-80" : "text-xs text-muted-foreground"}>{sub}</div>
-    </div>
+    </button>
   );
 }

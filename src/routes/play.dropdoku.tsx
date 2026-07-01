@@ -527,7 +527,7 @@ function DropdokuPage() {
       </div>
 
       <div className="flex-1 flex items-center justify-center relative">
-        <div className="relative">
+        <div className="relative" ref={boardWrapRef}>
           <Board
             board={board}
             piece={piece}

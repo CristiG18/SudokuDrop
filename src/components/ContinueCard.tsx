@@ -12,57 +12,42 @@ export function ContinueCard() {
   const drop = useGameStore((s) => s.dropdokuSession);
   const classic = useGameStore((s) => s.classicSession);
 
-  // Prefer dropdoku, then classic (most recent startedAt wins if both).
-  const pick =
-    drop && classic
-      ? drop.startedAt > classic.startedAt
-        ? "drop"
-        : "classic"
-      : drop
-        ? "drop"
-        : classic
-          ? "classic"
-          : null;
+  if (!drop && !classic) return null;
 
-  if (!pick) return null;
-
-  if (pick === "drop" && drop) {
-    const elapsed = Math.floor((Date.now() - drop.startedAt) / 1000);
-    return (
-      <Link
-        to="/play/dropdoku"
-        search={{ difficulty: drop.difficulty as never, resume: true }}
-        className="mx-5 mt-4 flex items-center bg-primary text-primary-foreground rounded-2xl p-4 shadow-card active:scale-[0.99] transition"
-      >
-        <Play className="w-5 h-5 mr-3" />
-        <div className="flex-1 text-left">
-          <div className="font-bold">Continuă Sudoku Drop</div>
-          <div className="text-xs opacity-80 capitalize">
-            {drop.difficulty} · {fmt(elapsed)} · {drop.score}p
+  return (
+    <div className="mx-5 mt-4 space-y-2">
+      {drop && (
+        <Link
+          to="/play/dropdoku"
+          search={{ difficulty: drop.difficulty as never, resume: true }}
+          className="flex items-center bg-primary text-primary-foreground rounded-2xl p-4 shadow-card active:scale-[0.99] transition"
+        >
+          <Play className="w-5 h-5 mr-3" />
+          <div className="flex-1 text-left">
+            <div className="font-bold text-sm">Continuă Sudoku Drop</div>
+            <div className="text-xs opacity-80 capitalize">
+              {drop.difficulty} · {fmt(Math.floor((Date.now() - drop.startedAt) / 1000))} · {drop.score}p
+            </div>
           </div>
-        </div>
-        <span className="text-2xl">→</span>
-      </Link>
-    );
-  }
-  if (pick === "classic" && classic) {
-    const elapsed = classic.seconds;
-    return (
-      <Link
-        to="/play/classic"
-        search={{ difficulty: classic.difficulty as never, resume: true }}
-        className="mx-5 mt-4 flex items-center bg-primary text-primary-foreground rounded-2xl p-4 shadow-card active:scale-[0.99] transition"
-      >
-        <Play className="w-5 h-5 mr-3" />
-        <div className="flex-1 text-left">
-          <div className="font-bold">Continuă Sudoku Clasic</div>
-          <div className="text-xs opacity-80 capitalize">
-            {classic.difficulty} · {fmt(elapsed)} · greșeli {classic.mistakes}/3
+          <span className="text-xl">→</span>
+        </Link>
+      )}
+      {classic && (
+        <Link
+          to="/play/classic"
+          search={{ difficulty: classic.difficulty as never, resume: true }}
+          className="flex items-center bg-card border border-border rounded-2xl p-4 shadow-soft active:scale-[0.99] transition"
+        >
+          <Play className="w-5 h-5 mr-3 text-primary" />
+          <div className="flex-1 text-left">
+            <div className="font-bold text-sm">Continuă Sudoku Clasic</div>
+            <div className="text-xs text-muted-foreground capitalize">
+              {classic.difficulty} · {fmt(classic.seconds)} · greșeli {classic.mistakes}/3
+            </div>
           </div>
-        </div>
-        <span className="text-2xl">→</span>
-      </Link>
-    );
-  }
-  return null;
+          <span className="text-xl text-primary">→</span>
+        </Link>
+      )}
+    </div>
+  );
 }

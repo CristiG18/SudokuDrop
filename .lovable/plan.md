@@ -1,104 +1,83 @@
-# Polish pass + Shop / Leaderboard / Skins
+# Fix-uri urgente + Monede + Auth (Phase 3)
 
-Toate modificările sunt frontend (fără backend nou). Magazinul, skinurile și clasamentul rulează pe state local (zustand) cu seed pentru top — gata să fie conectate la Cloud în Faza 3.
+## A. Fix-uri gameplay & UI
 
-## 1. Sudoku Drop — alegere dificultate la „Joacă acum"
+### 1. Bătălie funcțională
+- `battle.tsx`: state local pentru mod selectat (`duel` / `timeattack`) — chip-urile devin butoane reale cu `active` derivat din state.
+- Tier-urile au buton „Joacă · N 🎟" activ când ai destule tichete → navighează la `/play/battle?mode=...&tier=...` (rută nouă simplă bazată pe dropdoku engine, seed fix pt duel).
+- Header afișează `🎟 X` (tichete curente) și `🪙 X` (monede) — mic tooltip la tap pe „i": „Tichetele se câștigă din login zilnic și turnee".
 
-- Pe Home, butonul `Joacă acum` deschide un **bottom-sheet** cu 3 carduri: **Ușor / Normal / Dificil** (descrieri scurte: nr. de seturi din sac).
-- Dacă există `dropdokuSession` activă → primul card devine **„Continuă (Normal · 02:14 · 1240p)"** cu timp scurs + scor.
-- După alegere → `navigate /play/dropdoku?difficulty=...`.
-- Bottom-sheet reutilizabil (`<DifficultySheet/>`) — folosit și mai jos pentru clasic.
+### 2. Continue card pe Home
+- În `index.tsx`, `ContinueCard` apare **doar** dacă `classicSession` sau `dropdokuSession` există.
+- Dacă ambele există → 2 carduri separate stacked (unul pt Drop, unul pt Clasic), fiecare cu buton propriu „Continuă".
 
-## 2. Sudoku Clasic — fix evidențiere, timer/limită, scoring
+### 3. Dropdoku gesturi globale
+- Mut listener-ele swipe/tap din `Board.tsx` pe un wrapper full-screen în `play.dropdoku.tsx` (div `fixed inset-0` la nivel de rută, `pointer-events` doar când helper mode e off).
+- Board păstrează doar interacțiunea pt helperi (tap pe celule).
+- Swipe-down oriunde pe ecran = hard drop; drag stânga/dreapta = mută; tap în zone 30% = shift, 40% centru = rotate.
 
-### Evidențiere
-- În `play.classic.tsx`, highlight-ul pe rând/coloană/box folosea `border` care suprapunea bordurile groase 3×3. Schimb pe **background tint + ring intern** (`bg-primary/8`, `ring-1 ring-inset ring-primary/20`) — bordurile externe și separatorii 3×3 rămân vizibile.
-- Celula selectată: ring intern mai gros, fără să taie marginea tablei.
+### 4. Clasamente — adaugă Clasic
+- `leaderboard.tsx`: tabs principale Dropdoku / Clasic; la Clasic sub-tabs pe dificultate (easy/medium/hard/expert/extreme), fiecare cu top 50 seed + user injectat cu high-score-ul lui pe dificultatea respectivă.
 
-### Cifre rămase (1–9 footer)
-- Card individual mai pronunțat: fundal `bg-accent`, badge cu count în colț, opacitate redusă (`opacity-40 grayscale`) când cifra e completă, ring activ când e cifra selectată. Layout 9 coloane egale, ușor mai înalte.
+### 5. Eveniment lunar — reset & lock
+- `events.tsx`: elimin bifările hardcodate. Progres real citit din store nou `monthlyProgress: Record<string, boolean>` (key = `YYYY-MM-day`).
+- Zilele completate afișează bifă + „Rejucat" disabled (nu se pot rejuca). Ziua curentă e „Joacă", zilele viitoare sunt lock.
+- Reset automat când se schimbă luna.
 
-### Timer + limită + scoring
-- Difficulty → timp maxim: easy 30', medium 25', hard 20', expert 17', extreme 12' (afișat în header).
-- 3 greșeli **sau** depășirea timpului → game over.
-- Scor la final: `base[difficulty] * (timeLeft / totalTime) - mistakes*150 - hintsUsed*100`, minim 0. Salvat în `highScores.classic[difficulty]`.
-- Adăugat în store: `highScores.classic`, `setClassicHighScore`.
-- Game-over modal: scor, timp, „Joacă din nou" / „Înapoi".
+## B. Sistem monede + tichete + calendar login
 
-## 3. Pauză + reluare sesiune
+### Store
+- `game-store.ts`:
+  - `coins: number` (câștigate din turnee + login zilnic).
+  - `tickets: number` (default 3, folosite la battle).
+  - `loginStreak: number`, `lastLoginDate: string` (YYYY-MM-DD).
+  - `claimDailyReward()` — verifică data curentă vs `lastLoginDate`: dacă e o zi nouă consecutivă → streak++, dacă e gap → reset la 1. Recompensă = `10 + min(streak, 7) * 5` monede + 1 tichet la fiecare 3 zile.
+  - `addCoins`, `spendCoins`, `addTickets`, `useTicket`.
 
-### Pauză (clasic + dropdoku solo)
-Sheet cu 3 (sau 4) butoane:
-- **Continuă** (resume)
-- **Restart** (doar solo — clasic & dropdoku)
-- **Meniu principal** (păstrează sesiunea)
-- **Ieși** (șterge sesiunea)
+### UI
+- Componentă `<DailyRewardModal/>` — apare pe home dacă `lastLoginDate !== today`. Grid 7 zile, ziua curentă pulsă, buton „Colectează". Reset vizual la ziua 8.
+- Regula gemuri: **doar achiziții shop** (păstrat). Recompensele in-game (win turneu/battle, daily) → monede + tichete.
+- Shop: adaug secțiune „Cumpără cu monede" pt helperi (alternativă la gemuri). Skinurile rămân doar pe gemuri.
 
-La turnee & 1v1 (`battle`, `tournaments`) → fără Restart, fără păstrare sesiune.
+## C. Phase 3 — Backend (Lovable Cloud)
 
-### Home – „Continuă jocul"
-- Dacă există `classicSession` SAU `dropdokuSession` → deasupra cardurilor carusel apare un card **„Continuă"** prioritar cu:
-  - Mod (Dropdoku / Clasic) + dificultate
-  - Timp scurs (HH:MM)
-  - Tap → reia jocul direct.
-- Butonul mare `Joacă acum` rămâne (deschide difficulty sheet pentru dropdoku nou).
+Enable Lovable Cloud (Supabase managed) pentru:
+1. **Auth cu Google** (Gmail) — buton pe pagina nouă `/auth` + link în `settings.tsx`.
+2. **Profil** (`profiles` table): `id (uuid, FK auth.users)`, `display_name`, `avatar_url`, `created_at`.
+3. **Sync progres**:
+   - Tabel `player_stats`: `user_id`, `diamonds`, `coins`, `tickets`, `login_streak`, `last_login`, `high_scores` (jsonb), `owned_skins` (text[]), `active_skin`.
+   - Server function `syncProfile` — la login, upload state local dacă e mai mare, altfel pull.
+   - Store zustand: `hydrateFromCloud()` + `pushToCloud()` (debounced la modificări).
+4. **Leaderboard global** (opțional în această fază, doar schema):
+   - Tabel `leaderboard_entries`: `user_id`, `mode` (dropdoku/classic), `difficulty`, `score`, `created_at`.
+   - Server function `submitScore` + `getTopScores(mode, difficulty, limit)`.
+   - `leaderboard.tsx` folosește date reale când user e logat, fallback seed dacă nu.
+5. **RLS**: policies standard — user citește/scrie doar propriul rând la `profiles`/`player_stats`; leaderboard SELECT public, INSERT doar own.
+6. Auto-create profile via trigger `handle_new_user`.
 
-## 4. Helper "Cross" badge fix
+## D. Fișiere
 
-`HelperBar` — badge count e deja generic, dar `cross` n-are același styling vizual (probabil tăiat de `overflow`). Verificare: badge poziționat `-top-1 -right-1` cu `z-10`, container `relative` + `overflow-visible`. Aplic fix global pe toate cele 4.
+### Modificate
+- `src/routes/battle.tsx` — state + navigare
+- `src/routes/index.tsx` — continue cards condiționate + daily modal trigger
+- `src/routes/play.dropdoku.tsx` — global gestures wrapper
+- `src/components/game/Board.tsx` — scot gesture-urile de mișcare (doar helperi)
+- `src/routes/leaderboard.tsx` — tabs Dropdoku/Clasic
+- `src/routes/events.tsx` — progres real, lock zile viitoare/completate
+- `src/routes/shop.tsx` — secțiune monede
+- `src/routes/settings.tsx` — buton „Conectează cu Google"
+- `src/store/game-store.ts` — coins/tickets/loginStreak/monthlyProgress + acțiuni
 
-## 5. Rewarded-video pentru helperi
+### Create
+- `src/components/DailyRewardModal.tsx`
+- `src/routes/auth.tsx`
+- `src/routes/play.battle.tsx`
+- `src/lib/cloud-sync.functions.ts` (după enable Cloud)
+- Migration Supabase: `profiles`, `player_stats`, `leaderboard_entries` + trigger + RLS
 
-Când userul tapează un helper la **count 0**:
-- Apare modal `<RewardedHelperModal helper="bomb">`:
-  - Pas 1: **„Vezi un video — primești 1 [helper]"** (gratuit, max 3 vizionări pe meci per helper, tracked în store: `rewardsUsed[matchId][helper]`).
-  - După 3 vizionări: pas 2 devine **„Cumpără 3 [helper] — 100 💎"**.
-- "Video" = simulare locală cu progress bar 5s + fade (fără SDK ads acum, stub `await playRewardedAd()`). Backend Cloud îl va înlocui mai târziu.
-- Recompensă: `addHelpers(helper, 1)` (video) sau `addHelpers(helper, 3)` + `spendDiamonds(100)`.
+## E. În afara scope-ului
+- Plăți reale Stripe (rămâne pt după).
+- SDK rewarded ads real (rămâne stub).
+- Turnee lunare cu premii distribuite automat (schema pregătită, cron ulterior).
 
-## 6. Shop (frontend, fără plăți)
-
-`src/routes/shop.tsx` reactivat:
-- **Tab Diamante**: 4 pachete (100 / 500 / 1200 / 3000) — buton „Cumpără" → toast „În curând (necesită plată)". Disabled pentru moment; pregătit pentru Stripe/Paddle.
-- **Tab Skinuri jucărie**: 4 skin-uri pentru piese dropdoku — `default` (deținut), `glass`, `neon`, `wood`. Cost 300 💎 fiecare, plată cu gemuri locali, `unlockSkin` + `setSkin`.
-- **Tab Helperi**: pachete 3×Hammer/Swap/Bomb/Cross — 100 💎.
-- Card mic „Skin activ" sus.
-- Vizual: carduri cu accent stâng, preview piesă mini.
-
-## 7. Skinuri aplicate
-
-În `Jewel.tsx` — variantă vizuală în funcție de `activeSkin`:
-- `default`: cel actual (pastel disc).
-- `glass`: gradient alb translucid + border subțire.
-- `neon`: fundal închis + glow primary.
-- `wood`: tonuri caramel + textură noise CSS.
-Aplicat pe Board (dropdoku). Nu schimbă logica.
-
-## 8. Leaderboard local (frontend)
-
-`src/routes/leaderboard.tsx`:
-- Tabs: **Dropdoku** / **Clasic** (cu sub-tabs per dificultate la clasic).
-- Top 50 generat seed-static (nume + scoruri credibile), userul curent inserat cu high-score-ul lui și marcat cu badge „Tu".
-- Footer: „Clasamentul real se activează cu Lovable Cloud".
-
-## 9. Tehnic — fișiere atinse
-
-- `src/store/game-store.ts` — `highScores.classic`, `classicSession.startedAt`, `dropdokuSession.startedAt`, `rewardsUsed`, helper counters cross fix.
-- `src/components/DifficultySheet.tsx` (nou) — reutilizabil.
-- `src/components/RewardedHelperModal.tsx` (nou).
-- `src/components/PauseSheet.tsx` (nou) — reutilizat în play.classic & play.dropdoku.
-- `src/components/ContinueCard.tsx` (nou) — afișat pe Home.
-- `src/components/game/Jewel.tsx` — skin variants.
-- `src/components/game/HelperBar.tsx` — badge fix + handler pentru count 0 → open rewarded modal.
-- `src/routes/index.tsx` — Continue card + Joacă acum → DifficultySheet.
-- `src/routes/play.classic.tsx` — timer/limită, scoring, highlight fix, footer counts redesign, pause sheet, rezultat final.
-- `src/routes/play.dropdoku.tsx` — pause sheet, rewarded modal, startedAt persistat.
-- `src/routes/shop.tsx` — implementare completă.
-- `src/routes/leaderboard.tsx` — date locale + user inject.
-- `src/styles.css` — clase tint utilitare dacă lipsesc.
-
-## 10. În afara scope-ului acestei runde
-
-- Plăți reale (Stripe/Paddle) — separat.
-- Backend Cloud (Supabase): clasamente reale, daily, turnee, recompense din ad — următoarea fază.
-- SDK real de rewarded ads — necesită integrare Capacitor.
+Confirmi și încep implementarea? Enable Lovable Cloud automat la pornire.

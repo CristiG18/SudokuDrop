@@ -115,15 +115,20 @@ function Home() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
         <div className="relative">
           <div
-            className="absolute inset-0 rounded-3xl blur-2xl opacity-40"
+            className="absolute inset-0 rounded-3xl blur-3xl opacity-30"
             style={{ background: "var(--color-primary)" }}
           />
-          <div className="relative w-32 h-32 rounded-3xl bg-card border border-border shadow-card flex items-center justify-center">
-            <Blocks className="w-16 h-16 text-primary" strokeWidth={1.4} />
-          </div>
+          <img
+            src={logo}
+            alt="Sudoku Drop logo — grilă 3x3 cu o piesă bijuterie ce cade"
+            width={144}
+            height={144}
+            className="relative w-36 h-36 object-contain drop-shadow-xl"
+          />
         </div>
         <h2 className="display text-4xl font-bold tracking-tight mt-6">Sudoku Drop</h2>
-        <p className="text-sm text-muted-foreground mt-1.5">Piesele cad. Tu completezi.</p>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground mt-1">aka Dropdoku</p>
+        <p className="text-sm text-muted-foreground mt-2">Piesele cad. Tu completezi.</p>
         <Link
           to="/tutorial"
           className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm font-medium text-primary shadow-soft"

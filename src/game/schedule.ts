@@ -49,19 +49,19 @@ export function dailyForDate(date: Date): DailyDifficulty {
 }
 
 // Monthly themes
-export const MONTH_THEMES: Array<{ key: "default" | "ice" | "rose" | "amber"; name: string }> = [
-  { key: "ice", name: "Sapphire Ice" },     // Jan
-  { key: "rose", name: "Rose Amethyst" },   // Feb
-  { key: "default", name: "Spring Mint" },  // Mar
-  { key: "default", name: "Cherry Bloom" }, // Apr
-  { key: "default", name: "Emerald May" },  // May
-  { key: "default", name: "Summer Blue" },  // Jun
-  { key: "amber", name: "Sunset Gold" },    // Jul
-  { key: "amber", name: "Harvest Amber" },  // Aug
-  { key: "default", name: "Autumn Sage" },  // Sep
-  { key: "amber", name: "Halloween" },      // Oct
-  { key: "default", name: "Frost Pine" },   // Nov
-  { key: "ice", name: "Winter Crystal" },   // Dec
+export const MONTH_THEMES: Array<{ key: "emerald" | "ocean" | "rose" | "amber"; name: string }> = [
+  { key: "ocean", name: "Sapphire Ice" },     // Jan
+  { key: "rose", name: "Rose Amethyst" },     // Feb
+  { key: "emerald", name: "Spring Mint" },    // Mar
+  { key: "rose", name: "Cherry Bloom" },      // Apr
+  { key: "emerald", name: "Emerald May" },    // May
+  { key: "ocean", name: "Summer Blue" },      // Jun
+  { key: "amber", name: "Sunset Gold" },      // Jul
+  { key: "amber", name: "Harvest Amber" },    // Aug
+  { key: "emerald", name: "Autumn Sage" },    // Sep
+  { key: "amber", name: "Halloween" },        // Oct
+  { key: "emerald", name: "Frost Pine" },     // Nov
+  { key: "ocean", name: "Winter Crystal" },   // Dec
 ];
 
 export function currentMonthTheme(date = new Date()) {

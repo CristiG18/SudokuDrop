@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/game-store";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ThemePicker } from "@/components/ThemePicker";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Setări — Sudoku Drop" }] }),

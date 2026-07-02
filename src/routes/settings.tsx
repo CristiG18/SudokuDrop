@@ -70,7 +70,8 @@ function SettingsPage() {
       </div>
 
       <div className="mt-4 space-y-3">
-        <Row
+        <ThemePicker />
+
           title="Mod control"
           desc={
             settings.controlMode === "gestures"

@@ -38,11 +38,11 @@ export function createBag(difficulty: Difficulty): number[] {
 export function spawnPiece(bag: number[], pieceIndex: number): Piece {
   const a = bag.pop() ?? 1;
   const b = bag.pop() ?? 1;
-  // Every 12th piece: one half is a joker (0), the other half a number.
+  // Spawn 3 rows above the visible board so the piece falls IN.
   if (pieceIndex > 0 && pieceIndex % 12 === 0) {
     const jokerLeft = Math.random() < 0.5;
     return {
-      r: -1,
+      r: -3,
       c: 4,
       isJoker: true,
       cells: [
@@ -52,7 +52,7 @@ export function spawnPiece(bag: number[], pieceIndex: number): Piece {
     };
   }
   return {
-    r: -1,
+    r: -3,
     c: 4,
     cells: [
       { dr: 0, dc: 0, value: a },

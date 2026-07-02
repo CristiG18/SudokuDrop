@@ -4,7 +4,7 @@ import { persist } from "zustand/middleware";
 export type Helper = "hammer" | "swap" | "boom" | "cross";
 export type ControlMode = "buttons" | "gestures";
 export type Skin = "default" | "glass" | "neon" | "wood";
-export type ThemeKey = "default" | "ice" | "amber" | "rose";
+export type ThemeKey = "emerald" | "amber" | "ocean" | "rose";
 export type ClassicDifficulty = "easy" | "medium" | "hard" | "expert" | "extreme";
 
 export interface ClassicHighScores {

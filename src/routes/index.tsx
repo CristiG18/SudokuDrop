@@ -18,14 +18,16 @@ import { currentMonthTheme, dailyForDate } from "@/game/schedule";
 import { DifficultySheet, type DropDifficulty } from "@/components/DifficultySheet";
 import { ContinueCard } from "@/components/ContinueCard";
 import { DailyRewardModal } from "@/components/DailyRewardModal";
+import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Sudoku Drop — Acasă" },
+      { title: "Sudoku Drop (Dropdoku) — Acasă" },
       {
         name: "description",
-        content: "Sudoku Drop, sudoku clasic, provocări zilnice, evenimente și turnee.",
+        content:
+          "Sudoku Drop, aka Dropdoku — piese care cad într-o grilă 9x9. Zilnice, evenimente, turnee.",
       },
     ],
   }),
@@ -37,7 +39,7 @@ function Home() {
   const coins = useGameStore((s) => s.coins);
   const tickets = useGameStore((s) => s.tickets);
   const streak = useGameStore((s) => s.classicStreak);
-  const setTheme = useGameStore((s) => s.setTheme);
+  const activeTheme = useGameStore((s) => s.activeTheme);
   const month = currentMonthTheme();
   const today = new Date();
   const todayDiff = dailyForDate(today);
@@ -46,12 +48,12 @@ function Home() {
   const navigate = useNavigate();
   const [sheet, setSheet] = useState(false);
 
+  // Apply user's chosen theme (do NOT auto-switch by month — that was jarring).
   useEffect(() => {
-    setTheme(month.key);
     if (typeof document !== "undefined") {
-      document.documentElement.dataset.theme = month.key;
+      document.documentElement.dataset.theme = activeTheme;
     }
-  }, [month.key, setTheme]);
+  }, [activeTheme]);
 
   const pick = (d: DropDifficulty, resume: boolean) => {
     setSheet(false);

@@ -18,14 +18,16 @@ import { currentMonthTheme, dailyForDate } from "@/game/schedule";
 import { DifficultySheet, type DropDifficulty } from "@/components/DifficultySheet";
 import { ContinueCard } from "@/components/ContinueCard";
 import { DailyRewardModal } from "@/components/DailyRewardModal";
+import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Sudoku Drop — Acasă" },
+      { title: "Sudoku Drop (Dropdoku) — Acasă" },
       {
         name: "description",
-        content: "Sudoku Drop, sudoku clasic, provocări zilnice, evenimente și turnee.",
+        content:
+          "Sudoku Drop, aka Dropdoku — piese care cad într-o grilă 9x9. Zilnice, evenimente, turnee.",
       },
     ],
   }),
@@ -37,7 +39,7 @@ function Home() {
   const coins = useGameStore((s) => s.coins);
   const tickets = useGameStore((s) => s.tickets);
   const streak = useGameStore((s) => s.classicStreak);
-  const setTheme = useGameStore((s) => s.setTheme);
+  const activeTheme = useGameStore((s) => s.activeTheme);
   const month = currentMonthTheme();
   const today = new Date();
   const todayDiff = dailyForDate(today);
@@ -46,12 +48,12 @@ function Home() {
   const navigate = useNavigate();
   const [sheet, setSheet] = useState(false);
 
+  // Apply user's chosen theme (do NOT auto-switch by month — that was jarring).
   useEffect(() => {
-    setTheme(month.key);
     if (typeof document !== "undefined") {
-      document.documentElement.dataset.theme = month.key;
+      document.documentElement.dataset.theme = activeTheme;
     }
-  }, [month.key, setTheme]);
+  }, [activeTheme]);
 
   const pick = (d: DropDifficulty, resume: boolean) => {
     setSheet(false);
@@ -113,15 +115,20 @@ function Home() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
         <div className="relative">
           <div
-            className="absolute inset-0 rounded-3xl blur-2xl opacity-40"
+            className="absolute inset-0 rounded-3xl blur-3xl opacity-30"
             style={{ background: "var(--color-primary)" }}
           />
-          <div className="relative w-32 h-32 rounded-3xl bg-card border border-border shadow-card flex items-center justify-center">
-            <Blocks className="w-16 h-16 text-primary" strokeWidth={1.4} />
-          </div>
+          <img
+            src={logo}
+            alt="Sudoku Drop logo — grilă 3x3 cu o piesă bijuterie ce cade"
+            width={144}
+            height={144}
+            className="relative w-36 h-36 object-contain drop-shadow-xl"
+          />
         </div>
         <h2 className="display text-4xl font-bold tracking-tight mt-6">Sudoku Drop</h2>
-        <p className="text-sm text-muted-foreground mt-1.5">Piesele cad. Tu completezi.</p>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground mt-1">aka Dropdoku</p>
+        <p className="text-sm text-muted-foreground mt-2">Piesele cad. Tu completezi.</p>
         <Link
           to="/tutorial"
           className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm font-medium text-primary shadow-soft"

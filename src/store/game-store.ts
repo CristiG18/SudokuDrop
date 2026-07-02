@@ -4,7 +4,7 @@ import { persist } from "zustand/middleware";
 export type Helper = "hammer" | "swap" | "boom" | "cross";
 export type ControlMode = "buttons" | "gestures";
 export type Skin = "default" | "glass" | "neon" | "wood";
-export type ThemeKey = "default" | "ice" | "amber" | "rose";
+export type ThemeKey = "emerald" | "amber" | "ocean" | "rose";
 export type ClassicDifficulty = "easy" | "medium" | "hard" | "expert" | "extreme";
 
 export interface ClassicHighScores {
@@ -69,6 +69,7 @@ interface GameState {
   ownedSkins: Skin[];
   activeSkin: Skin;
   activeTheme: ThemeKey;
+  ownedThemes: ThemeKey[];
   settings: Settings;
   classicStreak: number;
   classicSession: ClassicSession | null;
@@ -133,7 +134,8 @@ export const useGameStore = create<GameState>()(
       helpers: { hammer: 2, swap: 2, boom: 2, cross: 2 },
       ownedSkins: ["default"],
       activeSkin: "default",
-      activeTheme: "default",
+      activeTheme: "emerald",
+      ownedThemes: ["emerald"],
       settings: { autoComplete: true, sound: true, haptics: true, controlMode: "gestures" },
       classicStreak: 0,
       classicSession: null,

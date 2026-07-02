@@ -69,6 +69,7 @@ interface GameState {
   ownedSkins: Skin[];
   activeSkin: Skin;
   activeTheme: ThemeKey;
+  ownedThemes: ThemeKey[];
   settings: Settings;
   classicStreak: number;
   classicSession: ClassicSession | null;

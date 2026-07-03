@@ -559,6 +559,20 @@ function DropdokuPage() {
         </button>
       </header>
 
+      {isTimeAttack && (
+        <div className="px-4 pb-2 flex items-center justify-center">
+          <div
+            className={
+              "soft-card px-5 py-2 text-3xl font-bold tabular-nums " +
+              (remainingAttack <= 10 ? "text-destructive animate-pulse" : "text-primary")
+            }
+          >
+            {fmtMS(remainingAttack)}
+          </div>
+        </div>
+      )}
+
+
       <div className="px-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
         <span>Record {highScore}</span>
         <span>·</span>

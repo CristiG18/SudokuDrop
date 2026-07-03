@@ -40,6 +40,7 @@ export interface DropdokuSession {
   pieceIndex: number;
   bag: number[];
   startedAt: number;
+  seconds: number;
 }
 
 interface Settings {
@@ -215,9 +216,8 @@ export const useGameStore = create<GameState>()(
         const last = get().lastLoginDate;
         if (last === todayISO()) return null;
         const nextStreak = last && isYesterday(last) ? get().loginStreak + 1 : 1;
-        const dayInCycle = ((nextStreak - 1) % 7) + 1;
-        const coins = 10 + Math.min(dayInCycle, 7) * 5;
-        const tickets = dayInCycle % 3 === 0 ? 1 : 0;
+        const { dayInCycle, tickets } = dailyRewardFor(nextStreak);
+        const coins = 20 + Math.min(dayInCycle, 7) * 10;
         return { day: dayInCycle, coins, tickets };
       },
       claimDaily: () => {
@@ -234,6 +234,38 @@ export const useGameStore = create<GameState>()(
         return pending;
       },
     }),
-    { name: "sudoku-drop-store" },
+    {
+      name: "sudoku-drop-store",
+      version: 3,
+      migrate: (persisted: unknown, version) => {
+        const s = (persisted ?? {}) as Partial<GameState>;
+        if (version < 3) {
+          s.activeTheme = "emerald";
+          s.ownedThemes = ["emerald"];
+          s.diamonds = Math.max(s.diamonds ?? 0, 1000);
+          s.tickets = Math.max(s.tickets ?? 0, 1000);
+          s.dropdokuSession = null;
+          s.classicSession = null;
+        }
+        return s as GameState;
+      },
+    },
   ),
 );
+
+// Daily login rewards: alternating 3-day / 4-day cycles, tickets grow by 1 each cycle.
+// Days 1-3 → 1 ticket, 4-7 → 2, 8-10 → 3, 11-14 → 4, 15-17 → 5, 18-21 → 6, ...
+function dailyRewardFor(streakDay: number): { dayInCycle: number; tickets: number } {
+  let remaining = streakDay;
+  let tickets = 1;
+  let cycleLen = 3;
+  let start = 1;
+  while (remaining > cycleLen) {
+    remaining -= cycleLen;
+    start += cycleLen;
+    tickets += 1;
+    cycleLen = cycleLen === 3 ? 4 : 3;
+  }
+  const dayInCycle = ((streakDay - 1) % 7) + 1;
+  return { dayInCycle, tickets };
+}

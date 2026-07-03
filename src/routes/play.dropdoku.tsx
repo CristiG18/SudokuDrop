@@ -39,6 +39,8 @@ export const Route = createFileRoute("/play/dropdoku")({
   validateSearch: (s: Record<string, unknown>) => ({
     difficulty: (s.difficulty as Difficulty) || "normal",
     resume: s.resume === true || s.resume === "true" ? true : undefined,
+    mode: s.mode === "timeattack" ? ("timeattack" as const) : undefined,
+    seconds: typeof s.seconds === "number" ? s.seconds : s.seconds ? Number(s.seconds) : undefined,
   }),
 });
 
@@ -74,7 +76,9 @@ function previewForHelper(
 }
 
 function DropdokuPage() {
-  const { difficulty, resume } = Route.useSearch();
+  const { difficulty, resume, mode, seconds: attackSeconds } = Route.useSearch();
+  const isTimeAttack = mode === "timeattack";
+  const totalAttackSecs = isTimeAttack ? Math.max(30, attackSeconds ?? 120) : 0;
   const navigate = useNavigate();
 
   const helpers = useGameStore((s) => s.helpers);
@@ -90,7 +94,7 @@ function DropdokuPage() {
   const setSetting = useGameStore((s) => s.setSetting);
 
   const initial = useMemo(() => {
-    if (resume && savedSession && savedSession.difficulty === difficulty) {
+    if (!isTimeAttack && resume && savedSession && savedSession.difficulty === difficulty) {
       return {
         board: savedSession.board as BoardT,
         bag: savedSession.bag.slice(),
@@ -98,6 +102,7 @@ function DropdokuPage() {
         score: savedSession.score,
         totalClears: savedSession.totalClears,
         startedAt: savedSession.startedAt,
+        seconds: savedSession.seconds ?? 0,
       };
     }
     return {
@@ -107,6 +112,7 @@ function DropdokuPage() {
       score: 0,
       totalClears: 0,
       startedAt: Date.now(),
+      seconds: 0,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -134,10 +140,45 @@ function DropdokuPage() {
   const speed = Math.max(220, baseSpeed - totalClears * 8);
 
   const startedAtRef = useRef(initial.startedAt);
+  const [secondsPlayed, setSecondsPlayed] = useState(initial.seconds);
   const [rewardHelper, setRewardHelper] = useState<Helper | null>(null);
 
+  // Tick the play timer only while actively playing.
   useEffect(() => {
-    if (gameOver) return;
+    if (paused || backOpen || gameOver || helperMode) return;
+    const id = setInterval(() => setSecondsPlayed((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [paused, backOpen, gameOver, helperMode]);
+
+  // Pause automatically when the tab/app is hidden so the game doesn't run in background.
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "hidden") setPaused(true);
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  // Time Attack countdown
+  const remainingAttack = isTimeAttack ? Math.max(0, totalAttackSecs - secondsPlayed) : 0;
+  useEffect(() => {
+    if (!isTimeAttack || gameOver) return;
+    if (remainingAttack === 0) {
+      setGameOver(true);
+      setHighScore(score);
+      setSession(null);
+      if (soundOn) sfx.fail();
+      return;
+    }
+    // Vibrations: every full minute, and every second in last 10s.
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      if (remainingAttack <= 10) navigator.vibrate(40);
+      else if (remainingAttack > 0 && remainingAttack % 60 === 0) navigator.vibrate([60, 40, 60]);
+    }
+  }, [remainingAttack, isTimeAttack, gameOver, score, setHighScore, setSession, soundOn]);
+
+  useEffect(() => {
+    if (gameOver || isTimeAttack) return;
     setSession({
       difficulty,
       board,
@@ -146,15 +187,19 @@ function DropdokuPage() {
       score,
       totalClears,
       startedAt: startedAtRef.current,
+      seconds: secondsPlayed,
     });
-  }, [difficulty, board, bag, pieceIndex, score, totalClears, gameOver, setSession]);
+  }, [difficulty, board, bag, pieceIndex, score, totalClears, gameOver, isTimeAttack, secondsPlayed, setSession]);
 
   useEffect(() => {
     if (piece || gameOver) return;
     let nextBag = bag;
     if (nextBag.length < 2) nextBag = [...nextBag, ...createBag(difficulty)];
     const p = spawnPiece(nextBag, pieceIndex);
-    if (collides(board, p, 1, 0) && collides(board, p, 0, 0)) {
+    // Game over: if this piece, translated so its top row is 0, would already
+    // overlap the stack, there's no room left for new pieces.
+    const atTop: Piece = { ...p, r: 0 };
+    if (collides(board, atTop, 0, 0)) {
       setGameOver(true);
       setHighScore(score);
       setSession(null);
@@ -482,11 +527,16 @@ function DropdokuPage() {
     setPiece(null);
     setScore(0);
     setTotalClears(0);
+    setSecondsPlayed(0);
     setGameOver(false);
     setUsedFreeRevive(false);
     setBackOpen(false);
     setPaused(false);
   };
+
+  const fmtMS = (s: number) =>
+    `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
 
   return (
     <div className="min-h-screen flex flex-col" onClick={unlockAudio}>
@@ -508,6 +558,20 @@ function DropdokuPage() {
           {paused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
         </button>
       </header>
+
+      {isTimeAttack && (
+        <div className="px-4 pb-2 flex items-center justify-center">
+          <div
+            className={
+              "soft-card px-5 py-2 text-3xl font-bold tabular-nums " +
+              (remainingAttack <= 10 ? "text-destructive animate-pulse" : "text-primary")
+            }
+          >
+            {fmtMS(remainingAttack)}
+          </div>
+        </div>
+      )}
+
 
       <div className="px-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
         <span>Record {highScore}</span>

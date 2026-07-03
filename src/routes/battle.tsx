@@ -18,8 +18,16 @@ const TIERS = [
   { id: "master", name: "Maestru", ticket: 5, prize: 1000, prizeText: "1000 🪙 + skin exclusiv" },
 ];
 
+const ATTACK_TIMES = [
+  { min: 2, label: "2 min" },
+  { min: 3, label: "3 min" },
+  { min: 5, label: "5 min" },
+  { min: 10, label: "10 min" },
+];
+
 function Battle() {
   const [mode, setMode] = useState<Mode>("duel");
+  const [attackMin, setAttackMin] = useState<number>(3);
   const [showInfo, setShowInfo] = useState(false);
   const tickets = useGameStore((s) => s.tickets);
   const coins = useGameStore((s) => s.coins);
@@ -29,17 +37,27 @@ function Battle() {
   const month = new Date().toLocaleDateString("ro-RO", { month: "long" });
 
   const play = (tier: typeof TIERS[number]) => {
-    if (tickets < tier.ticket) {
-      toast.error(`Ai nevoie de ${tier.ticket} tichete. Ai ${tickets}.`);
+    // Time Attack: always 1 ticket, regardless of tier or duration.
+    const cost = mode === "timeattack" ? 1 : tier.ticket;
+    if (tickets < cost) {
+      toast.error(`Ai nevoie de ${cost} tichete. Ai ${tickets}.`);
       return;
     }
-    for (let i = 0; i < tier.ticket; i++) useTicket();
-    // Simulated: win 60% for demo — grant coins immediately
-    // Route into dropdoku with a fixed seed for the duel; real matchmaking comes later.
-    toast.success(`Meci ${tier.name} pornit · ${tier.ticket} 🎟`);
-    // Give a small preview: award half prize on completion (real system phase 4).
+    for (let i = 0; i < cost; i++) useTicket();
+    toast.success(`Meci ${tier.name} pornit · ${cost} 🎟`);
     addCoins(Math.round(tier.prize * 0.5));
-    navigate({ to: "/play/dropdoku", search: { difficulty: "normal" } });
+    if (mode === "timeattack") {
+      navigate({
+        to: "/play/dropdoku",
+        search: {
+          difficulty: "normal",
+          mode: "timeattack" as const,
+          seconds: attackMin * 60,
+        },
+      });
+    } else {
+      navigate({ to: "/play/dropdoku", search: { difficulty: "normal" } });
+    }
   };
 
   return (
@@ -79,12 +97,12 @@ function Battle() {
           <Swords className="w-10 h-10 text-primary" strokeWidth={1.4} />
         </div>
         <h2 className="text-xl font-bold">
-          {mode === "duel" ? "Survival Duel" : "Time Attack"}
+          {mode === "duel" ? "Survival Duel" : `Time Attack · ${attackMin} min`}
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
           {mode === "duel"
             ? "Joacă pe același seed. Cel mai mare scor câștigă."
-            : "2 minute pe ceas. Scor maxim câștigă."}
+            : `${attackMin} minute pe ceas. Scor maxim câștigă. Cost: 1 🎟.`}
         </p>
       </div>
 
@@ -95,7 +113,7 @@ function Battle() {
         <ModeChip
           Icon={Clock}
           label="Time Attack"
-          sub="2 min"
+          sub="alege timpul"
           active={mode === "timeattack"}
           onClick={() => setMode("timeattack")}
         />
@@ -108,12 +126,39 @@ function Battle() {
         />
       </div>
 
+      {mode === "timeattack" && (
+        <>
+          <h3 className="mt-5 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Durată
+          </h3>
+          <div className="grid grid-cols-4 gap-2">
+            {ATTACK_TIMES.map((t) => (
+              <button
+                key={t.min}
+                type="button"
+                onClick={() => setAttackMin(t.min)}
+                className={
+                  "rounded-2xl py-2.5 text-sm font-semibold " +
+                  (attackMin === t.min
+                    ? "bg-primary text-primary-foreground shadow-card"
+                    : "bg-card border border-border text-muted-foreground")
+                }
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+
       <h3 className="mt-6 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         Tier-uri
       </h3>
       <div className="space-y-2.5">
         {TIERS.map((t) => {
-          const canPlay = tickets >= t.ticket;
+          const cost = mode === "timeattack" ? 1 : t.ticket;
+          const canPlay = tickets >= cost;
           return (
             <div
               key={t.id}
@@ -131,7 +176,7 @@ function Battle() {
                 disabled={!canPlay}
                 className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 flex items-center gap-1"
               >
-                Joacă · {t.ticket} <Ticket className="w-3.5 h-3.5" />
+                Joacă · {cost} <Ticket className="w-3.5 h-3.5" />
               </button>
             </div>
           );

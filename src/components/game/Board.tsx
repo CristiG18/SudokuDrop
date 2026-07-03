@@ -141,15 +141,68 @@ export function Board({
     drag.current = null;
   };
 
+  // Piece cells that are still above the visible board (r < 0) — render as
+  // a translucent preview overlay so the player can plan the landing spot.
+  const abovePieceCells = piece
+    ? piece.cells
+        .map((cell) => ({
+          r: piece.r + cell.dr,
+          c: piece.c + cell.dc,
+          value: cell.value,
+        }))
+        .filter((p) => p.r < 0 && p.c >= 0 && p.c < COLS)
+    : [];
+  const previewStripRows = 3;
+  const previewStripHeight = cellSize * previewStripRows;
+
   return (
     <div
-      className="relative bg-card rounded-2xl p-2 shadow-soft"
-      style={{ width: inner + 16, height: inner + 16, touchAction: "none" }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
+      className="relative"
+      style={{ width: inner + 16 }}
     >
+      {/* Preview strip above the board — shows the piece before it enters */}
+      <div
+        className="relative mx-auto"
+        style={{
+          width: inner + 16,
+          height: previewStripHeight,
+          padding: "0 8px",
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          className="relative"
+          style={{ width: inner, height: previewStripHeight }}
+        >
+          {abovePieceCells.map((p, i) => {
+            const rowFromTop = previewStripRows + p.r; // p.r is negative (-3..-1)
+            return (
+              <div
+                key={`above-${i}`}
+                className="absolute flex items-center justify-center rounded-md"
+                style={{
+                  left: p.c * cellSize,
+                  top: rowFromTop * cellSize,
+                  width: cellSize,
+                  height: cellSize,
+                  opacity: 0.55 + rowFromTop * 0.12,
+                }}
+              >
+                <Jewel value={p.value} size={cellSize - 4} popping={false} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div
+        className="relative bg-card rounded-2xl p-2 shadow-soft"
+        style={{ width: inner + 16, height: inner + 16, touchAction: "none" }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
       <div
         className="grid relative bg-board rounded-md overflow-hidden"
         style={{
@@ -203,6 +256,7 @@ export function Board({
             );
           }),
         )}
+      </div>
       </div>
     </div>
   );

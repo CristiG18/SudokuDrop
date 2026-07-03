@@ -527,11 +527,16 @@ function DropdokuPage() {
     setPiece(null);
     setScore(0);
     setTotalClears(0);
+    setSecondsPlayed(0);
     setGameOver(false);
     setUsedFreeRevive(false);
     setBackOpen(false);
     setPaused(false);
   };
+
+  const fmtMS = (s: number) =>
+    `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
 
   return (
     <div className="min-h-screen flex flex-col" onClick={unlockAudio}>

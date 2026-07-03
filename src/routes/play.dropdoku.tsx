@@ -140,10 +140,45 @@ function DropdokuPage() {
   const speed = Math.max(220, baseSpeed - totalClears * 8);
 
   const startedAtRef = useRef(initial.startedAt);
+  const [secondsPlayed, setSecondsPlayed] = useState(initial.seconds);
   const [rewardHelper, setRewardHelper] = useState<Helper | null>(null);
 
+  // Tick the play timer only while actively playing.
   useEffect(() => {
-    if (gameOver) return;
+    if (paused || backOpen || gameOver || helperMode) return;
+    const id = setInterval(() => setSecondsPlayed((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [paused, backOpen, gameOver, helperMode]);
+
+  // Pause automatically when the tab/app is hidden so the game doesn't run in background.
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "hidden") setPaused(true);
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  // Time Attack countdown
+  const remainingAttack = isTimeAttack ? Math.max(0, totalAttackSecs - secondsPlayed) : 0;
+  useEffect(() => {
+    if (!isTimeAttack || gameOver) return;
+    if (remainingAttack === 0) {
+      setGameOver(true);
+      setHighScore(score);
+      setSession(null);
+      if (soundOn) sfx.fail();
+      return;
+    }
+    // Vibrations: every full minute, and every second in last 10s.
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      if (remainingAttack <= 10) navigator.vibrate(40);
+      else if (remainingAttack > 0 && remainingAttack % 60 === 0) navigator.vibrate([60, 40, 60]);
+    }
+  }, [remainingAttack, isTimeAttack, gameOver, score, setHighScore, setSession, soundOn]);
+
+  useEffect(() => {
+    if (gameOver || isTimeAttack) return;
     setSession({
       difficulty,
       board,
@@ -152,15 +187,19 @@ function DropdokuPage() {
       score,
       totalClears,
       startedAt: startedAtRef.current,
+      seconds: secondsPlayed,
     });
-  }, [difficulty, board, bag, pieceIndex, score, totalClears, gameOver, setSession]);
+  }, [difficulty, board, bag, pieceIndex, score, totalClears, gameOver, isTimeAttack, secondsPlayed, setSession]);
 
   useEffect(() => {
     if (piece || gameOver) return;
     let nextBag = bag;
     if (nextBag.length < 2) nextBag = [...nextBag, ...createBag(difficulty)];
     const p = spawnPiece(nextBag, pieceIndex);
-    if (collides(board, p, 1, 0) && collides(board, p, 0, 0)) {
+    // Game over: if this piece, translated so its top row is 0, would already
+    // overlap the stack, there's no room left for new pieces.
+    const atTop: Piece = { ...p, r: 0 };
+    if (collides(board, atTop, 0, 0)) {
       setGameOver(true);
       setHighScore(score);
       setSession(null);

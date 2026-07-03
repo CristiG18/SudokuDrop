@@ -39,6 +39,8 @@ export const Route = createFileRoute("/play/dropdoku")({
   validateSearch: (s: Record<string, unknown>) => ({
     difficulty: (s.difficulty as Difficulty) || "normal",
     resume: s.resume === true || s.resume === "true" ? true : undefined,
+    mode: s.mode === "timeattack" ? ("timeattack" as const) : undefined,
+    seconds: typeof s.seconds === "number" ? s.seconds : s.seconds ? Number(s.seconds) : undefined,
   }),
 });
 
@@ -74,7 +76,9 @@ function previewForHelper(
 }
 
 function DropdokuPage() {
-  const { difficulty, resume } = Route.useSearch();
+  const { difficulty, resume, mode, seconds: attackSeconds } = Route.useSearch();
+  const isTimeAttack = mode === "timeattack";
+  const totalAttackSecs = isTimeAttack ? Math.max(30, attackSeconds ?? 120) : 0;
   const navigate = useNavigate();
 
   const helpers = useGameStore((s) => s.helpers);
@@ -90,7 +94,7 @@ function DropdokuPage() {
   const setSetting = useGameStore((s) => s.setSetting);
 
   const initial = useMemo(() => {
-    if (resume && savedSession && savedSession.difficulty === difficulty) {
+    if (!isTimeAttack && resume && savedSession && savedSession.difficulty === difficulty) {
       return {
         board: savedSession.board as BoardT,
         bag: savedSession.bag.slice(),
@@ -98,6 +102,7 @@ function DropdokuPage() {
         score: savedSession.score,
         totalClears: savedSession.totalClears,
         startedAt: savedSession.startedAt,
+        seconds: savedSession.seconds ?? 0,
       };
     }
     return {
@@ -107,6 +112,7 @@ function DropdokuPage() {
       score: 0,
       totalClears: 0,
       startedAt: Date.now(),
+      seconds: 0,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

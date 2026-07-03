@@ -26,7 +26,7 @@ export function ContinueCard() {
           <div className="flex-1 text-left">
             <div className="font-bold text-sm">Continuă Sudoku Drop</div>
             <div className="text-xs opacity-80 capitalize">
-              {drop.difficulty} · {fmt(Math.floor((Date.now() - drop.startedAt) / 1000))} · {drop.score}p
+              {drop.difficulty} · {fmt(drop.seconds ?? 0)} · {drop.score}p
             </div>
           </div>
           <span className="text-xl">→</span>

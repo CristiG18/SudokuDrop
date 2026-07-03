@@ -157,7 +157,8 @@ function Battle() {
       </h3>
       <div className="space-y-2.5">
         {TIERS.map((t) => {
-          const canPlay = tickets >= t.ticket;
+          const cost = mode === "timeattack" ? 1 : t.ticket;
+          const canPlay = tickets >= cost;
           return (
             <div
               key={t.id}
@@ -175,7 +176,7 @@ function Battle() {
                 disabled={!canPlay}
                 className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 flex items-center gap-1"
               >
-                Joacă · {t.ticket} <Ticket className="w-3.5 h-3.5" />
+                Joacă · {cost} <Ticket className="w-3.5 h-3.5" />
               </button>
             </div>
           );

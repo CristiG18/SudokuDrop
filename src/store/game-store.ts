@@ -52,6 +52,8 @@ interface Settings {
 
 type RewardsUsed = Partial<Record<Helper, number>>;
 
+const DEFAULT_HELPERS: Record<Helper, number> = { hammer: 2, swap: 2, boom: 2, cross: 2 };
+
 export interface DailyClaim {
   day: number; // 1..7
   coins: number;
@@ -132,7 +134,7 @@ export const useGameStore = create<GameState>()(
         dropdoku: 0,
         classic: { easy: 0, medium: 0, hard: 0, expert: 0, extreme: 0 },
       },
-      helpers: { hammer: 2, swap: 2, boom: 2, cross: 2 },
+      helpers: DEFAULT_HELPERS,
       ownedSkins: ["default"],
       activeSkin: "default",
       activeTheme: "emerald",
@@ -160,10 +162,16 @@ export const useGameStore = create<GameState>()(
         set({ tickets: get().tickets - 1 });
         return true;
       },
-      addHelpers: (h, n) => set({ helpers: { ...get().helpers, [h]: get().helpers[h] + n } }),
+      addHelpers: (h, n) => {
+        const current = get().helpers[h];
+        const safeCurrent = Number.isFinite(current) ? current : 0;
+        set({ helpers: { ...get().helpers, [h]: safeCurrent + n } });
+      },
       useHelper: (h) => {
-        if (get().helpers[h] <= 0) return false;
-        set({ helpers: { ...get().helpers, [h]: get().helpers[h] - 1 } });
+        const current = get().helpers[h];
+        const safeCurrent = Number.isFinite(current) ? current : 0;
+        if (safeCurrent <= 0) return false;
+        set({ helpers: { ...get().helpers, [h]: safeCurrent - 1 } });
         return true;
       },
       setDropdokuHighScore: (score) => {
@@ -236,7 +244,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 3,
+      version: 4,
       migrate: (persisted: unknown, version) => {
         const s = (persisted ?? {}) as Partial<GameState>;
         if (version < 3) {
@@ -246,6 +254,14 @@ export const useGameStore = create<GameState>()(
           s.tickets = Math.max(s.tickets ?? 0, 1000);
           s.dropdokuSession = null;
           s.classicSession = null;
+        }
+        if (version < 4) {
+          const previous = s.helpers ?? DEFAULT_HELPERS;
+          s.helpers = { ...DEFAULT_HELPERS };
+          (Object.keys(DEFAULT_HELPERS) as Helper[]).forEach((h) => {
+            const value = previous[h];
+            s.helpers![h] = Number.isFinite(value) ? value : DEFAULT_HELPERS[h];
+          });
         }
         return s as GameState;
       },

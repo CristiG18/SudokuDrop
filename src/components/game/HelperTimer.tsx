@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface HelperTimerProps {
   seconds: number;
@@ -9,6 +9,9 @@ interface HelperTimerProps {
 
 export function HelperTimer({ seconds, onExpire, onCancel, label }: HelperTimerProps) {
   const [remaining, setRemaining] = useState(seconds);
+  const onExpireRef = useRef(onExpire);
+
+  onExpireRef.current = onExpire;
 
   useEffect(() => {
     setRemaining(seconds);
@@ -17,13 +20,13 @@ export function HelperTimer({ seconds, onExpire, onCancel, label }: HelperTimerP
       const left = seconds - (Date.now() - start) / 1000;
       if (left <= 0) {
         clearInterval(id);
-        onExpire();
+        onExpireRef.current();
       } else {
         setRemaining(left);
       }
     }, 100);
     return () => clearInterval(id);
-  }, [seconds, onExpire]);
+  }, [seconds]);
 
   const pct = Math.max(0, (remaining / seconds) * 100);
 

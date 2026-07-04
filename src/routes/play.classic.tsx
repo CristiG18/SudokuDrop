@@ -14,11 +14,20 @@ import { PauseSheet } from "@/components/PauseSheet";
 export const Route = createFileRoute("/play/classic")({
   head: () => ({ meta: [{ title: "Sudoku Clasic — joc" }] }),
   component: ClassicGame,
-  validateSearch: (s: Record<string, unknown>) => ({
-    difficulty: (s.difficulty as SudokuDifficulty) || "medium",
-    seed: typeof s.seed === "number" ? (s.seed as number) : undefined,
-    resume: s.resume === true || s.resume === "true" ? true : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>) => {
+    const rawSeed = s.seed;
+    const parsedSeed =
+      typeof rawSeed === "number"
+        ? rawSeed
+        : typeof rawSeed === "string"
+          ? Number(rawSeed)
+          : undefined;
+    return {
+      difficulty: (s.difficulty as SudokuDifficulty) || "medium",
+      seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
+      resume: s.resume === true || s.resume === "true" ? true : undefined,
+    };
+  },
 });
 
 // Maximum allowed time per difficulty (seconds). Hit it and you lose.
@@ -77,7 +86,7 @@ function ClassicGame() {
         startedAt: session.startedAt,
       };
     }
-    const s = seed ?? Date.now();
+    const s = seed ?? 1;
     const { puzzle, solution } = generatePuzzle(difficulty, s);
     const fixed = puzzle.map((row) => row.map((v) => v !== null));
     return {
@@ -297,10 +306,7 @@ function ClassicGame() {
     return c;
   }, [grid]);
 
-  const cellSize = useMemo(() => {
-    if (typeof window === "undefined") return 38;
-    return Math.min(40, Math.floor((window.innerWidth - 24) / 9));
-  }, []);
+  const cellSize = 38;
   const inner = cellSize * 9;
   const remaining = Math.max(0, limit - seconds);
   const time = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;

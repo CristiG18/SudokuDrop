@@ -56,7 +56,9 @@ function ClassicPicker() {
         {LEVELS.map((l) => (
           <button
             key={l.key}
-            onClick={() => navigate({ to: "/play/classic", search: { difficulty: l.key } })}
+            onClick={() =>
+              navigate({ to: "/play/classic", search: { difficulty: l.key, seed: Date.now() } })
+            }
             className="w-full flex items-center bg-card border border-border rounded-2xl p-4 shadow-soft active:scale-[0.99] transition"
           >
             <span className="w-1.5 h-10 rounded-full bg-primary mr-4" />

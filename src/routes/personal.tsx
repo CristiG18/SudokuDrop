@@ -11,6 +11,10 @@ function Personal() {
   const diamonds = useGameStore((s) => s.diamonds);
   const helpers = useGameStore((s) => s.helpers);
   const high = useGameStore((s) => s.highScores.dropdoku);
+  const helperCount = (key: keyof typeof helpers) => {
+    const value = helpers[key];
+    return typeof value === "number" && Number.isFinite(value) ? value : 0;
+  };
 
   return (
     <div className="min-h-screen px-5 pt-5">
@@ -35,9 +39,9 @@ function Personal() {
         Helperi
       </h3>
       <div className="bg-card border border-border rounded-2xl p-4 shadow-soft grid grid-cols-3 text-center divide-x divide-border">
-        <div><div className="font-bold text-lg">{helpers.hammer}</div><div className="text-xs text-muted-foreground">Hammer</div></div>
-        <div><div className="font-bold text-lg">{helpers.swap}</div><div className="text-xs text-muted-foreground">Swap</div></div>
-        <div><div className="font-bold text-lg">{helpers.boom}</div><div className="text-xs text-muted-foreground">Boom</div></div>
+        <div><div className="font-bold text-lg">{helperCount("hammer")}</div><div className="text-xs text-muted-foreground">Hammer</div></div>
+        <div><div className="font-bold text-lg">{helperCount("swap")}</div><div className="text-xs text-muted-foreground">Swap</div></div>
+        <div><div className="font-bold text-lg">{helperCount("boom")}</div><div className="text-xs text-muted-foreground">Boom</div></div>
       </div>
 
       <div className="mt-6 space-y-2">

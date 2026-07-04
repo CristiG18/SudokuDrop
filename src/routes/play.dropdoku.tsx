@@ -138,6 +138,7 @@ function DropdokuPage() {
 
   const baseSpeed = difficulty === "easy" ? 900 : difficulty === "normal" ? 700 : 520;
   const speed = Math.max(220, baseSpeed - totalClears * 8);
+  const gravityNextAtRef = useRef(Date.now() + speed);
 
   const startedAtRef = useRef(initial.startedAt);
   const [secondsPlayed, setSecondsPlayed] = useState(initial.seconds);
@@ -207,6 +208,7 @@ function DropdokuPage() {
       return;
     }
     setPiece(p);
+    gravityNextAtRef.current = Date.now() + speed;
     setBag(nextBag);
     setPieceIndex((i) => i + 1);
   }, [
@@ -220,6 +222,7 @@ function DropdokuPage() {
     setHighScore,
     setSession,
     soundOn,
+    speed,
   ]);
 
   const cellSize = useMemo(() => {
@@ -274,20 +277,40 @@ function DropdokuPage() {
     [totalClears, soundOn, spawnPopup],
   );
 
+  const boardRef = useRef(board);
+  const pieceRef = useRef(piece);
+  const speedRef = useRef(speed);
+  const soundOnRef = useRef(soundOn);
+  const resolveClearsRef = useRef(resolveClears);
+
+  boardRef.current = board;
+  pieceRef.current = piece;
+  speedRef.current = speed;
+  soundOnRef.current = soundOn;
+  resolveClearsRef.current = resolveClears;
+
   useEffect(() => {
-    if (!piece || paused || backOpen || gameOver || helperMode) return;
+    if (paused || backOpen || gameOver || helperMode) {
+      gravityNextAtRef.current = Date.now() + speedRef.current;
+      return;
+    }
     const id = setInterval(() => {
+      if (!pieceRef.current) return;
+      const now = Date.now();
+      if (now < gravityNextAtRef.current) return;
+      gravityNextAtRef.current = now + speedRef.current;
       setPiece((cur) => {
         if (!cur) return cur;
-        if (!collides(board, cur, 1, 0)) return { ...cur, r: cur.r + 1 };
-        const locked = lockPiece(board, cur);
-        if (soundOn) sfx.drop();
-        resolveClears(locked);
+        const latestBoard = boardRef.current;
+        if (!collides(latestBoard, cur, 1, 0)) return { ...cur, r: cur.r + 1 };
+        const locked = lockPiece(latestBoard, cur);
+        if (soundOnRef.current) sfx.drop();
+        resolveClearsRef.current(locked);
         return null;
       });
-    }, speed);
+    }, 50);
     return () => clearInterval(id);
-  }, [piece, board, paused, backOpen, gameOver, helperMode, speed, resolveClears, soundOn]);
+  }, [paused, backOpen, gameOver, helperMode]);
 
   const moveBy = (dc: number) => {
     if (!piece || paused || gameOver || helperMode) return;
@@ -687,6 +710,7 @@ function DropdokuPage() {
 
       {helperMode && (
         <HelperTimer
+          key={`${helperMode}-${helperPresses}`}
           seconds={helperSeconds}
           label={
             helperMode === "swap"

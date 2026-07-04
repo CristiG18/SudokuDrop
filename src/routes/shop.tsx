@@ -78,6 +78,10 @@ function ShopPage() {
   const spend = useGameStore((s) => s.spendDiamonds);
   const addHelpers = useGameStore((s) => s.addHelpers);
   const helpers = useGameStore((s) => s.helpers);
+  const helperCount = (helper: Helper) => {
+    const value = helpers[helper];
+    return typeof value === "number" && Number.isFinite(value) ? value : 0;
+  };
 
   const buySkin = (s: typeof SKINS[number]) => {
     if (ownedSkins.includes(s.id)) {
@@ -204,7 +208,7 @@ function ShopPage() {
               <div className="flex-1 text-left">
                 <div className="font-semibold">3× {p.label}</div>
                 <div className="text-xs text-muted-foreground">
-                  Stoc curent: {helpers[p.helper]}
+                  Stoc curent: {helperCount(p.helper)}
                 </div>
               </div>
               <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold inline-flex items-center gap-1">

@@ -260,7 +260,8 @@ export const useGameStore = create<GameState>()(
           s.helpers = { ...DEFAULT_HELPERS };
           (Object.keys(DEFAULT_HELPERS) as Helper[]).forEach((h) => {
             const value = previous[h];
-            s.helpers![h] = Number.isFinite(value) ? value : DEFAULT_HELPERS[h];
+            s.helpers![h] =
+              typeof value === "number" && Number.isFinite(value) ? value : DEFAULT_HELPERS[h];
           });
         }
         return s as GameState;

@@ -23,7 +23,8 @@ export function HelperBar({ counts, active, onPick, onEmpty, disabled }: HelperB
       {(Object.keys(META) as Helper[]).map((h) => {
         const { label, Icon } = META[h];
         const isActive = active === h;
-        const count = counts[h] ?? 0;
+        const rawCount = counts[h];
+        const count = typeof rawCount === "number" && Number.isFinite(rawCount) ? rawCount : 0;
         const empty = count <= 0;
         return (
           <button

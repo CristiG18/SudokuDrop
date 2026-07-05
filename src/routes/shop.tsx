@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Gem, Check } from "lucide-react";
 import { useState } from "react";
 import { useGameStore, type Helper, type Skin } from "@/store/game-store";
+import { skinStyle } from "@/components/game/Jewel";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/shop")({
@@ -18,11 +19,17 @@ const DIAMOND_PACKS = [
   { n: 3000, price: "€17,99" },
 ];
 
-const SKINS: Array<{ id: Skin; name: string; cost: number; preview: string }> = [
-  { id: "default", name: "Pastel", cost: 0, preview: "default" },
-  { id: "glass", name: "Sticlă", cost: 300, preview: "glass" },
-  { id: "neon", name: "Neon", cost: 500, preview: "neon" },
-  { id: "wood", name: "Lemn", cost: 400, preview: "wood" },
+const SKINS: Array<{ id: Skin; name: string; cost: number }> = [
+  { id: "default", name: "Pastel", cost: 0 },
+  { id: "glass", name: "Sticlă", cost: 300 },
+  { id: "neon", name: "Neon", cost: 500 },
+  { id: "wood", name: "Lemn", cost: 400 },
+  { id: "marble", name: "Marmură", cost: 450 },
+  { id: "sunset", name: "Apus", cost: 550 },
+  { id: "galaxy", name: "Galaxie", cost: 700 },
+  { id: "candy", name: "Bomboană", cost: 400 },
+  { id: "ice", name: "Gheață", cost: 500 },
+  { id: "retro", name: "Retro", cost: 600 },
 ];
 
 const HELPER_PACKS: Array<{ helper: Helper; label: string }> = [
@@ -32,32 +39,8 @@ const HELPER_PACKS: Array<{ helper: Helper; label: string }> = [
   { helper: "cross", label: "Cruce" },
 ];
 
-function PreviewBlock({ kind }: { kind: string }) {
-  const style: React.CSSProperties = (() => {
-    if (kind === "glass")
-      return {
-        background:
-          "linear-gradient(160deg, rgba(255,255,255,0.95), color-mix(in oklab, var(--color-primary) 12%, white))",
-        border: "1px solid color-mix(in oklab, var(--color-primary) 30%, white)",
-        color: "var(--color-primary)",
-      };
-    if (kind === "neon")
-      return {
-        background: "oklch(0.22 0.02 250)",
-        color: "color-mix(in oklab, var(--color-primary) 80%, white)",
-        boxShadow: "0 0 12px color-mix(in oklab, var(--color-primary) 50%, transparent)",
-      };
-    if (kind === "wood")
-      return {
-        background: "linear-gradient(160deg, #f5d9a8, #d6a86b)",
-        color: "#3a2410",
-      };
-    return {
-      background: "var(--color-card)",
-      border: "1px solid var(--color-border)",
-      color: "var(--color-cell-user)",
-    };
-  })();
+function PreviewBlock({ kind }: { kind: Skin }) {
+  const style = skinStyle(kind, 7);
   return (
     <div
       className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg"
@@ -170,7 +153,7 @@ function ShopPage() {
                 onClick={() => buySkin(s)}
                 className="w-full flex items-center bg-card border border-border rounded-2xl p-3 shadow-soft active:scale-[0.99] transition"
               >
-                <PreviewBlock kind={s.preview} />
+                <PreviewBlock kind={s.id} />
                 <div className="flex-1 text-left ml-3">
                   <div className="font-semibold">{s.name}</div>
                   <div className="text-xs text-muted-foreground">

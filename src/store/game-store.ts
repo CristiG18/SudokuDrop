@@ -3,7 +3,17 @@ import { persist } from "zustand/middleware";
 
 export type Helper = "hammer" | "swap" | "boom" | "cross";
 export type ControlMode = "buttons" | "gestures";
-export type Skin = "default" | "glass" | "neon" | "wood";
+export type Skin =
+  | "default"
+  | "glass"
+  | "neon"
+  | "wood"
+  | "marble"
+  | "sunset"
+  | "galaxy"
+  | "candy"
+  | "ice"
+  | "retro";
 export type ThemeKey = "emerald" | "amber" | "ocean" | "rose";
 export type ClassicDifficulty = "easy" | "medium" | "hard" | "expert" | "extreme";
 

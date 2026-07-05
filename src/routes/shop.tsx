@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Gem, Check } from "lucide-react";
 import { useState } from "react";
 import { useGameStore, type Helper, type Skin } from "@/store/game-store";
+import { skinStyle } from "@/components/game/Jewel";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/shop")({
@@ -38,32 +39,8 @@ const HELPER_PACKS: Array<{ helper: Helper; label: string }> = [
   { helper: "cross", label: "Cruce" },
 ];
 
-function PreviewBlock({ kind }: { kind: string }) {
-  const style: React.CSSProperties = (() => {
-    if (kind === "glass")
-      return {
-        background:
-          "linear-gradient(160deg, rgba(255,255,255,0.95), color-mix(in oklab, var(--color-primary) 12%, white))",
-        border: "1px solid color-mix(in oklab, var(--color-primary) 30%, white)",
-        color: "var(--color-primary)",
-      };
-    if (kind === "neon")
-      return {
-        background: "oklch(0.22 0.02 250)",
-        color: "color-mix(in oklab, var(--color-primary) 80%, white)",
-        boxShadow: "0 0 12px color-mix(in oklab, var(--color-primary) 50%, transparent)",
-      };
-    if (kind === "wood")
-      return {
-        background: "linear-gradient(160deg, #f5d9a8, #d6a86b)",
-        color: "#3a2410",
-      };
-    return {
-      background: "var(--color-card)",
-      border: "1px solid var(--color-border)",
-      color: "var(--color-cell-user)",
-    };
-  })();
+function PreviewBlock({ kind }: { kind: Skin }) {
+  const style = skinStyle(kind, 7);
   return (
     <div
       className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg"

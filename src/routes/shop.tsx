@@ -153,7 +153,7 @@ function ShopPage() {
                 onClick={() => buySkin(s)}
                 className="w-full flex items-center bg-card border border-border rounded-2xl p-3 shadow-soft active:scale-[0.99] transition"
               >
-                <PreviewBlock kind={s.preview} />
+                <PreviewBlock kind={s.id} />
                 <div className="flex-1 text-left ml-3">
                   <div className="font-semibold">{s.name}</div>
                   <div className="text-xs text-muted-foreground">

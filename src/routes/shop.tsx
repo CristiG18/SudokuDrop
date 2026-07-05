@@ -18,11 +18,17 @@ const DIAMOND_PACKS = [
   { n: 3000, price: "€17,99" },
 ];
 
-const SKINS: Array<{ id: Skin; name: string; cost: number; preview: string }> = [
-  { id: "default", name: "Pastel", cost: 0, preview: "default" },
-  { id: "glass", name: "Sticlă", cost: 300, preview: "glass" },
-  { id: "neon", name: "Neon", cost: 500, preview: "neon" },
-  { id: "wood", name: "Lemn", cost: 400, preview: "wood" },
+const SKINS: Array<{ id: Skin; name: string; cost: number }> = [
+  { id: "default", name: "Pastel", cost: 0 },
+  { id: "glass", name: "Sticlă", cost: 300 },
+  { id: "neon", name: "Neon", cost: 500 },
+  { id: "wood", name: "Lemn", cost: 400 },
+  { id: "marble", name: "Marmură", cost: 450 },
+  { id: "sunset", name: "Apus", cost: 550 },
+  { id: "galaxy", name: "Galaxie", cost: 700 },
+  { id: "candy", name: "Bomboană", cost: 400 },
+  { id: "ice", name: "Gheață", cost: 500 },
+  { id: "retro", name: "Retro", cost: 600 },
 ];
 
 const HELPER_PACKS: Array<{ helper: Helper; label: string }> = [

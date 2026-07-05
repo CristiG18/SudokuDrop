@@ -236,21 +236,7 @@ export function Board({
                 {pv !== null ? (
                   <Jewel value={pv} size={cellSize - 2} popping />
                 ) : v !== null ? (
-                  <span
-                    className={
-                      clearing
-                        ? "scale-125 transition-transform duration-300"
-                        : "transition-transform"
-                    }
-                    style={{
-                      color: "var(--color-cell-user)",
-                      fontSize: cellSize * 0.5,
-                      fontWeight: 600,
-                      display: "inline-block",
-                    }}
-                  >
-                    {v === 0 ? "★" : v}
-                  </span>
+                  <Jewel value={v} size={cellSize - 2} clearing={clearing} />
                 ) : null}
               </div>
             );

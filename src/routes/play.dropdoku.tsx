@@ -35,7 +35,7 @@ export const Route = createFileRoute("/play/dropdoku")({
       { name: "description", content: "Endless falling Sudoku puzzle." },
     ],
   }),
-  component: DropdokuPage,
+  component: DropdokuRoute,
   validateSearch: (s: Record<string, unknown>) => ({
     difficulty: (s.difficulty as Difficulty) || "normal",
     resume: s.resume === true || s.resume === "true" ? true : undefined,
@@ -73,6 +73,21 @@ function previewForHelper(
   for (let i = 0; i < COLS; i++) cells.push({ r, c: i });
   for (let i = 0; i < ROWS; i++) if (i !== r) cells.push({ r: i, c });
   return cells;
+}
+
+// The game board is seeded with randomness and persisted state, so it can only
+// be built in the browser. Rendering it during SSR causes hydration mismatches.
+function DropdokuRoute() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
+        Se încarcă…
+      </div>
+    );
+  }
+  return <DropdokuPage />;
 }
 
 function DropdokuPage() {

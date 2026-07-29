@@ -131,6 +131,143 @@ function monthKey(level: number) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${level}`;
 }
 
+const SKINS: Skin[] = [
+  "default",
+  "glass",
+  "neon",
+  "wood",
+  "marble",
+  "sunset",
+  "galaxy",
+  "candy",
+  "ice",
+  "retro",
+];
+const THEMES: ThemeKey[] = ["emerald", "amber", "ocean", "rose"];
+const CONTROL_MODES: ControlMode[] = ["buttons", "gestures"];
+
+function num(v: unknown, fallback: number): number {
+  return typeof v === "number" && Number.isFinite(v) ? v : fallback;
+}
+function bool(v: unknown, fallback: boolean): boolean {
+  return typeof v === "boolean" ? v : fallback;
+}
+function isMatrix(v: unknown, rows: number, cols: number): boolean {
+  return (
+    Array.isArray(v) &&
+    v.length === rows &&
+    v.every((row) => Array.isArray(row) && row.length === cols)
+  );
+}
+
+function sanitizeClassicSession(v: unknown): ClassicSession | null {
+  const s = v as Partial<ClassicSession> | null | undefined;
+  if (!s || typeof s !== "object") return null;
+  if (!isMatrix(s.puzzle, 9, 9) || !isMatrix(s.solution, 9, 9) || !isMatrix(s.grid, 9, 9))
+    return null;
+  if (typeof s.difficulty !== "string") return null;
+  return {
+    difficulty: s.difficulty,
+    seed: num(s.seed, 1),
+    puzzle: s.puzzle as (number | null)[][],
+    solution: s.solution as number[][],
+    grid: s.grid as (number | null)[][],
+    mistakes: num(s.mistakes, 0),
+    seconds: num(s.seconds, 0),
+    hintsLeft: num(s.hintsLeft, 3),
+    startedAt: num(s.startedAt, Date.now()),
+  };
+}
+
+function sanitizeDropdokuSession(v: unknown): DropdokuSession | null {
+  const s = v as Partial<DropdokuSession> | null | undefined;
+  if (!s || typeof s !== "object") return null;
+  if (!isMatrix(s.board, 9, 9)) return null;
+  if (typeof s.difficulty !== "string") return null;
+  return {
+    difficulty: s.difficulty,
+    board: s.board as (number | null)[][],
+    score: num(s.score, 0),
+    totalClears: num(s.totalClears, 0),
+    pieceIndex: num(s.pieceIndex, 0),
+    bag: Array.isArray(s.bag) ? (s.bag.filter((n) => typeof n === "number") as number[]) : [],
+    startedAt: num(s.startedAt, Date.now()),
+    seconds: num(s.seconds, 0),
+  };
+}
+
+/**
+ * Repairs any persisted blob so a stale / partial / corrupted save can never
+ * crash the app. Every field falls back to a valid default.
+ */
+export function sanitizeState(raw: unknown): Partial<GameState> {
+  const s = (raw ?? {}) as Record<string, unknown>;
+  const hs = (s.highScores ?? {}) as Record<string, unknown>;
+  const classic = (hs.classic ?? {}) as Record<string, unknown>;
+  const prevHelpers = (s.helpers ?? {}) as Record<string, unknown>;
+  const settings = (s.settings ?? {}) as Record<string, unknown>;
+
+  const helpers = { ...DEFAULT_HELPERS };
+  (Object.keys(DEFAULT_HELPERS) as Helper[]).forEach((h) => {
+    helpers[h] = Math.max(0, Math.floor(num(prevHelpers[h], DEFAULT_HELPERS[h])));
+  });
+
+  const ownedSkins = Array.isArray(s.ownedSkins)
+    ? (s.ownedSkins.filter((x): x is Skin => SKINS.includes(x as Skin)) as Skin[])
+    : [];
+  if (!ownedSkins.includes("default")) ownedSkins.unshift("default");
+
+  const ownedThemes = Array.isArray(s.ownedThemes)
+    ? (s.ownedThemes.filter((x): x is ThemeKey => THEMES.includes(x as ThemeKey)) as ThemeKey[])
+    : [];
+  if (!ownedThemes.includes("emerald")) ownedThemes.unshift("emerald");
+
+  const activeSkin = SKINS.includes(s.activeSkin as Skin) ? (s.activeSkin as Skin) : "default";
+  const activeTheme = THEMES.includes(s.activeTheme as ThemeKey)
+    ? (s.activeTheme as ThemeKey)
+    : "emerald";
+
+  return {
+    diamonds: Math.max(0, Math.floor(num(s.diamonds, 250))),
+    coins: Math.max(0, Math.floor(num(s.coins, 0))),
+    tickets: Math.max(0, Math.floor(num(s.tickets, 3))),
+    loginStreak: Math.max(0, Math.floor(num(s.loginStreak, 0))),
+    lastLoginDate: typeof s.lastLoginDate === "string" ? s.lastLoginDate : null,
+    monthlyProgress:
+      s.monthlyProgress && typeof s.monthlyProgress === "object"
+        ? (s.monthlyProgress as Record<string, boolean>)
+        : {},
+    highScores: {
+      dropdoku: Math.max(0, num(hs.dropdoku, 0)),
+      classic: {
+        easy: Math.max(0, num(classic.easy, 0)),
+        medium: Math.max(0, num(classic.medium, 0)),
+        hard: Math.max(0, num(classic.hard, 0)),
+        expert: Math.max(0, num(classic.expert, 0)),
+        extreme: Math.max(0, num(classic.extreme, 0)),
+      },
+    },
+    helpers,
+    ownedSkins,
+    activeSkin,
+    ownedThemes,
+    activeTheme,
+    settings: {
+      autoComplete: bool(settings.autoComplete, true),
+      sound: bool(settings.sound, true),
+      haptics: bool(settings.haptics, true),
+      controlMode: CONTROL_MODES.includes(settings.controlMode as ControlMode)
+        ? (settings.controlMode as ControlMode)
+        : "gestures",
+    },
+    classicStreak: Math.max(0, Math.floor(num(s.classicStreak, 0))),
+    classicSession: sanitizeClassicSession(s.classicSession),
+    dropdokuSession: sanitizeDropdokuSession(s.dropdokuSession),
+    rewardsUsed:
+      s.rewardsUsed && typeof s.rewardsUsed === "object" ? (s.rewardsUsed as RewardsUsed) : {},
+  };
+}
+
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
@@ -255,8 +392,29 @@ export const useGameStore = create<GameState>()(
     {
       name: "sudoku-drop-store",
       version: 5,
+      // Only data is persisted — actions always come from fresh code.
+      partialize: (state) =>
+        ({
+          diamonds: state.diamonds,
+          coins: state.coins,
+          tickets: state.tickets,
+          loginStreak: state.loginStreak,
+          lastLoginDate: state.lastLoginDate,
+          monthlyProgress: state.monthlyProgress,
+          highScores: state.highScores,
+          helpers: state.helpers,
+          ownedSkins: state.ownedSkins,
+          activeSkin: state.activeSkin,
+          ownedThemes: state.ownedThemes,
+          activeTheme: state.activeTheme,
+          settings: state.settings,
+          classicStreak: state.classicStreak,
+          classicSession: state.classicSession,
+          dropdokuSession: state.dropdokuSession,
+          rewardsUsed: state.rewardsUsed,
+        }) as unknown as GameState,
       migrate: (persisted: unknown, version) => {
-        const s = (persisted ?? {}) as Partial<GameState>;
+        const s = sanitizeState(persisted);
         if (version < 3) {
           s.activeTheme = "emerald";
           s.ownedThemes = ["emerald"];
@@ -265,30 +423,11 @@ export const useGameStore = create<GameState>()(
           s.dropdokuSession = null;
           s.classicSession = null;
         }
-        if (version < 4) {
-          const previous = s.helpers ?? DEFAULT_HELPERS;
-          s.helpers = { ...DEFAULT_HELPERS };
-          (Object.keys(DEFAULT_HELPERS) as Helper[]).forEach((h) => {
-            const value = previous[h];
-            s.helpers![h] =
-              typeof value === "number" && Number.isFinite(value) ? value : DEFAULT_HELPERS[h];
-          });
-        }
-        // Repair high scores: older saves could persist without `classic`.
-        const hs = (s.highScores ?? {}) as Partial<HighScores>;
-        const classic = (hs.classic ?? {}) as Partial<ClassicHighScores>;
-        s.highScores = {
-          dropdoku: Number.isFinite(hs.dropdoku) ? (hs.dropdoku as number) : 0,
-          classic: {
-            easy: classic.easy ?? 0,
-            medium: classic.medium ?? 0,
-            hard: classic.hard ?? 0,
-            expert: classic.expert ?? 0,
-            extreme: classic.extreme ?? 0,
-          },
-        };
         return s as GameState;
       },
+      // Last line of defense: whatever comes out of storage is repaired before
+      // it reaches any component, so a partial blob can never crash a screen.
+      merge: (persisted, current) => ({ ...current, ...sanitizeState(persisted) }),
     },
   ),
 );

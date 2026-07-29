@@ -70,7 +70,7 @@ function ClassicGame() {
   const streak = useGameStore((s) => s.classicStreak);
   const addDiamonds = useGameStore((s) => s.addDiamonds);
   const setClassicHighScore = useGameStore((s) => s.setClassicHighScore);
-  const highScore = useGameStore((s) => s.highScores.classic[difficulty]);
+  const highScore = useGameStore((s) => s.highScores.classic?.[difficulty] ?? 0);
 
   const init = useMemo(() => {
     if (resume && session && session.difficulty === difficulty) {

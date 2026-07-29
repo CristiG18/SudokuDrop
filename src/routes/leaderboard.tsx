@@ -46,7 +46,7 @@ function Leaderboard() {
   const board =
     mode === "dropdoku"
       ? makeBoard(101, 8400, drop, "Sudoku Drop")
-      : makeBoard(diff.charCodeAt(0) * 7, diff === "extreme" ? 5200 : 3200, classic[diff], `Clasic · ${diff}`);
+      : makeBoard(diff.charCodeAt(0) * 7, diff === "extreme" ? 5200 : 3200, classic?.[diff] ?? 0, `Clasic · ${diff}`);
 
   return (
     <div className="min-h-screen px-5 pt-5 pb-10">

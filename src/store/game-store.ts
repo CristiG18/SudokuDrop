@@ -254,7 +254,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 4,
+      version: 5,
       migrate: (persisted: unknown, version) => {
         const s = (persisted ?? {}) as Partial<GameState>;
         if (version < 3) {
@@ -274,6 +274,19 @@ export const useGameStore = create<GameState>()(
               typeof value === "number" && Number.isFinite(value) ? value : DEFAULT_HELPERS[h];
           });
         }
+        // Repair high scores: older saves could persist without `classic`.
+        const hs = (s.highScores ?? {}) as Partial<HighScores>;
+        const classic = (hs.classic ?? {}) as Partial<ClassicHighScores>;
+        s.highScores = {
+          dropdoku: Number.isFinite(hs.dropdoku) ? (hs.dropdoku as number) : 0,
+          classic: {
+            easy: classic.easy ?? 0,
+            medium: classic.medium ?? 0,
+            hard: classic.hard ?? 0,
+            expert: classic.expert ?? 0,
+            extreme: classic.extreme ?? 0,
+          },
+        };
         return s as GameState;
       },
     },

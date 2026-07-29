@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomTabs } from "../components/BottomTabs";
+import { useGameStore } from "../store/game-store";
 
 
 function NotFoundComponent() {
@@ -124,6 +125,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const activeTheme = useGameStore((s) => s.activeTheme);
+
+  // Theme is applied app-wide (not per page) so every screen matches.
+  useEffect(() => {
+    document.documentElement.dataset.theme = activeTheme;
+  }, [activeTheme]);
 
   return (
     <QueryClientProvider client={queryClient}>

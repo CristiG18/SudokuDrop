@@ -190,7 +190,7 @@ export const useGameStore = create<GameState>()(
         }
       },
       setClassicHighScore: (d, score) => {
-        const cur = get().highScores.classic[d];
+        const cur = get().highScores.classic?.[d] ?? 0;
         if (score > cur) {
           set({
             highScores: {

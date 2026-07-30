@@ -5,6 +5,8 @@ import { useGameStore } from "@/store/game-store";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ThemePicker } from "@/components/ThemePicker";
+import { SkinPicker } from "@/components/SkinPicker";
+
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Setări — Sudoku Drop" }] }),
@@ -71,6 +73,8 @@ function SettingsPage() {
 
       <div className="mt-4 space-y-3">
         <ThemePicker />
+        <SkinPicker />
+
         <Row
           title="Mod control"
           desc={

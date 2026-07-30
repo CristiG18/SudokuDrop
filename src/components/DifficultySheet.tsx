@@ -76,6 +76,28 @@ export function DifficultySheet({ open, onClose, onPick }: Props) {
             </button>
           ))}
         </div>
+
+        {onPickMode && (
+          <>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-5 mb-2">
+              Moduri speciale
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {SPECIALS.map((m) => (
+                <button
+                  key={m.key}
+                  onClick={() => onPickMode(m.key)}
+                  className="rounded-2xl bg-muted p-3 text-left active:scale-[0.98] transition"
+                >
+                  <div className="text-lg">{m.emoji}</div>
+                  <div className="font-semibold text-sm mt-0.5">{m.label}</div>
+                  <div className="text-[10px] text-muted-foreground leading-tight">{m.sub}</div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
       </div>
     </div>
   );

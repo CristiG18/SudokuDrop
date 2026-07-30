@@ -1,4 +1,6 @@
 import { Play, RotateCcw, Home, X } from "lucide-react";
+import { SkinPicker } from "@/components/SkinPicker";
+
 
 interface Props {
   open: boolean;
@@ -31,7 +33,13 @@ export function PauseSheet({
       >
         <h2 className="text-xl font-bold text-center">{title}</h2>
         <p className="text-center text-sm text-muted-foreground mt-1">Ce vrei să faci?</p>
-        <div className="flex flex-col gap-2 mt-5">
+
+        <div className="mt-4 rounded-2xl bg-muted/60 p-3">
+          <SkinPicker compact />
+        </div>
+
+        <div className="flex flex-col gap-2 mt-4">
+
           <button
             onClick={onResume}
             className="py-3 rounded-2xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2"

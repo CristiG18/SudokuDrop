@@ -364,12 +364,8 @@ function ClassicGame() {
 
       <div className="mt-4 flex justify-center">
         <div
-          className="bg-card rounded-xl overflow-hidden"
-          style={{
-            width: inner,
-            height: inner,
-            boxShadow: "inset 0 0 0 1.5px var(--color-board-line-thick)",
-          }}
+          className="relative bg-card rounded-xl overflow-hidden"
+          style={{ width: inner, height: inner }}
         >
           <div
             className="grid"
@@ -392,17 +388,16 @@ function ClassicGame() {
                   sel && grid[sel.r][sel.c] && grid[sel.r][sel.c] === v && !selected;
                 const wrong = v !== null && !fixed[r][c] && v !== solution[r][c];
                 const isFlash = flashCells.has(`${r},${c}`);
-                const rightThick = (c + 1) % 3 === 0 && c !== 8;
-                const bottomThick = (r + 1) % 3 === 0 && r !== 8;
-                // Background fill (no borders here — highlight uses tints only)
+                // Background fill only — every grid line is drawn by the
+                // overlay below, so highlights can never hide a line.
                 const bg = isFlash
                   ? "var(--color-accent)"
                   : selected
                     ? "var(--color-cell-selected)"
                     : sameValue
-                      ? "color-mix(in oklab, var(--color-cell-selected) 60%, white)"
+                      ? "var(--color-cell-same)"
                       : highlight
-                        ? "color-mix(in oklab, var(--color-primary) 6%, white)"
+                        ? "var(--color-cell-peer)"
                         : "transparent";
                 return (
                   <button
@@ -418,9 +413,7 @@ function ClassicGame() {
                           : "var(--color-cell-user)",
                       fontWeight: fixed[r][c] ? 600 : 500,
                       fontSize: cellSize * 0.5,
-                      borderRight: `${rightThick ? 2 : 1}px solid ${rightThick ? "var(--color-board-line-thick)" : "var(--color-board-line-thin)"}`,
-                      borderBottom: `${bottomThick ? 2 : 1}px solid ${bottomThick ? "var(--color-board-line-thick)" : "var(--color-board-line-thin)"}`,
-                      transition: "background-color 200ms ease, transform 200ms ease",
+                      transition: "background-color 160ms ease, transform 200ms ease",
                       transform: isFlash ? "scale(1.06)" : "scale(1)",
                     }}
                   >
@@ -430,8 +423,43 @@ function ClassicGame() {
               }),
             )}
           </div>
+
+          {/* Grid lines drawn on top of the cells */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              boxShadow: "inset 0 0 0 2px var(--color-board-line-thick)",
+              backgroundImage: `
+                repeating-linear-gradient(to right, var(--color-board-line-thin) 0 1px, transparent 1px ${cellSize}px),
+                repeating-linear-gradient(to bottom, var(--color-board-line-thin) 0 1px, transparent 1px ${cellSize}px)
+              `,
+            }}
+          />
+          {[1, 2].map((i) => (
+            <span
+              key={`v${i}`}
+              className="absolute top-0 bottom-0 pointer-events-none"
+              style={{
+                left: i * cellSize * 3 - 1,
+                width: 2,
+                background: "var(--color-board-line-thick)",
+              }}
+            />
+          ))}
+          {[1, 2].map((i) => (
+            <span
+              key={`h${i}`}
+              className="absolute left-0 right-0 pointer-events-none"
+              style={{
+                top: i * cellSize * 3 - 1,
+                height: 2,
+                background: "var(--color-board-line-thick)",
+              }}
+            />
+          ))}
         </div>
       </div>
+
 
       <div className="mt-5 flex justify-around">
         <ToolBtn Icon={RotateCcw} label="Reset" onClick={reset} />

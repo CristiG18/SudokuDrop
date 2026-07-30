@@ -129,16 +129,23 @@ function isUnitComplete(values: CellValue[]): boolean {
 export interface ClearResult {
   board: Board;
   clears: number;
+  rows: number;
+  cols: number;
+  boxes: number;
   cells: Array<{ r: number; c: number }>;
 }
 
 export function findAndClear(board: Board): ClearResult {
   const toClear = new Set<string>();
   let clears = 0;
+  let rows = 0;
+  let cols = 0;
+  let boxes = 0;
 
   for (let r = 0; r < ROWS; r++) {
     if (isUnitComplete(board[r])) {
       clears++;
+      rows++;
       for (let c = 0; c < COLS; c++) toClear.add(`${r},${c}`);
     }
   }
@@ -146,6 +153,7 @@ export function findAndClear(board: Board): ClearResult {
     const col = board.map((row) => row[c]);
     if (isUnitComplete(col)) {
       clears++;
+      cols++;
       for (let r = 0; r < ROWS; r++) toClear.add(`${r},${c}`);
     }
   }
@@ -156,13 +164,14 @@ export function findAndClear(board: Board): ClearResult {
         for (let c = bc * 3; c < bc * 3 + 3; c++) cells.push(board[r][c]);
       if (isUnitComplete(cells)) {
         clears++;
+        boxes++;
         for (let r = br * 3; r < br * 3 + 3; r++)
           for (let c = bc * 3; c < bc * 3 + 3; c++) toClear.add(`${r},${c}`);
       }
     }
   }
 
-  if (clears === 0) return { board, clears: 0, cells: [] };
+  if (clears === 0) return { board, clears: 0, rows: 0, cols: 0, boxes: 0, cells: [] };
 
   const next = board.map((row) => row.slice());
   const cleared: Array<{ r: number; c: number }> = [];
@@ -171,8 +180,25 @@ export function findAndClear(board: Board): ClearResult {
     next[r][c] = null;
     cleared.push({ r, c });
   }
-  return { board: next, clears, cells: cleared };
+  return { board: next, clears, rows, cols, boxes, cells: cleared };
 }
+
+// Ice mode: pushes a partially-filled "frozen" row up from the bottom.
+export function pushGarbageRow(board: Board): Board {
+  const next = board.map((row) => row.slice());
+  // shift everything up one row (top row is discarded)
+  for (let r = 0; r < ROWS - 1; r++) next[r] = next[r + 1].slice();
+  const row: CellValue[] = Array<CellValue>(COLS).fill(null);
+  const holes = 2 + Math.floor(Math.random() * 2);
+  const holeCols = new Set<number>();
+  while (holeCols.size < holes) holeCols.add(Math.floor(Math.random() * COLS));
+  for (let c = 0; c < COLS; c++) {
+    if (!holeCols.has(c)) row[c] = 1 + Math.floor(Math.random() * 9);
+  }
+  next[ROWS - 1] = row;
+  return next;
+}
+
 
 // Per-column gravity: every cell falls to the bottom of its column
 // independently. This is what makes a horizontal domino landing on top of

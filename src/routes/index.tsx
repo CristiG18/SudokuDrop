@@ -11,6 +11,10 @@ import {
   ShoppingBag,
   Ticket,
   Coins,
+  Timer,
+  Zap,
+  Snowflake,
+
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useGameStore } from "@/store/game-store";
@@ -106,9 +110,34 @@ function Home() {
       <div className="mt-5 -mx-1 overflow-x-auto no-scrollbar">
         <div className="flex gap-3 px-4 snap-x snap-mandatory">
           <CarouselCard to="/daily" tag="Zilnică" title={`${monthShort} ${day}`} sub={todayDiff.toUpperCase()} Icon={Trophy} />
+          <CarouselCard
+            to="/play/dropdoku"
+            search={{ difficulty: "normal", mode: "timerush" }}
+            tag="Mod nou"
+            title="Time Rush"
+            sub="3 min · +10s/linie, +15s/box"
+            Icon={Timer}
+          />
+          <CarouselCard
+            to="/play/dropdoku"
+            search={{ difficulty: "normal", mode: "rush" }}
+            tag="Mod nou"
+            title="Rush"
+            sub="Cădere rapidă, scor mare"
+            Icon={Zap}
+          />
+          <CarouselCard
+            to="/play/dropdoku"
+            search={{ difficulty: "normal", mode: "ice" }}
+            tag="Mod nou"
+            title="Ice"
+            sub="Rânduri înghețate urcă"
+            Icon={Snowflake}
+          />
           <CarouselCard to="/events" tag="Eveniment" title={month.name} sub="100 niveluri" Icon={Sparkles} />
           <CarouselCard to="/battle" tag="Turneu" title="Bronz" sub="Începe acum" Icon={Trophy} />
           <CarouselCard to="/classic" tag="Clasic" title="Sudoku 9×9" sub="Puzzle clasic" Icon={Blocks} />
+
         </div>
       </div>
 
@@ -152,7 +181,15 @@ function Home() {
         </Link>
       </div>
 
-      <DifficultySheet open={sheet} onClose={() => setSheet(false)} onPick={pick} />
+      <DifficultySheet
+        open={sheet}
+        onClose={() => setSheet(false)}
+        onPick={pick}
+        onPickMode={(m) => {
+          setSheet(false);
+          navigate({ to: "/play/dropdoku", search: { difficulty: "normal", mode: m } });
+        }}
+      />
       <DailyRewardModal />
     </div>
   );

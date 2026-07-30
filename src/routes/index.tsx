@@ -181,7 +181,15 @@ function Home() {
         </Link>
       </div>
 
-      <DifficultySheet open={sheet} onClose={() => setSheet(false)} onPick={pick} />
+      <DifficultySheet
+        open={sheet}
+        onClose={() => setSheet(false)}
+        onPick={pick}
+        onPickMode={(m) => {
+          setSheet(false);
+          navigate({ to: "/play/dropdoku", search: { difficulty: "normal", mode: m } });
+        }}
+      />
       <DailyRewardModal />
     </div>
   );

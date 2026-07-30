@@ -19,7 +19,7 @@ import {
 import { useState, useEffect } from "react";
 import { useGameStore } from "@/store/game-store";
 import { currentMonthTheme, dailyForDate } from "@/game/schedule";
-import { DifficultySheet, type DropDifficulty } from "@/components/DifficultySheet";
+import { DifficultySheet, type DropDifficulty, type SpecialMode } from "@/components/DifficultySheet";
 import { ContinueCard } from "@/components/ContinueCard";
 import { DailyRewardModal } from "@/components/DailyRewardModal";
 import logo from "@/assets/logo.png";

@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
 
 export type DropDifficulty = "easy" | "normal" | "hard";
+export type SpecialMode = "timerush" | "rush" | "ice";
 
 const LEVELS: Array<{ key: DropDifficulty; label: string; sub: string }> = [
   { key: "easy", label: "Ușor", sub: "2 seturi de cifre · cădere lentă" },
@@ -9,10 +10,17 @@ const LEVELS: Array<{ key: DropDifficulty; label: string; sub: string }> = [
   { key: "hard", label: "Dificil", sub: "4 seturi · cădere rapidă" },
 ];
 
+const SPECIALS: Array<{ key: SpecialMode; label: string; sub: string; emoji: string }> = [
+  { key: "timerush", label: "Time Rush", sub: "3 min · +10s/linie", emoji: "⏱️" },
+  { key: "rush", label: "Rush", sub: "cădere rapidă", emoji: "⚡" },
+  { key: "ice", label: "Ice", sub: "rânduri înghețate", emoji: "❄️" },
+];
+
 interface Props {
   open: boolean;
   onClose: () => void;
   onPick: (d: DropDifficulty, resume: boolean) => void;
+  onPickMode?: (m: SpecialMode) => void;
 }
 
 function fmt(sec: number) {
@@ -21,7 +29,8 @@ function fmt(sec: number) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export function DifficultySheet({ open, onClose, onPick }: Props) {
+export function DifficultySheet({ open, onClose, onPick, onPickMode }: Props) {
+
   const session = useGameStore((s) => s.dropdokuSession);
   if (!open) return null;
   const elapsed = session ? Math.floor((Date.now() - session.startedAt) / 1000) : 0;

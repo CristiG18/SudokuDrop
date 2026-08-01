@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Swords, Compass, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 const TABS = [
   { to: "/", label: "Acasă", Icon: Home },
@@ -15,6 +16,7 @@ const HIDE_ON: (string | RegExp)[] = [
 ];
 
 export function BottomTabs() {
+  const t = useT();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (HIDE_ON.some((m) => (typeof m === "string" ? pathname === m : m.test(pathname)))) {
     return null;
@@ -35,7 +37,7 @@ export function BottomTabs() {
             >
               <Icon className="w-5 h-5" strokeWidth={active ? 2.4 : 1.8} />
               <span className={cn("text-[11px]", active && "font-semibold")}>
-                {label}
+                {t(label)}
               </span>
             </Link>
           );

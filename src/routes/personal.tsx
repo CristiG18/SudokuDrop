@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { User, Trophy, Flame, Clock, ShoppingBag, ListOrdered } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/personal")({
   head: () => ({ meta: [{ title: "Personal — Sudoku Drop" }] }),
@@ -8,6 +9,7 @@ export const Route = createFileRoute("/personal")({
 });
 
 function Personal() {
+  const t = useT();
   const diamonds = useGameStore((s) => s.diamonds);
   const helpers = useGameStore((s) => s.helpers);
   const high = useGameStore((s) => s.highScores.dropdoku);
@@ -23,30 +25,30 @@ function Personal() {
           <User className="w-8 h-8" strokeWidth={1.5} />
         </div>
         <div>
-          <h1 className="text-xl font-bold">Invitat</h1>
-          <p className="text-sm text-muted-foreground">Conectare în Phase 3</p>
+          <h1 className="text-xl font-bold">{t("Invitat")}</h1>
+          <p className="text-sm text-muted-foreground">{t("Conectare în Phase 3")}</p>
         </div>
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3">
-        <Stat Icon={Trophy} label="Best Dropdoku" value={high} />
-        <Stat Icon={Flame} label="Streak" value={0} />
-        <Stat Icon={Clock} label="Total time" value="0h" />
-        <Stat Icon={Trophy} label="Diamonds" value={diamonds} />
+        <Stat Icon={Trophy} label={t("Best Dropdoku")} value={high} />
+        <Stat Icon={Flame} label={t("Streak")} value={0} />
+        <Stat Icon={Clock} label={t("Total time")} value="0h" />
+        <Stat Icon={Trophy} label={t("Diamonds")} value={diamonds} />
       </div>
 
       <h3 className="mt-6 mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-        Helperi
+        {t("Helperi")}
       </h3>
       <div className="bg-card border border-border rounded-2xl p-4 shadow-soft grid grid-cols-3 text-center divide-x divide-border">
-        <div><div className="font-bold text-lg">{helperCount("hammer")}</div><div className="text-xs text-muted-foreground">Hammer</div></div>
-        <div><div className="font-bold text-lg">{helperCount("swap")}</div><div className="text-xs text-muted-foreground">Swap</div></div>
-        <div><div className="font-bold text-lg">{helperCount("boom")}</div><div className="text-xs text-muted-foreground">Boom</div></div>
+        <div><div className="font-bold text-lg">{helperCount("hammer")}</div><div className="text-xs text-muted-foreground">{t("Hammer")}</div></div>
+        <div><div className="font-bold text-lg">{helperCount("swap")}</div><div className="text-xs text-muted-foreground">{t("Swap")}</div></div>
+        <div><div className="font-bold text-lg">{helperCount("boom")}</div><div className="text-xs text-muted-foreground">{t("Boom")}</div></div>
       </div>
 
       <div className="mt-6 space-y-2">
-        <Row to="/shop" Icon={ShoppingBag} label="Magazin" />
-        <Row to="/leaderboard" Icon={ListOrdered} label="Clasamente" />
+        <Row to="/shop" Icon={ShoppingBag} label={t("Magazin")} />
+        <Row to="/leaderboard" Icon={ListOrdered} label={t("Clasamente")} />
       </div>
     </div>
   );

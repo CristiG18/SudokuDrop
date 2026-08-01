@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, Blocks, Calendar, Sparkles, Square, Swords } from "lucide-react";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/tutorial")({
   head: () => ({ meta: [{ title: "Tutorial — Sudoku Drop" }] }),
@@ -15,6 +16,7 @@ const MODES = [
 ];
 
 function TutorialLayout() {
+  const t = useT();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const onIndex = pathname === "/tutorial" || pathname === "/tutorial/";
   if (!onIndex) return <Outlet />;
@@ -26,8 +28,8 @@ function TutorialLayout() {
       >
         <ArrowLeft className="w-5 h-5" />
       </Link>
-      <h1 className="display text-3xl font-bold mt-6">Cum se joacă</h1>
-      <p className="text-sm text-muted-foreground mt-1">Alege modul de joc</p>
+      <h1 className="display text-3xl font-bold mt-6">{t("Cum se joacă")}</h1>
+      <p className="text-sm text-muted-foreground mt-1">{t("Alege modul de joc")}</p>
 
       <div className="mt-6 space-y-3">
         {MODES.map((m) => (
@@ -41,8 +43,8 @@ function TutorialLayout() {
               <m.Icon className="w-6 h-6" strokeWidth={1.6} />
             </div>
             <div className="flex-1">
-              <div className="font-semibold">{m.title}</div>
-              <div className="text-xs text-muted-foreground">{m.sub}</div>
+              <div className="font-semibold">{t(m.title)}</div>
+              <div className="text-xs text-muted-foreground">{t(m.sub)}</div>
             </div>
             <span className="text-muted-foreground">→</span>
           </Link>

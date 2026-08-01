@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { dailyForDate, isoWeek, weekSchedule } from "@/game/schedule";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/daily")({
   head: () => ({ meta: [{ title: "Provocarea Zilnică" }] }),
@@ -15,6 +16,7 @@ const DIFF_COLOR: Record<string, string> = {
 };
 
 function Daily() {
+  const t = useT();
   const navigate = useNavigate();
   const today = new Date();
   const week = weekSchedule(today);
@@ -43,15 +45,15 @@ function Daily() {
           <Calendar className="w-6 h-6" strokeWidth={1.6} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Provocarea Zilnică</h1>
+          <h1 className="text-2xl font-bold">{t("Provocarea Zilnică")}</h1>
           <p className="text-xs text-muted-foreground">
-            Săpt. {weekNum} · {year} · 3 ușoare, 2 medii, 2 grele
+            {t("Săpt.")} {weekNum} · {year} · {t("3 ușoare, 2 medii, 2 grele")}
           </p>
         </div>
       </div>
 
       <div className="mt-6 bg-card border border-border rounded-3xl p-6 shadow-card text-center">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">Astăzi</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wide">{t("Astăzi")}</p>
         <h2 className="mt-1 text-3xl font-bold capitalize">
           {today.toLocaleDateString("ro-RO", { weekday: "long", day: "numeric", month: "long" })}
         </h2>
@@ -62,12 +64,12 @@ function Daily() {
           onClick={startGame}
           className="mt-5 w-full py-3 rounded-full bg-primary text-primary-foreground font-bold shadow-soft"
         >
-          Joacă acum
+          {t("Joacă acum")}
         </button>
       </div>
 
       <h3 className="mt-6 mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-        Săptămâna aceasta
+        {t("Săptămâna aceasta")}
       </h3>
       <div className="grid grid-cols-7 gap-2">
         {week.map((d, i) => (
@@ -86,7 +88,7 @@ function Daily() {
       </div>
 
       <p className="mt-4 text-xs text-muted-foreground text-center">
-        Toți jucătorii primesc aceeași programare în fiecare săptămână.
+        {t("Toți jucătorii primesc aceeași programare în fiecare săptămână.")}
       </p>
     </div>
   );

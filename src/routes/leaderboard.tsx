@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Crown, Medal } from "lucide-react";
 import { useState } from "react";
 import { useGameStore, type ClassicDifficulty } from "@/store/game-store";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({ meta: [{ title: "Clasament" }] }),
@@ -38,6 +39,7 @@ function makeBoard(seed: number, max: number, you: number, label: string) {
 }
 
 function Leaderboard() {
+  const t = useT();
   const [mode, setMode] = useState<Mode>("dropdoku");
   const [diff, setDiff] = useState<ClassicDifficulty>("medium");
   const drop = useGameStore((s) => s.highScores.dropdoku);
@@ -59,8 +61,8 @@ function Leaderboard() {
         </Link>
         <Crown className="w-6 h-6 text-primary" />
       </div>
-      <h1 className="display text-3xl font-bold mt-5">Clasament</h1>
-      <p className="text-sm text-muted-foreground mt-1">Top jucători</p>
+      <h1 className="display text-3xl font-bold mt-5">{t("Clasament")}</h1>
+      <p className="text-sm text-muted-foreground mt-1">{t("Top jucători")}</p>
 
       <div className="mt-4 flex gap-1 p-1 bg-muted rounded-full">
         {(["dropdoku", "classic"] as Mode[]).map((m) => (
@@ -71,7 +73,7 @@ function Leaderboard() {
               mode === m ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"
             }`}
           >
-            {m === "dropdoku" ? "Sudoku Drop" : "Clasic"}
+            {m === "dropdoku" ? "Sudoku Drop" : t("Clasic")}
           </button>
         ))}
       </div>
@@ -114,7 +116,7 @@ function Leaderboard() {
               {row.name}
               {row.you && (
                 <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-primary text-primary-foreground">
-                  TU
+                  {t("TU")}
                 </span>
               )}
             </span>
@@ -124,7 +126,7 @@ function Leaderboard() {
       </div>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        Clasament local · sincronizare globală vine cu Lovable Cloud.
+        {t("Clasament local · sincronizare globală vine cu Lovable Cloud.")}
       </p>
     </div>
   );

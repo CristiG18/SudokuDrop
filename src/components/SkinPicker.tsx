@@ -1,6 +1,7 @@
 import { Check, Lock } from "lucide-react";
 import { useGameStore, type Skin } from "@/store/game-store";
 import { skinStyle } from "@/components/game/Jewel";
+import { useT } from "@/i18n";
 
 export const SKIN_LIST: Array<{ id: Skin; name: string }> = [
   { id: "default", name: "Pastel" },
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function SkinPicker({ compact }: Props) {
+  const t = useT();
   const owned = useGameStore((s) => s.ownedSkins);
   const active = useGameStore((s) => s.activeSkin);
   const setSkin = useGameStore((s) => s.setSkin);
@@ -30,11 +32,11 @@ export function SkinPicker({ compact }: Props) {
   return (
     <div className={compact ? "" : "bg-card border border-border rounded-2xl p-4 shadow-soft"}>
       <div className={compact ? "text-xs font-semibold text-muted-foreground" : "font-semibold"}>
-        Skin piese
+        {t("Skin piese")}
       </div>
       {!compact && (
         <div className="text-xs text-muted-foreground mt-0.5 mb-3">
-          Se aplică pe toate modurile. Se pot schimba și în timpul meciului (pauză).
+          {t("Se aplică pe toate modurile. Se pot schimba și în timpul meciului (pauză).")}
         </div>
       )}
       <div className={`flex gap-2 overflow-x-auto no-scrollbar ${compact ? "mt-2" : "mt-1"}`}>
@@ -47,7 +49,7 @@ export function SkinPicker({ compact }: Props) {
               type="button"
               onClick={() => isOwned && setSkin(s.id)}
               disabled={!isOwned}
-              aria-label={s.name}
+              aria-label={t(s.name)}
               className={
                 "relative shrink-0 rounded-xl flex items-center justify-center font-bold transition " +
                 (isActive ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : "") +

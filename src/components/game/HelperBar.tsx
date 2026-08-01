@@ -1,6 +1,7 @@
 import { Hammer, ArrowLeftRight, Bomb, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Helper } from "@/store/game-store";
+import { useT } from "@/i18n";
 
 interface HelperBarProps {
   counts: Record<Helper, number>;
@@ -18,6 +19,7 @@ const META: Record<Helper, { label: string; Icon: typeof Hammer }> = {
 };
 
 export function HelperBar({ counts, active, onPick, onEmpty, disabled }: HelperBarProps) {
+  const t = useT();
   return (
     <div className="flex justify-center gap-2 flex-wrap overflow-visible">
       {(Object.keys(META) as Helper[]).map((h) => {
@@ -40,7 +42,7 @@ export function HelperBar({ counts, active, onPick, onEmpty, disabled }: HelperB
             )}
           >
             <Icon className="w-7 h-7 text-primary" />
-            <span className="text-xs mt-1 font-semibold">{label}</span>
+            <span className="text-xs mt-1 font-semibold">{t(label)}</span>
             <span
               className={cn(
                 "absolute -top-1.5 -right-1.5 text-xs font-bold rounded-full min-w-[22px] h-[22px] px-1 flex items-center justify-center shadow z-10",

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, Snowflake, Square, Blocks, Flame } from "lucide-react";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/explore")({
   head: () => ({ meta: [{ title: "Explorează — variante Sudoku" }] }),
@@ -39,9 +40,10 @@ const VARIANTS = [
 ];
 
 function Explore() {
+  const t = useT();
   return (
     <div className="min-h-screen px-5 pt-5">
-      <h1 className="display text-3xl font-bold">Explorează</h1>
+      <h1 className="display text-3xl font-bold">{t("Explorează")}</h1>
 
       <Link
         to="/tutorial"
@@ -51,8 +53,8 @@ function Explore() {
           <BookOpen className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Cum se joacă</div>
-          <div className="text-xs opacity-80">Tutoriale pentru fiecare mod</div>
+          <div className="font-semibold">{t("Cum se joacă")}</div>
+          <div className="text-xs opacity-80">{t("Tutoriale pentru fiecare mod")}</div>
         </div>
         <span>→</span>
       </Link>
@@ -66,15 +68,15 @@ function Explore() {
                 <v.Icon className="w-6 h-6" strokeWidth={1.5} />
               </div>
               <div className="flex-1">
-                <div className="font-semibold">{v.title}</div>
-                <div className="text-xs text-muted-foreground">{v.sub}</div>
+                <div className="font-semibold">{t(v.title)}</div>
+                <div className="text-xs text-muted-foreground">{t(v.sub)}</div>
               </div>
               {v.available ? (
                 <span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
-                  Joacă
+                  {t("Joacă")}
                 </span>
               ) : (
-                <span className="text-xs text-muted-foreground">curând</span>
+                <span className="text-xs text-muted-foreground">{t("curând")}</span>
               )}
             </div>
           );

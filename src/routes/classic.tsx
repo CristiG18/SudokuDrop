@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import type { SudokuDifficulty } from "@/game/classic";
 import { useGameStore } from "@/store/game-store";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/classic")({
   head: () => ({ meta: [{ title: "Sudoku Clasic" }] }),
@@ -18,6 +19,7 @@ const LEVELS: Array<{ key: SudokuDifficulty; label: string }> = [
 ];
 
 function ClassicPicker() {
+  const t = useT();
   const navigate = useNavigate();
   const session = useGameStore((s) => s.classicSession);
 
@@ -29,8 +31,8 @@ function ClassicPicker() {
       >
         <ArrowLeft className="w-5 h-5" />
       </Link>
-      <h1 className="mt-6 text-3xl font-bold">Sudoku clasic</h1>
-      <p className="text-sm text-muted-foreground mt-1">Alege o dificultate</p>
+      <h1 className="mt-6 text-3xl font-bold">{t("Sudoku clasic")}</h1>
+      <p className="text-sm text-muted-foreground mt-1">{t("Alege o dificultate")}</p>
 
       {session && (
         <button
@@ -43,9 +45,9 @@ function ClassicPicker() {
           className="mt-5 w-full flex items-center justify-between bg-primary text-primary-foreground rounded-2xl p-4 shadow-card active:scale-[0.99] transition"
         >
           <div className="text-left">
-            <div className="font-semibold">Continuă</div>
+            <div className="font-semibold">{t("Continuă")}</div>
             <div className="text-xs opacity-80 capitalize">
-              {session.difficulty} · greșeli {session.mistakes}/3
+              {session.difficulty} · {t("greșeli")} {session.mistakes}/3
             </div>
           </div>
           <span className="text-2xl">→</span>
@@ -63,10 +65,10 @@ function ClassicPicker() {
           >
             <span className="w-1.5 h-10 rounded-full bg-primary mr-4" />
             <div className="flex-1 text-left">
-              <div className="font-semibold">{l.label}</div>
+              <div className="font-semibold">{t(l.label)}</div>
             </div>
             <span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
-              Joacă
+              {t("Joacă")}
             </span>
           </button>
         ))}
@@ -77,7 +79,7 @@ function ClassicPicker() {
         params={{ mode: "classic" }}
         className="mt-6 block text-center text-sm text-muted-foreground underline"
       >
-        Cum se joacă Sudoku Clasic
+        {t("Cum se joacă Sudoku Clasic")}
       </Link>
     </div>
   );

@@ -29,6 +29,7 @@ import { ArrowLeft, ArrowDown, Gem, Pause, Play, RotateCw } from "lucide-react";
 import { sfx, unlockAudio } from "@/lib/sfx";
 import { PauseSheet } from "@/components/PauseSheet";
 import { RewardedHelperModal } from "@/components/RewardedHelperModal";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/play/dropdoku")({
   head: () => ({
@@ -89,16 +90,22 @@ function DropdokuRoute() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
-        Se încarcă…
-      </div>
-    );
+    return <DropdokuLoading />;
   }
   return <DropdokuPage />;
 }
 
+function DropdokuLoading() {
+  const t = useT();
+  return (
+    <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
+      {t("Se încarcă…")}
+    </div>
+  );
+}
+
 function DropdokuPage() {
+  const t = useT();
   const { difficulty, resume, mode, seconds: attackSeconds } = Route.useSearch();
   const isTimeAttack = mode === "timeattack";
   const isTimeRush = mode === "timerush";
@@ -695,7 +702,7 @@ function DropdokuPage() {
           </div>
           {isTimeRush && (
             <p className="text-[11px] text-muted-foreground mt-1">
-              Linie/coloană +10s · box +15s
+              {t("Linie/coloană +10s · box +15s")}
             </p>
           )}
         </div>
@@ -706,17 +713,17 @@ function DropdokuPage() {
           <>
             <span className="px-2 py-0.5 rounded-full bg-accent text-accent-foreground font-semibold uppercase">
               {mode === "timerush"
-                ? "Time Rush"
+                ? t("Time Rush")
                 : mode === "rush"
-                  ? "Rush"
+                  ? t("Rush")
                   : mode === "ice"
-                    ? "Ice"
-                    : "Time Attack"}
+                    ? t("Ice")
+                    : t("Time Attack")}
             </span>
             <span>·</span>
           </>
         )}
-        <span>Record {highScore}</span>
+        <span>{t("Record")} {highScore}</span>
         <span>·</span>
         <span>{difficulty.toUpperCase()}</span>
         <span>·</span>
@@ -728,7 +735,7 @@ function DropdokuPage() {
           }
           className="underline underline-offset-2"
         >
-          {controlMode === "buttons" ? "Butoane" : "Gesturi"}
+          {controlMode === "buttons" ? t("Butoane") : t("Gesturi")}
         </button>
       </div>
 
@@ -822,8 +829,8 @@ function DropdokuPage() {
         />
         <p className="text-center text-[11px] text-muted-foreground mt-3">
           {controlMode === "gestures"
-            ? "Glisare stânga/dreapta · click 30% margini = 1 căsuță · click centru = rotire · swipe jos = drop"
-            : "Butoane: stânga · rotire · drop · dreapta"}
+            ? t("Glisare stânga/dreapta · click 30% margini = 1 căsuță · click centru = rotire · swipe jos = drop")
+            : t("Butoane: stânga · rotire · drop · dreapta")}
         </p>
       </div>
 
@@ -836,9 +843,9 @@ function DropdokuPage() {
           label={
             helperMode === "swap"
               ? swapFirst
-                ? "SWAP — alege a 2-a piesă"
-                : "SWAP — alege prima piesă"
-              : `${helperMode.toUpperCase()} — ține apăsat pentru previzualizare`
+                ? t("SWAP — alege a 2-a piesă")
+                : t("SWAP — alege prima piesă")
+              : `${helperMode.toUpperCase()} — ${t("ține apăsat pentru previzualizare")}`
           }
           onExpire={cancelHelper}
           onCancel={cancelHelper}
@@ -858,7 +865,7 @@ function DropdokuPage() {
 
       <PauseSheet
         open={backOpen}
-        title="Meniu pauză"
+        title={t("Meniu pauză")}
         onResume={() => setBackOpen(false)}
         onRestart={startFresh}
         onMenu={() => navigate({ to: "/" })}
@@ -871,15 +878,15 @@ function DropdokuPage() {
       {gameOver && (
         <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-30 px-6">
           <div className="soft-card p-8 text-center w-full max-w-sm animate-slide-up">
-            <h2 className="text-3xl font-bold mb-1">Game Over</h2>
-            <p className="text-muted-foreground mb-4">Scor: {score}</p>
+            <h2 className="text-3xl font-bold mb-1">{t("Game Over")}</h2>
+            <p className="text-muted-foreground mb-4">{t("Scor")}: {score}</p>
             <div className="flex flex-col gap-3">
               {!usedFreeRevive && (
                 <button
                   onClick={() => revive(true)}
                   className="px-6 py-3 rounded-2xl bg-accent text-accent-foreground font-bold"
                 >
-                  ▶ Vezi reclama — Reînvie gratuit
+                  ▶ {t("Vezi reclama — Reînvie gratuit")}
                 </button>
               )}
               <button
@@ -887,17 +894,17 @@ function DropdokuPage() {
                 disabled={diamonds < reviveCost}
                 className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-bold disabled:opacity-40"
               >
-                <Gem className="inline w-4 h-4 mr-1" /> {reviveCost} — Reînvie
+                <Gem className="inline w-4 h-4 mr-1" /> {reviveCost} — {t("Reînvie")}
 
               </button>
               <button onClick={startFresh} className="px-6 py-3 rounded-2xl bg-muted font-bold">
-                Joc nou
+                {t("Joc nou")}
               </button>
               <button
                 onClick={() => navigate({ to: "/" })}
                 className="px-6 py-3 rounded-2xl text-muted-foreground font-semibold"
               >
-                Meniu
+                {t("Meniu")}
               </button>
             </div>
           </div>

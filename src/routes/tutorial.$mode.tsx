@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/tutorial/$mode")({
   head: () => ({ meta: [{ title: "Tutorial — Sudoku Drop" }] }),
@@ -101,6 +102,7 @@ const LESSONS: Record<string, Lesson> = {
 };
 
 function TutorialDetail() {
+  const t = useT();
   const { mode } = Route.useParams();
   const navigate = useNavigate();
   const lesson = LESSONS[mode];
@@ -108,9 +110,9 @@ function TutorialDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
         <div>
-          <p className="text-muted-foreground">Tutorial inexistent.</p>
+          <p className="text-muted-foreground">{t("Tutorial inexistent.")}</p>
           <Link to="/tutorial" className="text-primary underline mt-3 inline-block">
-            Înapoi la tutorial
+            {t("Înapoi la tutorial")}
           </Link>
         </div>
       </div>
@@ -124,8 +126,8 @@ function TutorialDetail() {
       >
         <ArrowLeft className="w-5 h-5" />
       </Link>
-      <h1 className="display text-3xl font-bold mt-6">{lesson.title}</h1>
-      <p className="text-sm text-muted-foreground mt-2">{lesson.intro}</p>
+      <h1 className="display text-3xl font-bold mt-6">{t(lesson.title)}</h1>
+      <p className="text-sm text-muted-foreground mt-2">{t(lesson.intro)}</p>
 
       <ol className="mt-6 space-y-3">
         {lesson.steps.map((s, i) => (
@@ -135,8 +137,8 @@ function TutorialDetail() {
                 {i + 1}
               </span>
               <div>
-                <div className="font-semibold">{s.title}</div>
-                <div className="text-sm text-muted-foreground mt-0.5">{s.body}</div>
+                <div className="font-semibold">{t(s.title)}</div>
+                <div className="text-sm text-muted-foreground mt-0.5">{t(s.body)}</div>
               </div>
             </div>
           </li>
@@ -147,7 +149,7 @@ function TutorialDetail() {
         onClick={() => navigate({ to: lesson.play.to, search: lesson.play.search as never })}
         className="mt-6 block w-full text-center py-4 rounded-full bg-primary text-primary-foreground font-bold shadow-card active:scale-[0.98] transition"
       >
-        {lesson.play.label}
+        {t(lesson.play.label)}
       </button>
     </div>
   );

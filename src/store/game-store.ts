@@ -423,6 +423,10 @@ export const useGameStore = create<GameState>()(
           s.dropdokuSession = null;
           s.classicSession = null;
         }
+        if (version < 6) {
+          // Testing grant
+          s.diamonds = Math.max(s.diamonds ?? 0, 9000);
+        }
         return s as GameState;
       },
       // Last line of defense: whatever comes out of storage is repaired before

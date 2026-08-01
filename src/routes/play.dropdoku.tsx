@@ -228,9 +228,38 @@ function DropdokuPage() {
     const every = difficulty === "easy" ? 12 : difficulty === "normal" ? 9 : 7;
     if (pieceIndex > 0 && pieceIndex % every === 0 && lastIceAtRef.current !== pieceIndex) {
       lastIceAtRef.current = pieceIndex;
-      setBoard((b) => pushGarbageRow(b));
+      setBoard((b) => {
+        const next = pushGarbageRow(b);
+        setFrozenKeys((prev) => {
+          // everything shifts one row up; the new bottom row is frozen
+          const shifted = prev
+            .map((k) => {
+              const [r, c] = k.split(",").map(Number);
+              return r - 1 >= 0 ? `${r - 1},${c}` : null;
+            })
+            .filter((k): k is string => k !== null);
+          const bottom: string[] = [];
+          for (let c = 0; c < 9; c++) {
+            if (next[8][c] !== null) bottom.push(`8,${c}`);
+          }
+          return Array.from(new Set([...shifted, ...bottom]));
+        });
+        return next;
+      });
+      if (soundOn) sfx.fail();
     }
-  }, [pieceIndex, isIce, gameOver, paused, helperMode, difficulty]);
+  }, [pieceIndex, isIce, gameOver, paused, helperMode, difficulty, soundOn]);
+
+  // Frozen cells melt as soon as the underlying cell is emptied (cleared).
+  const frozenCells = useMemo(() => {
+    if (!isIce) return [];
+    return frozenKeys
+      .map((k) => {
+        const [r, c] = k.split(",").map(Number);
+        return { r, c };
+      })
+      .filter((p) => board[p.r]?.[p.c] !== null && board[p.r]?.[p.c] !== undefined);
+  }, [frozenKeys, board, isIce]);
 
   useEffect(() => {
     if (gameOver || isSpecial) return;

@@ -222,10 +222,11 @@ export function Board({
             const preview = isPreview(r, c);
             const rightThick = (c + 1) % 3 === 0 && c !== COLS - 1;
             const bottomThick = (r + 1) % 3 === 0 && r !== ROWS - 1;
+            const frozen = v !== null && isFrozen(r, c);
             return (
               <div
                 key={`${r}-${c}`}
-                className="flex items-center justify-center"
+                className="relative flex items-center justify-center"
                 style={{
                   borderRight: `${rightThick ? THICK : 1}px solid ${rightThick ? "var(--color-board-line-thick)" : "var(--color-board-line-thin)"}`,
                   borderBottom: `${bottomThick ? THICK : 1}px solid ${bottomThick ? "var(--color-board-line-thick)" : "var(--color-board-line-thin)"}`,
@@ -240,6 +241,17 @@ export function Board({
                   <Jewel value={pv} size={cellSize - 2} popping />
                 ) : v !== null ? (
                   <Jewel value={v} size={cellSize - 2} clearing={clearing} />
+                ) : null}
+                {frozen ? (
+                  <div
+                    className="pointer-events-none absolute inset-0 rounded-[6px]"
+                    style={{
+                      background:
+                        "linear-gradient(150deg, oklch(0.93 0.05 220 / 0.62), oklch(0.83 0.08 230 / 0.42))",
+                      boxShadow: "inset 0 0 0 1px oklch(0.99 0.02 220 / 0.85)",
+                      backdropFilter: "blur(0.5px)",
+                    }}
+                  />
                 ) : null}
               </div>
             );

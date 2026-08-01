@@ -169,6 +169,8 @@ function DropdokuPage() {
   const [helperPresses, setHelperPresses] = useState(0);
   const [swapFirst, setSwapFirst] = useState<{ r: number; c: number } | null>(null);
   const [previewCells, setPreviewCells] = useState<Array<{ r: number; c: number }>>([]);
+  // Ice mode: coordinates of frozen (garbage) cells, for the icy overlay.
+  const [frozenKeys, setFrozenKeys] = useState<string[]>([]);
 
   const [bonusSecs, setBonusSecs] = useState(0);
   const [reviveCount, setReviveCount] = useState(0);

@@ -7,6 +7,7 @@ interface BoardProps {
   board: BoardT;
   piece: Piece | null;
   clearingCells: Array<{ r: number; c: number }>;
+  frozenCells?: Array<{ r: number; c: number }>;
   helperMode: Helper | null;
   swapFirst: { r: number; c: number } | null;
   previewCells: Array<{ r: number; c: number }>;

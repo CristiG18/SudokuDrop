@@ -391,7 +391,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 5,
+      version: 6,
       // Only data is persisted — actions always come from fresh code.
       partialize: (state) =>
         ({

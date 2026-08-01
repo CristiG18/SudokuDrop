@@ -27,6 +27,7 @@ export function Board({
   board,
   piece,
   clearingCells,
+  frozenCells,
   helperMode,
   swapFirst,
   previewCells,
@@ -39,6 +40,7 @@ export function Board({
 }: BoardProps) {
   const isClearing = (r: number, c: number) => clearingCells.some((p) => p.r === r && p.c === c);
   const isPreview = (r: number, c: number) => previewCells.some((p) => p.r === r && p.c === c);
+  const isFrozen = (r: number, c: number) => !!frozenCells?.some((p) => p.r === r && p.c === c);
 
   const pieceCellAt = (r: number, c: number) => {
     if (!piece) return null;

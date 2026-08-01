@@ -739,6 +739,7 @@ function DropdokuPage() {
             board={board}
             piece={piece}
             clearingCells={clearingCells}
+            frozenCells={frozenCells}
             helperMode={helperMode}
             swapFirst={swapFirst}
             previewCells={previewCells}

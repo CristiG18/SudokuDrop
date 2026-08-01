@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ThemePicker } from "@/components/ThemePicker";
 import { SkinPicker } from "@/components/SkinPicker";
+import { LanguagePicker } from "@/components/LanguagePicker";
+import { useT } from "@/i18n";
 
 
 export const Route = createFileRoute("/settings")({
@@ -17,6 +19,7 @@ function SettingsPage() {
   const settings = useGameStore((s) => s.settings);
   const setSetting = useGameStore((s) => s.setSetting);
   const navigate = useNavigate();
+  const t = useT();
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,7 +32,7 @@ function SettingsPage() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    toast.success("Deconectat");
+    toast.success(t("Deconectat"));
   };
 
   return (
@@ -40,7 +43,7 @@ function SettingsPage() {
       >
         <ArrowLeft className="w-5 h-5" />
       </Link>
-      <h1 className="display text-3xl font-bold mt-6">Setări</h1>
+      <h1 className="display text-3xl font-bold mt-6">{t("Setări")}</h1>
 
       <div className="mt-6 rounded-2xl bg-card border border-border p-4 shadow-soft flex items-center gap-3">
         <div className="w-11 h-11 rounded-full bg-accent flex items-center justify-center">
@@ -48,10 +51,10 @@ function SettingsPage() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm truncate">
-            {email ?? "Nu ești autentificat"}
+            {email ?? t("Nu ești autentificat")}
           </div>
           <div className="text-xs text-muted-foreground">
-            {email ? "Progresul se sincronizează în cloud" : "Autentifică-te pentru a salva progresul"}
+            {email ? t("Progresul se sincronizează în cloud") : t("Autentifică-te pentru a salva progresul")}
           </div>
         </div>
         {email ? (
@@ -59,47 +62,48 @@ function SettingsPage() {
             onClick={signOut}
             className="px-3 py-1.5 rounded-full bg-muted text-xs font-semibold flex items-center gap-1"
           >
-            <LogOut className="w-3.5 h-3.5" /> Ieși
+            <LogOut className="w-3.5 h-3.5" /> {t("Ieși")}
           </button>
         ) : (
           <button
             onClick={() => navigate({ to: "/auth" })}
             className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center gap-1"
           >
-            <LogIn className="w-3.5 h-3.5" /> Intră
+            <LogIn className="w-3.5 h-3.5" /> {t("Intră")}
           </button>
         )}
       </div>
 
       <div className="mt-4 space-y-3">
+        <LanguagePicker />
         <ThemePicker />
         <SkinPicker />
 
         <Row
-          title="Mod control"
+          title={t("Mod control")}
           desc={
             settings.controlMode === "gestures"
-              ? "Gesturi: glisare = mută, swipe jos = drop, tap margini/centru = mută/rotire."
-              : "Butoane: săgeți + rotire + drop. Gesturile sunt dezactivate."
+              ? t("Gesturi: glisare = mută, swipe jos = drop, tap margini/centru = mută/rotire.")
+              : t("Butoane: săgeți + rotire + drop. Gesturile sunt dezactivate.")
           }
           value={settings.controlMode === "gestures"}
           onToggle={(v) => setSetting("controlMode", v ? "gestures" : "buttons")}
         />
         <Row
-          title="Auto-completare"
-          desc="Când mai rămân puține celule cu un singur candidat, se completează singure (Sudoku Clasic)."
+          title={t("Auto-completare")}
+          desc={t("Când mai rămân puține celule cu un singur candidat, se completează singure (Sudoku Clasic).")}
           value={settings.autoComplete}
           onToggle={(v) => setSetting("autoComplete", v)}
         />
         <Row
-          title="Sunet"
-          desc="Efecte sonore în joc."
+          title={t("Sunet")}
+          desc={t("Efecte sonore în joc.")}
           value={settings.sound}
           onToggle={(v) => setSetting("sound", v)}
         />
         <Row
-          title="Vibrații"
-          desc="Feedback haptic la atingere."
+          title={t("Vibrații")}
+          desc={t("Feedback haptic la atingere.")}
           value={settings.haptics}
           onToggle={(v) => setSetting("haptics", v)}
         />

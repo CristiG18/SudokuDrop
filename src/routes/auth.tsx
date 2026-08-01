@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Cont — Sudoku Drop" }] }),
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
+  const t = useT();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -31,10 +33,10 @@ function AuthPage() {
       });
       if (result.error) throw result.error;
       if (result.redirected) return;
-      toast.success("Autentificat");
+      toast.success(t("Autentificat"));
       navigate({ to: "/" });
     } catch (e) {
-      toast.error("Autentificare eșuată");
+      toast.error(t("Autentificare eșuată"));
       console.error(e);
     } finally {
       setBusy(false);
@@ -56,10 +58,10 @@ function AuthPage() {
         });
         if (error) throw error;
       }
-      toast.success("Autentificat");
+      toast.success(t("Autentificat"));
       navigate({ to: "/" });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Eroare";
+      const msg = e instanceof Error ? e.message : t("Eroare");
       toast.error(msg);
     } finally {
       setBusy(false);
@@ -77,10 +79,10 @@ function AuthPage() {
 
       <div className="mt-8 text-center">
         <h1 className="display text-3xl font-bold">
-          {mode === "signin" ? "Bine ai revenit" : "Creează un cont"}
+          {mode === "signin" ? t("Bine ai revenit") : t("Creează un cont")}
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Salvează progresul pe orice dispozitiv.
+          {t("Salvează progresul pe orice dispozitiv.")}
         </p>
       </div>
 
@@ -95,12 +97,12 @@ function AuthPage() {
           <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.83z"/>
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"/>
         </svg>
-        Continuă cu Google
+        {t("Continuă cu Google")}
       </button>
 
       <div className="my-6 flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground">sau email</span>
+        <span className="text-xs text-muted-foreground">{t("sau email")}</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 
@@ -122,7 +124,7 @@ function AuthPage() {
           minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Parolă (min. 6 caractere)"
+          placeholder={t("Parolă (min. 6 caractere)")}
           className="w-full px-4 py-3 rounded-2xl bg-card border border-border text-sm"
         />
         <button
@@ -131,7 +133,7 @@ function AuthPage() {
           className="w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold shadow-card disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-          {mode === "signin" ? "Autentificare" : "Creează cont"}
+          {mode === "signin" ? t("Autentificare") : t("Creează cont")}
         </button>
       </form>
 
@@ -139,7 +141,7 @@ function AuthPage() {
         onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
         className="mt-6 w-full text-sm text-muted-foreground"
       >
-        {mode === "signin" ? "Nu ai cont? Creează unul" : "Ai deja cont? Autentifică-te"}
+        {mode === "signin" ? t("Nu ai cont? Creează unul") : t("Ai deja cont? Autentifică-te")}
       </button>
     </div>
   );

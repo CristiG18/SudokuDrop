@@ -10,6 +10,7 @@ import {
 import { useGameStore } from "@/store/game-store";
 import { sfx, unlockAudio } from "@/lib/sfx";
 import { PauseSheet } from "@/components/PauseSheet";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/play/classic")({
   head: () => ({ meta: [{ title: "Sudoku Clasic — joc" }] }),
@@ -56,6 +57,7 @@ function computeFinalScore(d: SudokuDifficulty, seconds: number, mistakes: numbe
 }
 
 function ClassicGame() {
+  const t = useT();
   const search = Route.useSearch();
   const difficulty = search.difficulty as SudokuDifficulty;
   const seed = search.seed;
@@ -331,7 +333,7 @@ function ClassicGame() {
         </button>
         <div className="text-center">
           <div className="text-xs text-muted-foreground capitalize">{difficulty}</div>
-          <div className="text-[10px] text-muted-foreground">Record: {highScore}</div>
+          <div className="text-[10px] text-muted-foreground">{t("Record")}: {highScore}</div>
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -350,7 +352,7 @@ function ClassicGame() {
 
       <div className="mt-2 px-2 flex items-center justify-between text-sm">
         <span className="text-muted-foreground">
-          Greșeli: <span className="text-foreground font-semibold">{mistakes}</span>/3
+          {t("Greșeli")}: <span className="text-foreground font-semibold">{mistakes}</span>/3
         </span>
         {streak > 0 && (
           <span className="text-xs px-2 py-0.5 rounded-full bg-accent text-accent-foreground font-semibold">
@@ -462,11 +464,11 @@ function ClassicGame() {
 
 
       <div className="mt-5 flex justify-around">
-        <ToolBtn Icon={RotateCcw} label="Reset" onClick={reset} />
-        <ToolBtn Icon={Eraser} label="Șterge" onClick={() => enter(null)} />
+        <ToolBtn Icon={RotateCcw} label={t("Reset")} onClick={reset} />
+        <ToolBtn Icon={Eraser} label={t("Șterge")} onClick={() => enter(null)} />
         <ToolBtn
           Icon={Lightbulb}
-          label={`Indiciu ${hintsLeft}`}
+          label={`${t("Indiciu")} ${hintsLeft}`}
           onClick={useHint}
           disabled={hintsLeft <= 0}
         />
@@ -518,7 +520,7 @@ function ClassicGame() {
 
       <PauseSheet
         open={backOpen && !won && !lost}
-        title="Meniu pauză"
+        title={t("Meniu pauză")}
         onResume={() => setBackOpen(false)}
         onRestart={startFresh}
         onMenu={() => navigate({ to: "/" })}
@@ -531,22 +533,22 @@ function ClassicGame() {
       {lost && (
         <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-30 px-6">
           <div className="bg-card rounded-3xl p-8 text-center w-full max-w-sm shadow-card animate-slide-up">
-            <h2 className="text-2xl font-bold">Ai pierdut</h2>
+            <h2 className="text-2xl font-bold">{t("Ai pierdut")}</h2>
             <p className="text-sm text-muted-foreground mt-2">
-              {mistakes >= 3 ? "3 greșeli" : "Timpul a expirat"}
+              {mistakes >= 3 ? t("3 greșeli") : t("Timpul a expirat")}
             </p>
             <div className="flex flex-col gap-2 mt-5">
               <button
                 onClick={startFresh}
                 className="py-3 rounded-full bg-primary text-primary-foreground font-semibold"
               >
-                Joc Nou
+                {t("Joc Nou")}
               </button>
               <button
                 onClick={() => navigate({ to: "/" })}
                 className="py-3 rounded-full bg-muted font-semibold"
               >
-                Acasă
+                {t("Acasă")}
               </button>
             </div>
           </div>
@@ -556,31 +558,31 @@ function ClassicGame() {
       {won && (
         <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm flex items-center justify-center z-30 px-6">
           <div className="bg-card rounded-3xl p-8 text-center w-full max-w-sm shadow-card animate-slide-up">
-            <h2 className="text-2xl font-bold">Felicitări! 🎉</h2>
+            <h2 className="text-2xl font-bold">{t("Felicitări! 🎉")}</h2>
             <p className="text-sm text-muted-foreground mt-2">
-              Timp: {time} · Greșeli: {mistakes}
+              {t("Timp")}: {time} · {t("Greșeli")}: {mistakes}
             </p>
             {finalScore !== null && (
               <div className="mt-4 inline-flex flex-col items-center gap-1 px-6 py-3 rounded-2xl bg-accent text-accent-foreground">
-                <span className="text-xs uppercase tracking-wide">Scor final</span>
+                <span className="text-xs uppercase tracking-wide">{t("Scor final")}</span>
                 <span className="text-3xl font-bold">{finalScore}</span>
               </div>
             )}
             {streak > 1 && (
-              <p className="text-xs text-muted-foreground mt-3">🔥 {streak} victorii consecutive</p>
+              <p className="text-xs text-muted-foreground mt-3">🔥 {streak} {t("victorii consecutive")}</p>
             )}
             <div className="flex flex-col gap-2 mt-5">
               <button
                 onClick={startFresh}
                 className="py-3 rounded-full bg-primary text-primary-foreground font-semibold"
               >
-                Joc Nou
+                {t("Joc Nou")}
               </button>
               <button
                 onClick={() => navigate({ to: "/" })}
                 className="py-3 rounded-full bg-muted font-semibold"
               >
-                Acasă
+                {t("Acasă")}
               </button>
             </div>
           </div>

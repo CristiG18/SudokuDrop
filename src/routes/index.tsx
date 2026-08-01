@@ -23,6 +23,7 @@ import { DifficultySheet, type DropDifficulty } from "@/components/DifficultyShe
 import { ContinueCard } from "@/components/ContinueCard";
 import { DailyRewardModal } from "@/components/DailyRewardModal";
 import logo from "@/assets/logo.png";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,6 +40,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+  const t = useT();
   const diamonds = useGameStore((s) => s.diamonds);
   const coins = useGameStore((s) => s.coins);
   const tickets = useGameStore((s) => s.tickets);
@@ -94,14 +96,14 @@ function Home() {
       </header>
 
       <div className="px-5 mt-4 flex flex-wrap gap-2">
-        <Chip Icon={Flame} label={`${streak} consecutive`} />
+        <Chip Icon={Flame} label={`${streak} ${t("consecutive")}`} />
         <Chip Icon={Coins} label={`${coins}`} tint="amber" />
-        <Chip Icon={Ticket} label={`${tickets} tichete`} />
+        <Chip Icon={Ticket} label={`${tickets} ${t("tichete")}`} />
         <Link
           to="/leaderboard"
           className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground"
         >
-          <Crown className="w-3.5 h-3.5" /> Clasament
+          <Crown className="w-3.5 h-3.5" /> {t("Clasament")}
         </Link>
       </div>
 
@@ -109,34 +111,34 @@ function Home() {
 
       <div className="mt-5 -mx-1 overflow-x-auto no-scrollbar">
         <div className="flex gap-3 px-4 snap-x snap-mandatory">
-          <CarouselCard to="/daily" tag="Zilnică" title={`${monthShort} ${day}`} sub={todayDiff.toUpperCase()} Icon={Trophy} />
+          <CarouselCard to="/daily" tag={t("Zilnică")} title={`${monthShort} ${day}`} sub={todayDiff.toUpperCase()} Icon={Trophy} />
           <CarouselCard
             to="/play/dropdoku"
             search={{ difficulty: "normal", mode: "timerush" }}
-            tag="Mod nou"
+            tag={t("Mod nou")}
             title="Time Rush"
-            sub="3 min · +10s/linie, +15s/box"
+            sub={`3 ${t("min")} · +10s/${t("linie")}, +15s/box`}
             Icon={Timer}
           />
           <CarouselCard
             to="/play/dropdoku"
             search={{ difficulty: "normal", mode: "rush" }}
-            tag="Mod nou"
+            tag={t("Mod nou")}
             title="Rush"
-            sub="Cădere rapidă, scor mare"
+            sub={t("Cădere rapidă, scor mare")}
             Icon={Zap}
           />
           <CarouselCard
             to="/play/dropdoku"
             search={{ difficulty: "normal", mode: "ice" }}
-            tag="Mod nou"
+            tag={t("Mod nou")}
             title="Ice"
-            sub="Rânduri înghețate urcă"
+            sub={t("Rânduri înghețate urcă")}
             Icon={Snowflake}
           />
-          <CarouselCard to="/events" tag="Eveniment" title={month.name} sub="100 niveluri" Icon={Sparkles} />
-          <CarouselCard to="/battle" tag="Turneu" title="Bronz" sub="Începe acum" Icon={Trophy} />
-          <CarouselCard to="/classic" tag="Clasic" title="Sudoku 9×9" sub="Puzzle clasic" Icon={Blocks} />
+          <CarouselCard to="/events" tag={t("Eveniment")} title={month.name} sub={`100 ${t("niveluri")}`} Icon={Sparkles} />
+          <CarouselCard to="/battle" tag={t("Turneu")} title={t("Bronz")} sub={t("Începe acum")} Icon={Trophy} />
+          <CarouselCard to="/classic" tag={t("Clasic")} title="Sudoku 9×9" sub={t("Puzzle clasic")} Icon={Blocks} />
 
         </div>
       </div>
@@ -157,12 +159,12 @@ function Home() {
         </div>
         <h2 className="display text-4xl font-bold tracking-tight mt-6">Sudoku Drop</h2>
         <p className="text-xs uppercase tracking-widest text-muted-foreground mt-1">aka Dropdoku</p>
-        <p className="text-sm text-muted-foreground mt-2">Piesele cad. Tu completezi.</p>
+        <p className="text-sm text-muted-foreground mt-2">{t("Piesele cad. Tu completezi.")}</p>
         <Link
           to="/tutorial"
           className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm font-medium text-primary shadow-soft"
         >
-          <BookOpen className="w-4 h-4" /> Cum se joacă
+          <BookOpen className="w-4 h-4" /> {t("Cum se joacă")}
         </Link>
       </div>
 
@@ -171,13 +173,13 @@ function Home() {
           onClick={() => setSheet(true)}
           className="block w-full text-center py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-card active:scale-[0.98] transition"
         >
-          Joacă acum
+          {t("Joacă acum")}
         </button>
         <Link
           to="/classic"
           className="block w-full text-center py-3.5 rounded-2xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition"
         >
-          Sudoku Clasic
+          {t("Sudoku Clasic")}
         </Link>
       </div>
 

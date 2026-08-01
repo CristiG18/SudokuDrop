@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Gem, Play, X } from "lucide-react";
 import { useGameStore, type Helper } from "@/store/game-store";
+import { useT } from "@/i18n";
 
 const LABELS: Record<Helper, string> = {
   hammer: "Hammer",
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function RewardedHelperModal({ helper, onClose }: Props) {
+  const t = useT();
   const rewardsUsed = useGameStore((s) => s.rewardsUsed);
   const bumpReward = useGameStore((s) => s.bumpRewardUsed);
   const addHelpers = useGameStore((s) => s.addHelpers);
@@ -51,7 +53,7 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
   if (!helper) return null;
   const used = rewardsUsed[helper] ?? 0;
   const adsLeft = Math.max(0, MAX_FREE - used);
-  const label = LABELS[helper];
+  const label = t(LABELS[helper]);
 
   const buy = () => {
     if (spendDiamonds(BUNDLE_COST)) {
@@ -71,9 +73,9 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
       >
         {adPlaying ? (
           <>
-            <h3 className="text-lg font-bold text-center">Reclamă</h3>
+            <h3 className="text-lg font-bold text-center">{t("Reclamă")}</h3>
             <p className="text-center text-xs text-muted-foreground mt-1">
-              Mulțumim! Primești 1× {label}
+              {t("Mulțumim! Primești 1×")} {label}
             </p>
             <div className="mt-5 h-2 rounded-full bg-muted overflow-hidden">
               <div
@@ -88,7 +90,7 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
         ) : (
           <>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-bold">{label} epuizat</h3>
+              <h3 className="text-lg font-bold">{label} {t("epuizat")}</h3>
               <button
                 onClick={onClose}
                 className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
@@ -96,7 +98,7 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-sm text-muted-foreground">Cum vrei să primești ajutor?</p>
+            <p className="text-sm text-muted-foreground">{t("Cum vrei să primești ajutor?")}</p>
 
             <div className="mt-4 space-y-2">
               <button
@@ -105,7 +107,7 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
                 className="w-full py-3 rounded-2xl bg-accent text-accent-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-40"
               >
                 <Play className="w-4 h-4" />
-                Vezi reclamă · primești 1× {label}
+                {t("Vezi reclamă · primești 1×")} {label}
                 <span className="text-xs opacity-70 ml-1">({adsLeft}/{MAX_FREE})</span>
               </button>
               <button
@@ -117,7 +119,7 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
               </button>
               {adsLeft <= 0 && (
                 <p className="text-xs text-center text-muted-foreground mt-2">
-                  Ai consumat reclamele pentru acest meci.
+                  {t("Ai consumat reclamele pentru acest meci.")}
                 </p>
               )}
             </div>

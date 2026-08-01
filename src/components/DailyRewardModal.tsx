@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Coins, Ticket, Gift, X } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
+import { useT } from "@/i18n";
 
 export function DailyRewardModal() {
+  const t = useT();
   const checkPending = useGameStore((s) => s.checkDailyPending);
   const claim = useGameStore((s) => s.claimDaily);
   const streak = useGameStore((s) => s.loginStreak);
@@ -38,9 +40,9 @@ export function DailyRewardModal() {
             <Gift className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h2 className="text-xl font-bold">Recompensă zilnică</h2>
+            <h2 className="text-xl font-bold">{t("Recompensă zilnică")}</h2>
             <p className="text-xs text-muted-foreground">
-              Ziua {dayInCycle} · streak {streak + (claimed ? 0 : 1)}
+              {t("Ziua")} {dayInCycle} · {t("streak")} {streak + (claimed ? 0 : 1)}
             </p>
           </div>
         </div>
@@ -84,7 +86,7 @@ export function DailyRewardModal() {
           disabled={claimed}
           className="mt-5 w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold shadow-card active:scale-[0.98] transition disabled:opacity-50"
         >
-          {claimed ? "Colectat!" : "Colectează"}
+          {claimed ? t("Colectat!") : t("Colectează")}
         </button>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Lock, Sparkles, Check } from "lucide-react";
 import { currentMonthTheme } from "@/game/schedule";
 import { useGameStore } from "@/store/game-store";
+import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/events")({
   head: () => ({ meta: [{ title: "Eveniment lunar" }] }),
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/events")({
 });
 
 function Events() {
+  const t = useT();
   const navigate = useNavigate();
   const theme = currentMonthTheme();
   const monthName = new Date().toLocaleDateString("ro-RO", { month: "long" });
@@ -50,7 +52,7 @@ function Events() {
         </div>
         <div className="mt-4">
           <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-            <span>Progres</span>
+            <span>{t("Progres")}</span>
             <span>{completed}/100</span>
           </div>
           <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -58,8 +60,8 @@ function Events() {
           </div>
         </div>
         <p className="text-[11px] text-muted-foreground mt-3">
-          Progresul se resetează la începutul fiecărei luni. Nivelurile completate nu pot fi
-          rejucate.
+          {t("Progresul se resetează la începutul fiecărei luni. Nivelurile completate nu pot fi")}
+          {" "}{t("rejucate.")}
         </p>
       </div>
 
@@ -78,10 +80,11 @@ function Events() {
 }
 
 function Band({ label, range, tint }: { label: string; range: string; tint: string }) {
+  const t = useT();
   return (
     <div className="mt-6 mb-3 flex items-center gap-2">
       <span className={`w-1.5 h-5 rounded-full bg-${tint}-400`} />
-      <h3 className="text-sm font-semibold">{label}</h3>
+      <h3 className="text-sm font-semibold">{t(label)}</h3>
       <span className="text-xs text-muted-foreground">· {range}</span>
     </div>
   );

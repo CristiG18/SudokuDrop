@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomTabs } from "../components/BottomTabs";
+import { SKIN_SURFACES, SKIN_SURFACE_KEYS } from "@/game/cosmetics";
 import { useGameStore } from "../store/game-store";
 
 
@@ -126,11 +127,21 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const activeTheme = useGameStore((s) => s.activeTheme);
+  const activeSkin = useGameStore((s) => s.activeSkin);
 
   // Theme is applied app-wide (not per page) so every screen matches.
   useEffect(() => {
     document.documentElement.dataset.theme = activeTheme;
   }, [activeTheme]);
+
+  // The active skin re-paints the whole interface (background, cards, board, text).
+  useEffect(() => {
+    const root = document.documentElement;
+    SKIN_SURFACE_KEYS.forEach((k) => root.style.removeProperty(k));
+    const vars = SKIN_SURFACES[activeSkin];
+    if (vars) Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+    root.dataset.skin = activeSkin;
+  }, [activeSkin]);
 
   return (
     <QueryClientProvider client={queryClient}>

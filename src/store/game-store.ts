@@ -13,8 +13,30 @@ export type Skin =
   | "galaxy"
   | "candy"
   | "ice"
-  | "retro";
-export type ThemeKey = "emerald" | "amber" | "ocean" | "rose";
+  | "retro"
+  | "paper"
+  | "mono"
+  | "bubble"
+  | "forest"
+  | "sakura"
+  | "lava"
+  | "aurora"
+  | "cyber"
+  | "obsidian"
+  | "gold";
+export type ThemeKey =
+  | "emerald"
+  | "amber"
+  | "ocean"
+  | "rose"
+  | "violet"
+  | "teal"
+  | "sand"
+  | "slate"
+  | "crimson"
+  | "indigo"
+  | "mint"
+  | "midnight";
 export type ClassicDifficulty = "easy" | "medium" | "hard" | "expert" | "extreme";
 
 export interface ClassicHighScores {
@@ -101,6 +123,7 @@ interface GameState {
   unlockSkin: (s: Skin) => void;
   setSkin: (s: Skin) => void;
   setTheme: (t: ThemeKey) => void;
+  unlockTheme: (t: ThemeKey) => void;
   setSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
   setClassicSession: (s: ClassicSession | null) => void;
   setDropdokuSession: (s: DropdokuSession | null) => void;
@@ -142,8 +165,31 @@ const SKINS: Skin[] = [
   "candy",
   "ice",
   "retro",
+  "paper",
+  "mono",
+  "bubble",
+  "forest",
+  "sakura",
+  "lava",
+  "aurora",
+  "cyber",
+  "obsidian",
+  "gold",
 ];
-const THEMES: ThemeKey[] = ["emerald", "amber", "ocean", "rose"];
+const THEMES: ThemeKey[] = [
+  "emerald",
+  "amber",
+  "ocean",
+  "rose",
+  "violet",
+  "teal",
+  "sand",
+  "slate",
+  "crimson",
+  "indigo",
+  "mint",
+  "midnight",
+];
 const CONTROL_MODES: ControlMode[] = ["buttons", "gestures"];
 
 function num(v: unknown, fallback: number): number {
@@ -343,6 +389,10 @@ export const useGameStore = create<GameState>()(
         }),
       setSkin: (s) => set({ activeSkin: s }),
       setTheme: (t) => set({ activeTheme: t }),
+      unlockTheme: (t) =>
+        set({
+          ownedThemes: get().ownedThemes.includes(t) ? get().ownedThemes : [...get().ownedThemes, t],
+        }),
       setSetting: (key, value) => set({ settings: { ...get().settings, [key]: value } }),
       setClassicSession: (s) => set({ classicSession: s }),
       setDropdokuSession: (s) => {

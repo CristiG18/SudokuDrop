@@ -85,6 +85,85 @@ export function skinStyle(skin: Skin, value: number): React.CSSProperties {
       borderRadius: 4,
     };
   }
+  if (skin === "paper") {
+    return {
+      background: "#fdfaf1",
+      border: "1px dashed #c8bda2",
+      color: value === 0 ? "#8a7f66" : "#3c3524",
+    };
+  }
+  if (skin === "mono") {
+    return {
+      background: "#ffffff",
+      border: "1px solid #2b2b2b",
+      color: value === 0 ? "#7a7a7a" : "#1a1a1a",
+    };
+  }
+  if (skin === "bubble") {
+    return {
+      background: "radial-gradient(circle at 32% 28%, #ffffff 0%, #bfe6ff 45%, #7fc4f2 100%)",
+      border: "1px solid #64aede",
+      color: "#0f3f5c",
+      boxShadow: "inset 0 2px 6px rgba(255,255,255,0.8)",
+      borderRadius: "50%",
+    };
+  }
+  if (skin === "forest") {
+    return {
+      background: "linear-gradient(160deg, #cdeccb, #86c98c 60%, #4f9b60)",
+      border: "1px solid #3b7a4c",
+      color: "#13341d",
+    };
+  }
+  if (skin === "sakura") {
+    return {
+      background: "linear-gradient(160deg, #fff0f5, #ffc9dc 60%, #ff9fc0)",
+      border: "1px solid #f07ba5",
+      color: "#6b2340",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85)",
+    };
+  }
+  if (skin === "lava") {
+    return {
+      background: "radial-gradient(circle at 35% 25%, #ffd166 0%, #ff6b1a 45%, #8c1b0b 100%)",
+      border: "1px solid #ff8a3d",
+      color: "#fff4e0",
+      boxShadow: "0 0 10px rgba(255,107,26,0.5)",
+      textShadow: "0 1px 2px rgba(0,0,0,0.35)",
+    };
+  }
+  if (skin === "aurora") {
+    return {
+      background: "linear-gradient(140deg, #23d5ab, #23a6d5 50%, #7b5cff)",
+      border: "1px solid #63e6c4",
+      color: "#f2fffb",
+      boxShadow: "0 0 10px rgba(35,213,171,0.45)",
+    };
+  }
+  if (skin === "cyber") {
+    return {
+      background: "linear-gradient(160deg, #071b22, #0d3440)",
+      border: "1px solid #22e0d0",
+      color: value === 0 ? "#9ff6ee" : "#5ffbe8",
+      boxShadow: "0 0 12px rgba(34,224,208,0.45), inset 0 0 6px rgba(34,224,208,0.2)",
+    };
+  }
+  if (skin === "obsidian") {
+    return {
+      background: "linear-gradient(160deg, #2a2a2e, #121214)",
+      border: "1px solid #45454c",
+      color: value === 0 ? "#a9a9b2" : "#f2f2f5",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
+    };
+  }
+  if (skin === "gold") {
+    return {
+      background: "linear-gradient(160deg, #fff2b8, #e8c25a 55%, #b98b1f)",
+      border: "1px solid #8a6512",
+      color: "#3a2a05",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7), 0 0 8px rgba(232,194,90,0.4)",
+    };
+  }
   return {
     background: "var(--color-card)",
     border: "1px solid var(--color-border)",

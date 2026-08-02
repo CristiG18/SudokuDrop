@@ -1,20 +1,10 @@
 import { Check, Lock } from "lucide-react";
-import { useGameStore, type Skin } from "@/store/game-store";
+import { useGameStore } from "@/store/game-store";
 import { skinStyle } from "@/components/game/Jewel";
 import { useT } from "@/i18n";
+import { SKIN_CATALOG } from "@/game/cosmetics";
 
-export const SKIN_LIST: Array<{ id: Skin; name: string }> = [
-  { id: "default", name: "Pastel" },
-  { id: "glass", name: "Sticlă" },
-  { id: "neon", name: "Neon" },
-  { id: "wood", name: "Lemn" },
-  { id: "marble", name: "Marmură" },
-  { id: "sunset", name: "Apus" },
-  { id: "galaxy", name: "Galaxie" },
-  { id: "candy", name: "Bomboană" },
-  { id: "ice", name: "Gheață" },
-  { id: "retro", name: "Retro" },
-];
+export const SKIN_LIST = SKIN_CATALOG;
 
 interface Props {
   /** Compact variant used inside the in-game pause sheet. */

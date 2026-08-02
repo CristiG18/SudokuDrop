@@ -174,7 +174,7 @@ function ShopPage() {
                 <div className="flex-1 text-left ml-3">
                   <div className="font-semibold">{t(s.name)}</div>
                   <div className="text-xs text-muted-foreground">
-                    {owned ? (active ? t("Activ") : t("Tap pentru a activa")) : t("Skin piesă Dropdoku")}
+                    {owned ? (active ? t("Activ") : t("Tap pentru a activa")) : t("Skin complet: piese, tablă, fundal")}
                   </div>
                 </div>
                 {active ? (

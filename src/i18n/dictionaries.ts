@@ -157,6 +157,7 @@ const TABLE: Record<string, readonly [string, string, string, string, string, st
   "Skinuri": ["Skins", "Skins", "Skins", "Skins", "Skin", "Skins"],
   "Skin": ["Skin", "Skin", "Skin", "Skin", "Skin", "Skin"],
   "Skin piese": ["Piece skin", "Skin de piezas", "Skin des pièces", "Stein-Skin", "Skin dei pezzi", "Skin das peças"],
+  "Skin complet: piese, tablă, fundal": ["Full skin: pieces, board, background", "Skin completo: piezas, tablero, fondo", "Skin complet : pièces, plateau, fond", "Komplett-Skin: Steine, Brett, Hintergrund", "Skin completo: pezzi, tavola, sfondo", "Skin completo: peças, tabuleiro, fundo"],
   "Skin piesă Dropdoku": ["Dropdoku piece skin", "Skin de pieza Dropdoku", "Skin de pièce Dropdoku", "Dropdoku-Stein-Skin", "Skin pezzo Dropdoku", "Skin de peça Dropdoku"],
   "Se aplică pe toate modurile. Se pot schimba și în timpul meciului (pauză).": [
     "Applies to all modes. Can be changed mid-match (pause).",

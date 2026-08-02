@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Gem, Check } from "lucide-react";
 import { useState } from "react";
-import { useGameStore, type Helper, type Skin, type ThemeKey } from "@/store/game-store";
+import { useGameStore, type Helper, type Skin } from "@/store/game-store";
 import { SKIN_CATALOG, THEME_CATALOG } from "@/game/cosmetics";
 import { skinStyle } from "@/components/game/Jewel";
 import { toast } from "sonner";

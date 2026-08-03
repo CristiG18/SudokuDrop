@@ -68,11 +68,8 @@ export function TicketMeter({ compact = false }: { compact?: boolean }) {
       <button
         type="button"
         disabled={full || left <= 0}
-        onClick={() => {
-          if (watchAd()) toast.success(`+1 🎟 · ${left - 1} ${t("video rămase azi")}`);
-          else if (full) toast.info(t("Ai deja maximul de tichete."));
-          else toast.error(t("Ai epuizat videoclipurile de azi."));
-        }}
+        onClick={onWatch}
+
         className="ml-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40"
         aria-label={t("Vezi o reclamă pentru un tichet")}
       >

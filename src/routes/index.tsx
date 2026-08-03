@@ -24,6 +24,8 @@ import { ContinueCard } from "@/components/ContinueCard";
 import { DailyRewardModal } from "@/components/DailyRewardModal";
 import logo from "@/assets/logo.png";
 import { useT } from "@/i18n";
+import { TicketMeter } from "@/components/TicketMeter";
+import { XpBar } from "@/components/XpBar";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -98,13 +100,17 @@ function Home() {
       <div className="px-5 mt-4 flex flex-wrap gap-2">
         <Chip Icon={Flame} label={`${streak} ${t("consecutive")}`} />
         <Chip Icon={Coins} label={`${coins}`} tint="amber" />
-        <Chip Icon={Ticket} label={`${tickets} ${t("tichete")}`} />
+        <TicketMeter />
         <Link
           to="/leaderboard"
           className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground"
         >
           <Crown className="w-3.5 h-3.5" /> {t("Clasament")}
         </Link>
+      </div>
+
+      <div className="px-5 mt-4">
+        <XpBar />
       </div>
 
       <ContinueCard />

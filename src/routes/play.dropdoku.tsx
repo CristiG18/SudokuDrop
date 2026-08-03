@@ -648,6 +648,7 @@ function DropdokuPage() {
         const after = applyGravity(next);
         setBoard(after);
         setHelperPresses(0);
+        setHelperLocked(false);
         setHelperMode(null);
         setPreviewCells([]);
         setPaused(false);
@@ -678,6 +679,7 @@ function DropdokuPage() {
         setBoard(next);
         setSwapFirst(null);
         setHelperPresses(0);
+        setHelperLocked(false);
         setHelperMode(null);
         setPreviewCells([]);
         setPaused(false);
@@ -691,6 +693,7 @@ function DropdokuPage() {
         const after = applyGravity(next);
         setBoard(after);
         setHelperPresses(0);
+        setHelperLocked(false);
         setHelperMode(null);
         setPreviewCells([]);
         setPaused(false);

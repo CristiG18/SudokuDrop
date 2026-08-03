@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { fmtNum } from "@/lib/format";
 import { ArrowLeft, Gem, Check, Coins, Ticket, ArrowLeftRight } from "lucide-react";
 import { useState } from "react";
 import { useGameStore, type Helper, type Skin } from "@/store/game-store";
@@ -117,10 +118,10 @@ function ShopPage() {
             <Ticket className="w-3.5 h-3.5 text-primary" /> {tickets}
           </span>
           <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-card border border-border text-xs font-semibold">
-            <Coins className="w-3.5 h-3.5 text-amber-500" /> {coins}
+            <Coins className="w-3.5 h-3.5 text-amber-500" /> {fmtNum(coins)}
           </span>
           <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-card border border-border text-xs font-semibold">
-            <Gem className="w-3.5 h-3.5 text-primary" /> {diamonds}
+            <Gem className="w-3.5 h-3.5 text-primary" /> {fmtNum(diamonds)}
           </span>
         </div>
       </div>

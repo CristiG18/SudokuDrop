@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { fmtNum } from "@/lib/format";
 import { User, Trophy, Flame, Coins, Ticket, ShoppingBag, ListOrdered, Gem } from "lucide-react";
 import { useState } from "react";
 import { XpBar } from "@/components/XpBar";
@@ -97,9 +98,9 @@ function Personal() {
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <Stat Icon={Coins} label={t("Monede")} value={coins.toLocaleString("ro-RO")} />
+        <Stat Icon={Coins} label={t("Monede")} value={fmtNum(coins)} />
         <Stat Icon={Ticket} label={t("Tichete")} value={tickets} />
-        <Stat Icon={Gem} label={t("Gemuri")} value={diamonds} />
+        <Stat Icon={Gem} label={t("Gemuri")} value={fmtNum(diamonds)} />
         <Stat Icon={Flame} label={t("Streak")} value={streak} />
       </div>
 

@@ -1,4 +1,5 @@
 import { Gem, Coins, Ticket, ArrowRight } from "lucide-react";
+import { fmtNum } from "@/lib/format";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useGameStore } from "@/store/game-store";
 import { COINS_TO_TICKETS, GEMS_TO_COINS } from "@/game/economy";
@@ -31,7 +32,7 @@ export function ExchangeSheet({
         <div className="space-y-5 pb-6">
           <section>
             <p className="text-xs font-semibold text-muted-foreground mb-2">
-              {t("Gemuri în monede")} · {diamonds} 💎
+              {t("Gemuri în monede")} · {fmtNum(diamonds)} 💎
             </p>
             <div className="grid gap-2">
               {GEMS_TO_COINS.map((p) => (
@@ -40,7 +41,7 @@ export function ExchangeSheet({
                   type="button"
                   disabled={diamonds < p.gems}
                   onClick={() => {
-                    if (gemsToCoins(p.gems, p.coins)) toast.success(`+${p.coins} 🪙`);
+                    if (gemsToCoins(p.gems, p.coins)) toast.success(`+${fmtNum(p.coins)} 🪙`);
                     else toast.error(t("Nu ai suficiente gemuri."));
                   }}
                   className="flex items-center justify-between p-3 rounded-2xl bg-card border border-border disabled:opacity-40"
@@ -50,7 +51,7 @@ export function ExchangeSheet({
                   </span>
                   <ArrowRight className="w-4 h-4 text-muted-foreground" />
                   <span className="flex items-center gap-2 font-semibold text-sm">
-                    <Coins className="w-4 h-4 text-amber-500" /> {p.coins}
+                    <Coins className="w-4 h-4 text-amber-500" /> {fmtNum(p.coins)}
                   </span>
                 </button>
               ))}
@@ -59,7 +60,7 @@ export function ExchangeSheet({
 
           <section>
             <p className="text-xs font-semibold text-muted-foreground mb-2">
-              {t("Monede în tichete")} · {coins} 🪙
+              {t("Monede în tichete")} · {fmtNum(coins)} 🪙
             </p>
             <div className="grid gap-2">
               {COINS_TO_TICKETS.map((p) => (
@@ -74,7 +75,7 @@ export function ExchangeSheet({
                   className="flex items-center justify-between p-3 rounded-2xl bg-card border border-border disabled:opacity-40"
                 >
                   <span className="flex items-center gap-2 font-semibold text-sm">
-                    <Coins className="w-4 h-4 text-amber-500" /> {p.coins}
+                    <Coins className="w-4 h-4 text-amber-500" /> {fmtNum(p.coins)}
                   </span>
                   <ArrowRight className="w-4 h-4 text-muted-foreground" />
                   <span className="flex items-center gap-2 font-semibold text-sm">

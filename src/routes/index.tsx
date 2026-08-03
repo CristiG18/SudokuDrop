@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { fmtNum } from "@/lib/format";
 import {
   Gem,
   Crown,
@@ -84,14 +85,14 @@ function Home() {
           </Link>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-sm font-semibold">
             <Gem className="w-4 h-4 text-primary" />
-            {diamonds}
+            {fmtNum(diamonds)}
           </div>
         </div>
       </header>
 
       <div className="px-5 mt-4 flex flex-wrap gap-2">
         <Chip Icon={Flame} label={`${streak} ${t("consecutive")}`} />
-        <Chip Icon={Coins} label={`${coins}`} tint="amber" />
+        <Chip Icon={Coins} label={fmtNum(coins)} tint="amber" />
         <TicketMeter compact />
         <Link
           to="/leaderboard"

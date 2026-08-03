@@ -452,7 +452,7 @@ function ClassicGame() {
 
           {/* Grid lines drawn on top of the cells */}
           <div
-            className="absolute inset-0 pointer-events-none"
+            className="absolute inset-0 pointer-events-none rounded-xl"
             style={{
               boxShadow: "inset 0 0 0 2px var(--color-board-line-thick)",
               backgroundImage: `

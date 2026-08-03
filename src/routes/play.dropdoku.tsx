@@ -206,6 +206,8 @@ function DropdokuPage() {
 
   const [helperMode, setHelperMode] = useState<Helper | null>(null);
   const [helperPresses, setHelperPresses] = useState(0);
+  // Locked after the 3rd unused press — stays locked until a piece is placed.
+  const [helperLocked, setHelperLocked] = useState(false);
   const [swapFirst, setSwapFirst] = useState<{ r: number; c: number } | null>(null);
   const [previewCells, setPreviewCells] = useState<Array<{ r: number; c: number }>>([]);
   const [fxItems, setFxItems] = useState<ClearFxItem[]>([]);
@@ -446,6 +448,31 @@ function DropdokuPage() {
   soundOnRef.current = soundOn;
   resolveClearsRef.current = resolveClears;
 
+  // Locking a piece: if any of its cells is still above the top line, the
+  // stack has overflowed the grid → game over. Otherwise it just settles.
+  const commitLock = useCallback(
+    (b: BoardT, p: Piece) => {
+      const overflow = p.cells.some((cell) => p.r + cell.dr < 0);
+      const locked = lockPiece(b, p);
+      if (soundOnRef.current) sfx.drop();
+      setHelperPresses(0);
+      setHelperLocked(false);
+      if (overflow) {
+        setBoard(locked);
+        setGameOver(true);
+        setHighScore(score);
+        setSession(null);
+        if (soundOnRef.current) sfx.fail();
+        return;
+      }
+      resolveClearsRef.current(locked);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [score, setHighScore, setSession],
+  );
+  const commitLockRef = useRef(commitLock);
+  commitLockRef.current = commitLock;
+
   useEffect(() => {
     if (paused || backOpen || gameOver || helperMode) {
       gravityNextAtRef.current = Date.now() + speedRef.current;
@@ -460,14 +487,13 @@ function DropdokuPage() {
         if (!cur) return cur;
         const latestBoard = boardRef.current;
         if (!collides(latestBoard, cur, 1, 0)) return { ...cur, r: cur.r + 1 };
-        const locked = lockPiece(latestBoard, cur);
-        if (soundOnRef.current) sfx.drop();
-        resolveClearsRef.current(locked);
+        commitLockRef.current(latestBoard, cur);
         return null;
       });
     }, 50);
     return () => clearInterval(id);
   }, [paused, backOpen, gameOver, helperMode]);
+
 
   const moveBy = (dc: number) => {
     if (!piece || paused || gameOver || helperMode) return;
@@ -490,11 +516,10 @@ function DropdokuPage() {
   const doHardDrop = () => {
     if (!piece || paused || gameOver || helperMode) return;
     const dropped = hardDrop(board, piece);
-    const locked = lockPiece(board, dropped);
     setPiece(null);
-    if (soundOn) sfx.drop();
-    resolveClears(locked);
+    commitLock(board, dropped);
   };
+
 
   // Gesture handlers (only active in gesture mode)
   const onDragMove = (delta: number) => moveBy(delta);
@@ -595,6 +620,12 @@ function DropdokuPage() {
   // Helpers
   const startHelper = (h: Helper) => {
     if (helpers[h] <= 0 || gameOver) return;
+    // After 3 presses without using it, the helper stays locked until the
+    // next piece lands — no more resetting the timer by tapping.
+    if (helperLocked || helperPresses >= 3) {
+      setHelperLocked(true);
+      return;
+    }
     setHelperMode(h);
     setSwapFirst(null);
     setPreviewCells([]);
@@ -602,15 +633,16 @@ function DropdokuPage() {
     setPaused(true);
   };
 
-  const helperSeconds =
-    helperPresses === 0 ? 10 : helperPresses === 1 ? 10 : helperPresses === 2 ? 6 : 3;
+  const helperSeconds = helperPresses <= 1 ? 10 : helperPresses === 2 ? 6 : 3;
 
   const cancelHelper = () => {
     setHelperMode(null);
     setSwapFirst(null);
     setPreviewCells([]);
     setPaused(false);
+    if (helperPresses >= 3) setHelperLocked(true);
   };
+
 
   const onHelperHover = (r: number, c: number | null) => {
     if (!helperMode) return;
@@ -639,6 +671,7 @@ function DropdokuPage() {
         const after = applyGravity(next);
         setBoard(after);
         setHelperPresses(0);
+        setHelperLocked(false);
         setHelperMode(null);
         setPreviewCells([]);
         setPaused(false);
@@ -669,6 +702,7 @@ function DropdokuPage() {
         setBoard(next);
         setSwapFirst(null);
         setHelperPresses(0);
+        setHelperLocked(false);
         setHelperMode(null);
         setPreviewCells([]);
         setPaused(false);
@@ -682,6 +716,7 @@ function DropdokuPage() {
         const after = applyGravity(next);
         setBoard(after);
         setHelperPresses(0);
+        setHelperLocked(false);
         setHelperMode(null);
         setPreviewCells([]);
         setPaused(false);

@@ -160,6 +160,11 @@ function RootComponent() {
     return () => dispose?.();
   }, []);
 
+  // Initialize AdMob + GDPR/UMP consent as early as possible on native builds.
+  useEffect(() => {
+    void initAds();
+  }, []);
+
 
   return (
     <QueryClientProvider client={queryClient}>

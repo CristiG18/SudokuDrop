@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Eraser, Lightbulb, Pause, Play, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { submitScore } from "@/lib/leaderboard";
 import {
   generatePuzzle,
   type SudokuDifficulty,
@@ -200,6 +201,7 @@ function ClassicGame() {
       const score = computeFinalScore(difficulty, secondsUsed, mistakesUsed, hintsUsedFinal);
       setFinalScore(score);
       setClassicHighScore(difficulty, score);
+      void submitScore("classic", difficulty, score);
       const xpRes = awardRunXp(difficulty, score);
       setXpGained(xpRes.xpGained);
       if (xpRes.levelsGained > 0) {

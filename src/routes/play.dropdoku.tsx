@@ -30,7 +30,14 @@ import { PauseSheet } from "@/components/PauseSheet";
 import { ClearFx, type ClearFxItem } from "@/components/game/ClearFx";
 import { RewardedHelperModal } from "@/components/RewardedHelperModal";
 import { useT } from "@/i18n";
-import { estimatePercentile, formatPercentile } from "@/game/economy";
+import {
+  estimatePercentile,
+  formatPercentile,
+  versusRivalLive,
+  versusRivalName,
+  versusRivalScore,
+} from "@/game/economy";
+import { fmtNum } from "@/lib/format";
 
 export const Route = createFileRoute("/play/dropdoku")({
   head: () => ({
@@ -117,6 +124,10 @@ function DropdokuPage() {
   const isTimeRush = mode === "timerush";
   const isRush = mode === "rush";
   const isTimed = isTimeAttack || isTimeRush;
+  // Versus bracket match: no game over, no revive — just a win/loss result.
+  const isVersus = Boolean(vkey);
+  // Revive is only offered in Classic and in Time Attack tournaments.
+  const canRevive = Boolean(tkey) && !isVersus;
   // Special modes never resume / never persist a session.
   const isSpecial = Boolean(mode);
   const totalAttackSecs = isTimeAttack
@@ -142,6 +153,20 @@ function DropdokuPage() {
   const recordCategoryScore = useGameStore((s) => s.recordCategoryScore);
   const recordVersusMatch = useGameStore((s) => s.recordVersusMatch);
   const setModeBest = useGameStore((s) => s.setModeBest);
+  const versusRun = useGameStore((s) => s.versus);
+
+  // The rival for this Versus match is drawn once, so the live score can be
+  // shown while playing and reused when the match is recorded.
+  const rival = useMemo(() => {
+    if (!vkey) return null;
+    return {
+      target: versusRivalScore(versusRun?.difficulty ?? "easy", versusRun?.round ?? 0),
+      name: versusRivalName(),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vkey]);
+
+
 
   const initial = useMemo(() => {
     if (!isSpecial && resume && savedSession && savedSession.difficulty === difficulty) {
@@ -223,6 +248,13 @@ function DropdokuPage() {
   const remainingAttack = isTimed
     ? Math.max(0, totalAttackSecs + bonusSecs - secondsPlayed)
     : 0;
+  // Rival's live score in a Versus match, paced with the match clock.
+  const rivalLive = rival
+    ? versusRivalLive(
+        rival.target,
+        totalAttackSecs > 0 ? secondsPlayed / totalAttackSecs : 0,
+      )
+    : 0;
   useEffect(() => {
     if (!isTimed || gameOver) return;
     if (remainingAttack === 0) {
@@ -287,14 +319,19 @@ function DropdokuPage() {
     speed,
   ]);
 
-  // Award XP once per lost run and compute the percentile bucket for the score.
+  // Award XP once per finished run and compute the percentile bucket.
   useEffect(() => {
     if (!gameOver || xpAwardedRef.current) return;
     xpAwardedRef.current = true;
     const res = awardRunXp(difficulty, score, !!tkey || !!vkey);
     if (tkey) recordCategoryScore(tkey, score);
-    if (vkey) recordVersusMatch(score);
-    if (!tkey && !vkey) setModeBest(`free:${mode ?? difficulty}`, score);
+    if (vkey) {
+      recordVersusMatch(score, rival?.target, rival?.name);
+      // Versus never shows Game Over — you go back to the bracket screen.
+      navigate({ to: "/battle" });
+      return;
+    }
+    if (!tkey) setModeBest(`free:${mode ?? difficulty}`, score);
     const rank = formatPercentile(estimatePercentile(score, Math.max(1500, highScore || 1500)));
     setEndXp({ xp: res.xpGained, levelsGained: res.levelsGained, rank });
   }, [
@@ -309,6 +346,8 @@ function DropdokuPage() {
     recordCategoryScore,
     recordVersusMatch,
     setModeBest,
+    rival,
+    navigate,
   ]);
 
   const cellSize = useMemo(() => {
@@ -689,7 +728,7 @@ function DropdokuPage() {
         </button>
         <div className="soft-card px-4 py-1.5 text-base font-bold">
           <span className="text-muted-foreground mr-2 text-xs font-medium">SCOR</span>
-          {score}
+          {fmtNum(score)}
         </div>
         <button
           onClick={() => setPaused((p) => !p)}
@@ -698,6 +737,22 @@ function DropdokuPage() {
           {paused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
         </button>
       </header>
+
+      {isVersus && rival && (
+        <div className="px-4 pb-2">
+          <div className="soft-card px-4 py-2 flex items-center justify-between text-sm">
+            <span className="font-bold text-primary tabular-nums">
+              {t("Tu")} {fmtNum(score)}
+            </span>
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
+              {t("live")}
+            </span>
+            <span className="font-bold tabular-nums">
+              {fmtNum(rivalLive)} {rival.name}
+            </span>
+          </div>
+        </div>
+      )}
 
       {isTimed && (
         <div className="px-4 pb-2 flex flex-col items-center justify-center">
@@ -717,6 +772,7 @@ function DropdokuPage() {
         </div>
       )}
 
+
       <div className="px-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
         {mode && (
           <>
@@ -730,11 +786,11 @@ function DropdokuPage() {
             <span>·</span>
           </>
         )}
-        <span>{t("Record")} {highScore}</span>
+        <span>{t("Record")} {fmtNum(highScore)}</span>
         <span>·</span>
         <span>{difficulty.toUpperCase()}</span>
         <span>·</span>
-        <span><Gem className="inline w-3 h-3 text-primary" /> {diamonds}</span>
+        <span><Gem className="inline w-3 h-3 text-primary" /> {fmtNum(diamonds)}</span>
         <span>·</span>
         <button
           onClick={() =>
@@ -893,11 +949,11 @@ function DropdokuPage() {
         }}
       />
 
-      {gameOver && (
+      {gameOver && !isVersus && (
         <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-30 px-6">
           <div className="soft-card p-8 text-center w-full max-w-sm animate-slide-up">
             <h2 className="text-3xl font-bold mb-1">{t("Game Over")}</h2>
-            <p className="text-muted-foreground mb-1">{t("Scor")}: {score}</p>
+            <p className="text-muted-foreground mb-1">{t("Scor")}: {fmtNum(score)}</p>
             {endXp && (
               <p className="text-sm font-semibold text-primary mb-4">
                 +{endXp.xp} XP · {t(endXp.rank)}
@@ -905,7 +961,7 @@ function DropdokuPage() {
               </p>
             )}
             <div className="flex flex-col gap-3">
-              {!usedFreeRevive && (
+              {canRevive && !usedFreeRevive && (
                 <button
                   onClick={() => revive(true)}
                   className="px-6 py-3 rounded-2xl bg-accent text-accent-foreground font-bold"
@@ -913,14 +969,15 @@ function DropdokuPage() {
                   ▶ {t("Vezi reclama — Reînvie gratuit")}
                 </button>
               )}
-              <button
-                onClick={() => revive(false)}
-                disabled={diamonds < reviveCost}
-                className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-bold disabled:opacity-40"
-              >
-                <Gem className="inline w-4 h-4 mr-1" /> {reviveCost} — {t("Reînvie")}
-
-              </button>
+              {canRevive && usedFreeRevive && (
+                <button
+                  onClick={() => revive(false)}
+                  disabled={diamonds < reviveCost}
+                  className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-bold disabled:opacity-40"
+                >
+                  <Gem className="inline w-4 h-4 mr-1" /> {fmtNum(reviveCost)} — {t("Reînvie")}
+                </button>
+              )}
               <button onClick={startFresh} className="px-6 py-3 rounded-2xl bg-muted font-bold">
                 {t("Joc nou")}
               </button>

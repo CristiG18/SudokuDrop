@@ -18,7 +18,6 @@ import {
   ROWS,
   COLS,
   clearTopRows,
-  pushGarbageRow,
 
 } from "@/game/engine";
 import { Board } from "@/components/game/Board";

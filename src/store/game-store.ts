@@ -100,7 +100,7 @@ interface Settings {
 
 type RewardsUsed = Partial<Record<Helper, number>>;
 
-const DEFAULT_HELPERS: Record<Helper, number> = { hammer: 2, swap: 2, boom: 2, cross: 2 };
+const DEFAULT_HELPERS: Record<Helper, number> = { hammer: 3, swap: 3, boom: 3, cross: 3 };
 
 export interface DailyClaim {
   day: number; // 1..7
@@ -789,7 +789,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 13,
+      version: 14,
       // Only data is persisted — actions always come from fresh code.
       partialize: (state) =>
         ({
@@ -834,6 +834,10 @@ export const useGameStore = create<GameState>()(
           s.ticketsUpdatedAt = Date.now();
           s.xp = s.xp ?? 0;
           s.level = s.level ?? 1;
+        }
+        if (version < 14) {
+          // Every player now starts a session with 3 of each power-up.
+          s.helpers = { ...DEFAULT_HELPERS };
         }
         return s as GameState;
       },

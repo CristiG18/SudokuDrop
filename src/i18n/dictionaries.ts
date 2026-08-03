@@ -153,7 +153,6 @@ const TABLE: Record<string, readonly [string, string, string, string, string, st
   "Auroră": ["Aurora", "Aurora", "Aurore", "Aurora", "Aurora", "Aurora"],
   "Cyber": ["Cyber", "Cyber", "Cyber", "Cyber", "Cyber", "Cyber"],
   "Obsidian": ["Obsidian", "Obsidiana", "Obsidienne", "Obsidian", "Ossidiana", "Obsidiana"],
-  "Aur": ["Gold", "Oro", "Or", "Gold", "Oro", "Ouro"],
   "Skinuri": ["Skins", "Skins", "Skins", "Skins", "Skin", "Skins"],
   "Skin": ["Skin", "Skin", "Skin", "Skin", "Skin", "Skin"],
   "Skin piese": ["Piece skin", "Skin de piezas", "Skin des pièces", "Stein-Skin", "Skin dei pezzi", "Skin das peças"],

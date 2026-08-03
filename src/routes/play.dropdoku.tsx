@@ -206,6 +206,8 @@ function DropdokuPage() {
 
   const [helperMode, setHelperMode] = useState<Helper | null>(null);
   const [helperPresses, setHelperPresses] = useState(0);
+  // Locked after the 3rd unused press — stays locked until a piece is placed.
+  const [helperLocked, setHelperLocked] = useState(false);
   const [swapFirst, setSwapFirst] = useState<{ r: number; c: number } | null>(null);
   const [previewCells, setPreviewCells] = useState<Array<{ r: number; c: number }>>([]);
   const [fxItems, setFxItems] = useState<ClearFxItem[]>([]);

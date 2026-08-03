@@ -410,6 +410,15 @@ function DropdokuPage() {
       if (soundOn) sfx.clear(result.clears);
       spawnPopup(`+${gain}`, result.cells, cellSizeRef.current);
 
+      // Time Attack: lines/columns add 10s, boxes add 15s — that's the mode.
+      if (isTimed) {
+        const bonus = (result.rows + result.cols) * 10 + result.boxes * 15;
+        if (bonus > 0) {
+          setBonusSecs((s) => s + bonus);
+          spawnPopup(`+${bonus}s`, result.cells, cellSizeRef.current, "time");
+        }
+      }
+
       setTimeout(() => {
         const dropped = applyGravity(result.board);
         setClearingCells([]);
@@ -421,8 +430,9 @@ function DropdokuPage() {
         }
       }, 320);
     },
-    [totalClears, soundOn, spawnPopup],
+    [totalClears, soundOn, spawnPopup, isTimed],
   );
+
 
   const boardRef = useRef(board);
   const pieceRef = useRef(piece);

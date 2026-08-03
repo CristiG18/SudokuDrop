@@ -405,6 +405,7 @@ function VersusBracket({
   t: (s: string) => string;
 }) {
   const run = useGameStore((s) => s.versus)!;
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const totalRounds = Math.round(Math.log2(run.size));
   const roundName = (i: number) => {
     const left = Math.pow(2, totalRounds - i);
@@ -524,9 +525,49 @@ function VersusBracket({
           >
             {t("Joacă meciul")} · 3 {t("min")} · 1 🎟
           </button>
-          <button onClick={onLeave} className="mt-2 w-full py-3 text-sm text-muted-foreground">
+          <button
+            onClick={() => setConfirmLeave(true)}
+            className="mt-2 w-full py-3 text-sm text-muted-foreground"
+          >
             {t("Abandonează turneul")}
           </button>
+
+          {confirmLeave && (
+            <div
+              className="fixed inset-0 z-50 bg-foreground/50 backdrop-blur-sm flex items-center justify-center px-6"
+              onClick={() => setConfirmLeave(false)}
+            >
+              <div
+                className="w-full max-w-sm bg-card rounded-3xl p-5 shadow-card"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-lg font-bold">{t("Sigur părăsești turneul?")}</div>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  {t("Ai plătit deja taxa de intrare de")} {fmtCoins(run.fee)} 🪙.{" "}
+                  {t(
+                    "Dacă ieși acum pierzi definitiv acești bani și locul din bracket — nu primești nimic înapoi.",
+                  )}
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => setConfirmLeave(false)}
+                    className="flex-1 py-3 rounded-2xl bg-primary text-primary-foreground font-semibold"
+                  >
+                    {t("Rămân în turneu")}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setConfirmLeave(false);
+                      onLeave();
+                    }}
+                    className="flex-1 py-3 rounded-2xl bg-card border border-destructive text-destructive font-semibold"
+                  >
+                    {t("Ies și pierd taxa")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

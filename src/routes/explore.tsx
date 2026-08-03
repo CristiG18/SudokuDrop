@@ -9,7 +9,7 @@ export const Route = createFileRoute("/explore")({
       {
         name: "description",
         content:
-          "Toate modurile din Sudoku Drop explicate pe larg: liber, clasic, Time Rush, Rush, Versus și Time Attack.",
+          "Toate modurile din Sudoku Drop explicate pe larg: liber, clasic, Versus și Time Attack.",
       },
     ],
   }),

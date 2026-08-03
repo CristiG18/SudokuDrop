@@ -107,7 +107,7 @@ async function push(userId: string) {
       login_streak: Number(snap.loginStreak ?? 0),
       owned_skins: (snap.ownedSkins as string[]) ?? ["default"],
       active_skin: (snap.activeSkin as string) ?? "default",
-      high_scores: { progress: snap },
+      high_scores: { progress: snap } as never,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },

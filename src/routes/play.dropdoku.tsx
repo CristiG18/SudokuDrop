@@ -51,6 +51,8 @@ export const Route = createFileRoute("/play/dropdoku")({
         typeof s.seconds === "number" ? s.seconds : s.seconds ? Number(s.seconds) : undefined,
       // Tournament category this run counts towards (e.g. "duel:hard").
       tkey: typeof s.tkey === "string" ? s.tkey : undefined,
+      // Versus bracket match (score is reported to the running bracket).
+      vkey: typeof s.vkey === "string" ? s.vkey : undefined,
     };
   },
 
@@ -110,7 +112,7 @@ function DropdokuLoading() {
 
 function DropdokuPage() {
   const t = useT();
-  const { difficulty, resume, mode, seconds: attackSeconds, tkey } = Route.useSearch();
+  const { difficulty, resume, mode, seconds: attackSeconds, tkey, vkey } = Route.useSearch();
   const isTimeAttack = mode === "timeattack";
   const isTimeRush = mode === "timerush";
   const isRush = mode === "rush";
@@ -138,6 +140,8 @@ function DropdokuPage() {
   const setSetting = useGameStore((s) => s.setSetting);
   const awardRunXp = useGameStore((s) => s.awardRunXp);
   const recordCategoryScore = useGameStore((s) => s.recordCategoryScore);
+  const recordVersusMatch = useGameStore((s) => s.recordVersusMatch);
+  const setModeBest = useGameStore((s) => s.setModeBest);
 
   const initial = useMemo(() => {
     if (!isSpecial && resume && savedSession && savedSession.difficulty === difficulty) {
@@ -287,11 +291,25 @@ function DropdokuPage() {
   useEffect(() => {
     if (!gameOver || xpAwardedRef.current) return;
     xpAwardedRef.current = true;
-    const res = awardRunXp(difficulty, score, !!tkey);
+    const res = awardRunXp(difficulty, score, !!tkey || !!vkey);
     if (tkey) recordCategoryScore(tkey, score);
+    if (vkey) recordVersusMatch(score);
+    if (!tkey && !vkey) setModeBest(`free:${mode ?? difficulty}`, score);
     const rank = formatPercentile(estimatePercentile(score, Math.max(1500, highScore || 1500)));
     setEndXp({ xp: res.xpGained, levelsGained: res.levelsGained, rank });
-  }, [gameOver, awardRunXp, difficulty, score, highScore, tkey, recordCategoryScore]);
+  }, [
+    gameOver,
+    awardRunXp,
+    difficulty,
+    score,
+    highScore,
+    tkey,
+    vkey,
+    mode,
+    recordCategoryScore,
+    recordVersusMatch,
+    setModeBest,
+  ]);
 
   const cellSize = useMemo(() => {
     if (typeof window === "undefined") return 36;

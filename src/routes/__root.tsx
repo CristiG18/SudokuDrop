@@ -81,20 +81,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Sudoku Drop (Dropdoku) — puzzle cu piese care cad" },
+      { title: "Sudoku Drop — puzzle cu piese care cad" },
       {
         name: "description",
         content:
-          "Sudoku Drop, aka Dropdoku: piese cad într-o grilă 9x9, completezi rânduri, coloane și pătrate. Zilnice, evenimente, turnee.",
+          "Sudoku Drop: piese cad într-o grilă 9x9, completezi rânduri, coloane și pătrate. Zilnice, evenimente, turnee.",
       },
       { name: "author", content: "Sudoku Drop" },
-      { property: "og:title", content: "Sudoku Drop (Dropdoku)" },
+      { property: "og:title", content: "Sudoku Drop" },
       { property: "og:description", content: "Puzzle rapid: piese care cad într-o grilă 9x9." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

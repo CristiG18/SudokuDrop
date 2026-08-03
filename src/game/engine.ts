@@ -5,7 +5,7 @@ export const COLS = 9;
 export type CellValue = number | null; // 1..9, 0 = joker, null = empty
 export type Board = CellValue[][];
 
-export type Difficulty = "easy" | "normal" | "hard";
+export type Difficulty = "easy" | "normal" | "hard" | "extreme";
 
 export interface PieceCell {
   dr: number;
@@ -25,7 +25,8 @@ export function emptyBoard(): Board {
 }
 
 export function createBag(difficulty: Difficulty): number[] {
-  const sets = difficulty === "easy" ? 2 : difficulty === "normal" ? 3 : 4;
+  const sets =
+    difficulty === "easy" ? 2 : difficulty === "normal" ? 3 : difficulty === "hard" ? 4 : 5;
   const bag: number[] = [];
   for (let s = 0; s < sets; s++) for (let n = 1; n <= 9; n++) bag.push(n);
   for (let i = bag.length - 1; i > 0; i--) {

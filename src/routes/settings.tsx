@@ -182,7 +182,7 @@ function SettingsPage() {
                 {t("Anulează")}
               </button>
               <button
-                onClick={removeAccount}
+                onClick={() => void removeAccount()}
                 disabled={deleting}
                 className="flex-1 py-3 rounded-2xl bg-destructive text-destructive-foreground font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
               >

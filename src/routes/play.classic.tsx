@@ -295,7 +295,12 @@ function ClassicGame() {
   };
 
   const useHint = () => {
-    if (!sel || hintsLeft <= 0 || won || lost) return;
+    if (won || lost) return;
+    if (hintsLeft <= 0) {
+      setHintShop(true);
+      return;
+    }
+    if (!sel) return;
     if (fixed[sel.r][sel.c]) return;
     const next = grid.map((row) => row.slice());
     next[sel.r][sel.c] = solution[sel.r][sel.c];
@@ -308,6 +313,7 @@ function ClassicGame() {
     if (checkWin(next)) finish(next, mistakes, hu, seconds);
     else tryAutoComplete(next, mistakes, hu);
   };
+
 
   const reset = () => {
     setGrid(puzzle.map((r) => r.slice()));

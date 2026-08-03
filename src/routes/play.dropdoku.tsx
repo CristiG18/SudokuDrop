@@ -125,8 +125,9 @@ function DropdokuPage() {
   const isTimed = isTimeAttack;
   // Versus bracket match: no game over, no revive — just a win/loss result.
   const isVersus = Boolean(vkey);
-  // Revive is only offered in Classic and in Time Attack tournaments.
-  const canRevive = Boolean(tkey) && !isVersus;
+  // Revive is available everywhere except Versus (where nothing is lost).
+  const canRevive = !isVersus;
+
   // Special modes never resume / never persist a session.
   const isSpecial = Boolean(mode);
   const totalAttackSecs = isTimeAttack ? Math.max(30, attackSeconds ?? 120) : 0;
@@ -284,20 +285,29 @@ function DropdokuPage() {
     let nextBag = bag;
     if (nextBag.length < 2) nextBag = [...nextBag, ...createBag(difficulty)];
     const p = spawnPiece(nextBag, pieceIndex);
-    // Game over: if this piece, translated so its top row is 0, would already
-    // overlap the stack, there's no room left for new pieces.
+    // Game over only when the stack has truly overflowed the grid: the piece is
+    // shifted sideways to look for ANY free entry column on the top row. As long
+    // as one exists, the player can keep playing and clear a line.
     const atTop: Piece = { ...p, r: 0 };
-    if (collides(board, atTop, 0, 0)) {
+    let spawned: Piece | null = null;
+    for (const dc of [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5, -6, 6, -7, 7, -8, 8]) {
+      if (!collides(board, atTop, 0, dc)) {
+        spawned = { ...p, c: p.c + dc };
+        break;
+      }
+    }
+    if (!spawned) {
       setGameOver(true);
       setHighScore(score);
       setSession(null);
       if (soundOn) sfx.fail();
       return;
     }
-    setPiece(p);
+    setPiece(spawned);
     gravityNextAtRef.current = Date.now() + speed;
     setBag(nextBag);
     setPieceIndex((i) => i + 1);
+
   }, [
     piece,
     gameOver,
@@ -400,6 +410,15 @@ function DropdokuPage() {
       if (soundOn) sfx.clear(result.clears);
       spawnPopup(`+${gain}`, result.cells, cellSizeRef.current);
 
+      // Time Attack: lines/columns add 10s, boxes add 15s — that's the mode.
+      if (isTimed) {
+        const bonus = (result.rows + result.cols) * 10 + result.boxes * 15;
+        if (bonus > 0) {
+          setBonusSecs((s) => s + bonus);
+          spawnPopup(`+${bonus}s`, result.cells, cellSizeRef.current, "time");
+        }
+      }
+
       setTimeout(() => {
         const dropped = applyGravity(result.board);
         setClearingCells([]);
@@ -411,8 +430,9 @@ function DropdokuPage() {
         }
       }, 320);
     },
-    [totalClears, soundOn, spawnPopup],
+    [totalClears, soundOn, spawnPopup, isTimed],
   );
+
 
   const boardRef = useRef(board);
   const pieceRef = useRef(piece);

@@ -208,18 +208,20 @@ export const TIME_ATTACK_MINUTES = [3, 5, 10] as const;
 export type TimeAttackMinutes = (typeof TIME_ATTACK_MINUTES)[number];
 
 /**
- * Duration only mildly changes the payout: 10 min is at most double 3 min.
+ * A weekly season is a long grind, so first place has to feel worth it.
+ * Duration still only mildly changes the payout: 10 min is at most double 3 min.
  */
-const TA_BASE_PRIZE: Record<number, number> = { 3: 250, 5: 350, 10: 500 };
+const TA_BASE_PRIZE: Record<number, number> = { 3: 1500, 5: 2200, 10: 3000 };
 const TA_DURATION_GEM_MULT: Record<number, number> = { 3: 1, 5: 1.4, 10: 2 };
 
-/** First-place gem pool per tier — deliberately small on Ușor. */
+/** First-place gem pool per tier — scales hard with difficulty. */
 const TA_TIER_GEMS: Record<TierId, number> = {
-  easy: 5,
-  medium: 12,
-  hard: 25,
-  extreme: 50,
+  easy: 60,
+  medium: 160,
+  hard: 350,
+  extreme: 750,
 };
+
 
 export interface PrizeRow {
   place: string;

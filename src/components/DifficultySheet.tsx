@@ -3,7 +3,7 @@ import { useGameStore } from "@/store/game-store";
 import { useT } from "@/i18n";
 
 export type DropDifficulty = "easy" | "normal" | "hard";
-export type SpecialMode = "timerush" | "rush" | "ice";
+export type SpecialMode = "timerush" | "rush";
 
 const LEVELS: Array<{ key: DropDifficulty; label: string; sub: string }> = [
   { key: "easy", label: "Ușor", sub: "2 seturi de cifre · cădere lentă" },
@@ -14,7 +14,6 @@ const LEVELS: Array<{ key: DropDifficulty; label: string; sub: string }> = [
 const SPECIALS: Array<{ key: SpecialMode; label: string; sub: string; emoji: string }> = [
   { key: "timerush", label: "Time Rush", sub: "3 min · +10s/linie", emoji: "⏱️" },
   { key: "rush", label: "Rush", sub: "cădere rapidă", emoji: "⚡" },
-  { key: "ice", label: "Ice", sub: "rânduri înghețate", emoji: "❄️" },
 ];
 
 interface Props {
@@ -92,7 +91,7 @@ export function DifficultySheet({ open, onClose, onPick, onPickMode }: Props) {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-5 mb-2">
               {t("Moduri speciale")}
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {SPECIALS.map((m) => (
                 <button
                   key={m.key}

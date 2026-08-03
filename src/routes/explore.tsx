@@ -25,13 +25,6 @@ const VARIANTS = [
   },
   {
     to: "#",
-    title: "Ice Sudoku",
-    sub: "Piese de gheață se sparg",
-    Icon: Snowflake,
-    available: false,
-  },
-  {
-    to: "#",
     title: "Killer Sudoku",
     sub: "Cuști cu sumă",
     Icon: Flame,

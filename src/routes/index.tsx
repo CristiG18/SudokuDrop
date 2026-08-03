@@ -33,7 +33,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Sudoku Drop, aka Dropdoku — piese care cad într-o grilă 9x9. Zilnice, evenimente, turnee.",
+          "Sudoku Drop, aka Dropdoku — piese care cad într-o grilă 9x9. Zilnice, turnee și moduri contra-cronometru.",
       },
     ],
   }),
@@ -132,15 +132,6 @@ function Home() {
             sub={t("Cădere rapidă, scor mare")}
             Icon={Zap}
           />
-          <CarouselCard
-            to="/play/dropdoku"
-            search={{ difficulty: "normal", mode: "ice" }}
-            tag={t("Mod nou")}
-            title="Ice"
-            sub={t("Rânduri înghețate urcă")}
-            Icon={Snowflake}
-          />
-          <CarouselCard to="/events" tag={t("Eveniment")} title={month.name} sub={`100 ${t("niveluri")}`} Icon={Sparkles} />
           <CarouselCard to="/battle" tag={t("Turneu")} title={t("Bronz")} sub={t("Începe acum")} Icon={Trophy} />
           <CarouselCard to="/classic" tag={t("Clasic")} title="Sudoku 9×9" sub={t("Puzzle clasic")} Icon={Blocks} />
 

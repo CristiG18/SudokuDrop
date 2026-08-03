@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Crown, Medal } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchTop, type LeaderRow } from "@/lib/leaderboard";
+
 import { useGameStore, type ClassicDifficulty } from "@/store/game-store";
 import {
   TIME_ATTACK_MINUTES,

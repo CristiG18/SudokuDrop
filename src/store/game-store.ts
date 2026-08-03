@@ -11,6 +11,11 @@ import {
   versusPrize,
 } from "@/game/economy";
 
+/** Clean launch balance — identical for new accounts and migrated ones. */
+export const START_DIAMONDS = 100;
+export const START_COINS = 100;
+export const START_TICKETS = 5;
+
 
 export type Helper = "hammer" | "swap" | "boom" | "cross";
 export type ControlMode = "buttons" | "gestures";

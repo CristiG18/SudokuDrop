@@ -12,51 +12,47 @@ Am parcurs tot codul: rute, joc, economie, backend, magazin, traduceri, SEO și 
 ## Probleme care blochează lansarea
 
 ### 1. Bani gratuiți din migrări (critic)
-În store există încă șase „testing grants” care dau automat între 9.000 și 25.000 de gemuri și 50.000 de monede oricui a mai deschis jocul. Cu ele active, magazinul nu are niciun sens economic. Trebuie eliminate și înlocuite cu un sold de start normal.
+În store există încă șase „testing grants” care dau automat între 9.000 și 25.000 de gemuri și 50.000 de monede. Le eliminăm complet. Soldul de start devine: **100 gemuri, 100 monede, 5 tichete**. Toate conturile existente sunt resetate la acest sold printr-o migrare nouă. Tichetele gratuite din video rămân exact cum sunt (max 5/zi).
 
 ### 2. Clasamentul este fals
 Clasamentele sunt generate local cu nume fixe și scoruri aleatorii. Tabela reală din baza de date (`leaderboard_entries`) există, dar nu e folosită de nicăieri. Fără clasament real, turneele nu au miză.
 
 ### 3. Turneele sunt simulate local
-Adversarii Versus și Time Attack sunt generați pe telefon. Premiile se acordă local, deci sunt manipulabile. Pentru lansare avem nevoie măcar de: scoruri trimise pe server, clasament săptămânal real și acordarea premiilor pe server, nu în telefon.
+Adversarii Versus și Time Attack sunt generați pe telefon, iar premiile se acordă local, deci sunt manipulabile. Avem nevoie de scoruri trimise pe server, clasament săptămânal real și premii validate pe server.
 
 ### 4. Plățile nu există
-Pachetele de gemuri afișează doar „Plățile reale vin în curând”. Fără billing, nu există venit.
+Pachetele de gemuri afișează doar „Plățile reale vin în curând”. Pentru Google Play folosim Google Play Billing, nu plăți web.
 
 ### 5. Traduceri lipsă
 78 de texte folosite în cod nu au traducere — în special ecranele de turnee. Un utilizator pe engleză vede text în română.
 
 ### 6. Fără ambalaj de aplicație
-Nu există configurație Capacitor, manifest PWA sau iconițe de aplicație (doar un favicon). Jocul nu se poate instala și nu se poate construi APK în starea actuală.
+Nu există configurație Capacitor și nici iconițe/splash de aplicație. Fără ele nu se poate genera APK/AAB pentru Google Play.
 
-## Îmbunătățiri de calitate (după blocante)
+## Îmbunătățiri de calitate
 
-- **SEO / partajare**: 8 rute au doar titlu, fără descriere; nicio rută nu are tag-uri Open Graph, deci un link partajat arată gol. Tutorialul pe moduri folosește același titlu pentru toate modurile.
-- **Performanță joc**: tabla și piesele nu sunt memoizate deloc; la fiecare tic se redesenează tot. De optimizat înainte de rularea pe telefoane slabe.
-- **Rezistență la erori**: există o singură plasă de siguranță globală — orice eroare într-un ecran albește toată aplicația. De pus protecție separată pe ecranele de joc.
+- **Performanță joc**: tabla și piesele nu sunt memoizate deloc; la fiecare tic se redesenează tot. Important pe telefoane slabe.
+- **Rezistență la erori**: o singură plasă de siguranță globală — orice eroare albește toată aplicația. Punem protecție separată pe ecranele de joc.
 - **Accesibilitate**: butoanele cu doar iconițe (helperi, controale de joc) nu au etichete.
+- **Metadate**: rămân minime, doar cât să nu fie goale. Nu investim în SEO/Open Graph, pentru că nu lansăm versiune de browser.
 
-## Ordinea propusă
+## Ordinea de execuție (le fac pe toate)
 
 ```text
-Etapa 1 (blocante economie)   → scoatem grant-urile de test, sold de start corect
-Etapa 2 (backend real)        → scoruri + clasamente reale, premii pe server
-Etapa 3 (traduceri + SEO)     → completăm dicționarul, descrieri + OG pe fiecare rută
-Etapa 4 (ambalaj)             → manifest PWA, iconițe, configurație Capacitor pentru APK
-Etapa 5 (polish)              → memoizare joc, protecție erori, accesibilitate
-Etapa 6 (plăți)               → Google Play Billing pentru APK / Stripe pentru web
+Etapa 1  → economie curată: fără grant-uri de test, start 100💎 / 100🪙 / 5🎟️
+Etapa 2  → backend real: scoruri + clasamente în baza de date, premii pe server
+Etapa 3  → traduceri complete pentru toate ecranele
+Etapa 4  → ambalaj Android: Capacitor, iconițe, splash, config pentru AAB
+Etapa 5  → polish: memoizare joc, protecție erori, accesibilitate
+Etapa 6  → Google Play Billing pentru pachetele de gemuri
 ```
 
 ## Detalii tehnice
 
-- Grant-uri de șters: `src/store/game-store.ts`, ramurile `version < 3/6/9/10/11/12` din `migrate`; bump la v13 cu resetare controlată a soldurilor.
-- Clasament real: server functions (`createServerFn`) care scriu în `leaderboard_entries` la finalul unei runde și citesc top-ul pe `mode`+`difficulty`; `src/routes/leaderboard.tsx` trece de la PRNG local la aceste date, cu fallback local când e offline.
-- Turnee: tabel nou pentru înscrieri și scoruri de sezon, cu politici RLS pe `auth.uid()`, plus validarea premiilor pe server.
-- Traduceri: completare `src/i18n/dictionaries.ts` pentru cele 78 de chei lipsă (grup turnee/versus).
-- Ambalaj: `public/manifest.webmanifest`, iconițe 192/512, `theme-color`, apoi `capacitor.config.ts` cu build static.
-- Plăți: pe APK Google Play Billing prin plugin Capacitor; pe web Stripe Checkout cu verificare pe server înainte de creditarea gemurilor.
+- Store `src/store/game-store.ts`: ștergem ramurile `version < 3/6/9/10/11/12` din `migrate`, bump la v13 care setează explicit `diamonds: 100`, `coins: 100`, `tickets: 5`. Sold implicit pentru conturi noi identic. Regenerarea tichetelor (1/45 min, cap 5) și recompensa video rămân neatinse.
+- Clasament: server functions care scriu în `leaderboard_entries` la finalul rundei (`mode`, `difficulty`, `score`) și citesc top-ul; `src/routes/leaderboard.tsx` consumă datele reale, cu fallback local când nu e rețea.
+- Turnee: tabel de sezon cu înscrieri și scoruri, RLS pe `auth.uid()`, premiile calculate pe server la închiderea sezonului.
+- Traduceri: completăm `src/i18n/dictionaries.ts` cu cele 78 de chei lipsă.
+- Android: `capacitor.config.ts` cu `webDir` pe build-ul static, iconițe 512/1024, splash, `androidScheme: https`; instrucțiuni de export local pentru generarea AAB.
+- Billing: plugin Capacitor pentru Google Play Billing; achiziția e verificată pe server înainte de creditarea gemurilor, ca să nu poată fi falsificată din client.
 
-## De confirmat
-
-1. Ținta principală de lansare: APK în Play Store, sau web/PWA întâi?
-2. La resetarea economiei: vrei să păstrezi un sold de test pe contul tău, sau pornim toți de la zero?

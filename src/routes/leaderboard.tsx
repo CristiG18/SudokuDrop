@@ -243,7 +243,10 @@ function Leaderboard() {
       </div>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        {t("Clasament local · sincronizare globală vine cu Lovable Cloud.")}
+        {isGlobal
+          ? t("Clasament global · actualizat în timp real.")
+          : t("Clasament local · conectează-te pentru clasamentul global.")}
+
       </p>
     </div>
   );

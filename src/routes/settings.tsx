@@ -1,8 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, LogIn, LogOut, UserCircle2 } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Loader2,
+  LogIn,
+  LogOut,
+  Shield,
+  Trash2,
+  UserCircle2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/game-store";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteMyAccount } from "@/lib/account.functions";
 import { toast } from "sonner";
 import { ThemePicker } from "@/components/ThemePicker";
 import { SkinPicker } from "@/components/SkinPicker";
@@ -21,6 +31,8 @@ function SettingsPage() {
   const navigate = useNavigate();
   const t = useT();
   const [email, setEmail] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
@@ -34,6 +46,22 @@ function SettingsPage() {
     await supabase.auth.signOut();
     toast.success(t("Deconectat"));
   };
+
+  const removeAccount = async () => {
+    setDeleting(true);
+    try {
+      await deleteMyAccount();
+      await supabase.auth.signOut();
+      setConfirmDelete(false);
+      toast.success(t("Contul a fost șters."));
+      navigate({ to: "/" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("Eroare"));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen px-5 pt-5 pb-8">
@@ -108,6 +136,63 @@ function SettingsPage() {
           onToggle={(v) => setSetting("haptics", v)}
         />
       </div>
+
+      <div className="mt-6 space-y-2">
+        <Link
+          to="/terms"
+          className="w-full flex items-center gap-3 bg-card border border-border rounded-2xl px-4 py-3.5 shadow-soft"
+        >
+          <FileText className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-semibold">{t("Termeni și condiții")}</span>
+        </Link>
+        <Link
+          to="/privacy"
+          className="w-full flex items-center gap-3 bg-card border border-border rounded-2xl px-4 py-3.5 shadow-soft"
+        >
+          <Shield className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-semibold">{t("Politica de confidențialitate")}</span>
+        </Link>
+
+        {email && (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="w-full flex items-center gap-3 bg-card border border-destructive/30 rounded-2xl px-4 py-3.5 shadow-soft text-destructive"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span className="text-sm font-semibold">{t("Șterge contul")}</span>
+          </button>
+        )}
+      </div>
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-4 pb-6">
+          <div className="w-full max-w-md rounded-3xl bg-card border border-border p-5 shadow-card">
+            <h2 className="text-lg font-bold">{t("Ștergi definitiv contul?")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t(
+                "Progresul, gemurile, monedele, skinurile și scorurile din clasamente se șterg definitiv. Acțiunea nu poate fi anulată.",
+              )}
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-2xl bg-muted font-semibold text-sm"
+              >
+                {t("Anulează")}
+              </button>
+              <button
+                onClick={() => void removeAccount()}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-2xl bg-destructive text-destructive-foreground font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {t("Șterge contul")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

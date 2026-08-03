@@ -17,6 +17,7 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -26,6 +27,10 @@ function AuthPage() {
   }, [navigate]);
 
   const signInGoogle = async () => {
+    if (mode === "signup" && !accepted) {
+      toast.error(t("Trebuie să accepți termenii și politica de confidențialitate."));
+      return;
+    }
     setBusy(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
@@ -43,23 +48,52 @@ function AuthPage() {
     }
   };
 
+  const forgotPassword = async () => {
+    if (!email) {
+      toast.error(t("Scrie întâi adresa de email."));
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success(t("Ți-am trimis un email cu linkul de resetare."));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("Eroare"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === "signup" && !accepted) {
+      toast.error(t("Trebuie să accepți termenii și politica de confidențialitate."));
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        toast.success(t("Autentificat"));
+        navigate({ to: "/" });
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
+        if (data.session) {
+          toast.success(t("Autentificat"));
+          navigate({ to: "/" });
+        } else {
+          toast.success(t("Verifică-ți emailul pentru a confirma contul."));
+        }
       }
-      toast.success(t("Autentificat"));
-      navigate({ to: "/" });
     } catch (e) {
       const msg = e instanceof Error ? e.message : t("Eroare");
       toast.error(msg);
@@ -127,6 +161,29 @@ function AuthPage() {
           placeholder={t("Parolă (min. 6 caractere)")}
           className="w-full px-4 py-3 rounded-2xl bg-card border border-border text-sm"
         />
+
+        {mode === "signup" && (
+          <label className="flex items-start gap-3 px-1 pt-1 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={(e) => setAccepted(e.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-[var(--color-primary)]"
+            />
+            <span>
+              {t("Am citit și accept")}{" "}
+              <Link to="/terms" className="text-primary font-semibold">
+                {t("Termenii și condițiile")}
+              </Link>{" "}
+              {t("și")}{" "}
+              <Link to="/privacy" className="text-primary font-semibold">
+                {t("Politica de confidențialitate")}
+              </Link>
+              .
+            </span>
+          </label>
+        )}
+
         <button
           type="submit"
           disabled={busy}
@@ -137,12 +194,28 @@ function AuthPage() {
         </button>
       </form>
 
+      {mode === "signin" && (
+        <button onClick={forgotPassword} disabled={busy} className="mt-4 w-full text-sm text-primary font-semibold">
+          {t("Ai uitat parola?")}
+        </button>
+      )}
+
       <button
         onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-        className="mt-6 w-full text-sm text-muted-foreground"
+        className="mt-4 w-full text-sm text-muted-foreground"
       >
         {mode === "signin" ? t("Nu ai cont? Creează unul") : t("Ai deja cont? Autentifică-te")}
       </button>
+
+      <p className="mt-6 text-center text-[11px] text-muted-foreground leading-relaxed">
+        <Link to="/terms" className="underline">
+          {t("Termeni și condiții")}
+        </Link>{" "}
+        ·{" "}
+        <Link to="/privacy" className="underline">
+          {t("Politica de confidențialitate")}
+        </Link>
+      </p>
     </div>
   );
 }

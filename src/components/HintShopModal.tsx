@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Gem, Play, X } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
 import { useT } from "@/i18n";
+import { showRewardedAd } from "@/lib/ads";
+import { isNative } from "@/lib/native";
 
 const MAX_ADS = 3;
 const BUNDLE_COST = 50;
@@ -39,6 +41,18 @@ export function HintShopModal({ open, adsUsed, onClose, onGrant }: Props) {
     }, 80);
     return () => clearInterval(id);
   }, [adPlaying, onGrant, onClose]);
+
+  /** Real rewarded ad on device, simulated ad break in the browser. */
+  const startAd = async () => {
+    if (!isNative()) {
+      setAdPlaying(true);
+      return;
+    }
+    if (await showRewardedAd()) {
+      onGrant(1, true);
+      onClose();
+    }
+  };
 
   if (!open) return null;
   const adsLeft = Math.max(0, MAX_ADS - adsUsed);
@@ -82,7 +96,7 @@ export function HintShopModal({ open, adsUsed, onClose, onGrant }: Props) {
             <p className="text-sm text-muted-foreground">{t("Cum vrei să primești ajutor?")}</p>
             <div className="mt-4 space-y-2">
               <button
-                onClick={() => setAdPlaying(true)}
+                onClick={() => void startAd()}
                 disabled={adsLeft <= 0}
                 className="w-full py-3 rounded-2xl bg-accent text-accent-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-40"
               >

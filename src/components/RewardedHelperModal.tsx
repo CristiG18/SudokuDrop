@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Gem, Play, X } from "lucide-react";
 import { useGameStore, type Helper } from "@/store/game-store";
 import { useT } from "@/i18n";
+import { showRewardedAd } from "@/lib/ads";
+import { isNative } from "@/lib/native";
 
 const LABELS: Record<Helper, string> = {
   hammer: "Hammer",
@@ -55,6 +57,21 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
   const adsLeft = Math.max(0, MAX_FREE - used);
   const label = t(LABELS[helper]);
 
+  const grantFree = () => {
+    bumpReward(helper);
+    addHelpers(helper, 1);
+    onClose();
+  };
+
+  /** Real rewarded ad on device, simulated ad break in the browser. */
+  const startAd = async () => {
+    if (!isNative()) {
+      setAdPlaying(true);
+      return;
+    }
+    if (await showRewardedAd()) grantFree();
+  };
+
   const buy = () => {
     if (spendDiamonds(BUNDLE_COST)) {
       addHelpers(helper, BUNDLE_SIZE);
@@ -102,7 +119,7 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
 
             <div className="mt-4 space-y-2">
               <button
-                onClick={() => setAdPlaying(true)}
+                onClick={() => void startAd()}
                 disabled={adsLeft <= 0}
                 className="w-full py-3 rounded-2xl bg-accent text-accent-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-40"
               >

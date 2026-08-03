@@ -10,8 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TutorialRouteImport } from './routes/tutorial'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as ExploreRouteImport } from './routes/explore'
@@ -29,6 +32,11 @@ const TutorialRoute = TutorialRouteImport.update({
   path: '/tutorial',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
@@ -37,6 +45,16 @@ const ShopRoute = ShopRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PersonalRoute = PersonalRouteImport.update({
@@ -104,8 +122,11 @@ export interface FileRoutesByFullPath {
   '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
+  '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/terms': typeof TermsRoute
   '/tutorial': typeof TutorialRouteWithChildren
   '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
@@ -120,8 +141,11 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
+  '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/terms': typeof TermsRoute
   '/tutorial': typeof TutorialRouteWithChildren
   '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
@@ -137,8 +161,11 @@ export interface FileRoutesById {
   '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
+  '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/terms': typeof TermsRoute
   '/tutorial': typeof TutorialRouteWithChildren
   '/play/classic': typeof PlayClassicRoute
   '/play/dropdoku': typeof PlayDropdokuRoute
@@ -155,8 +182,11 @@ export interface FileRouteTypes {
     | '/explore'
     | '/leaderboard'
     | '/personal'
+    | '/privacy'
+    | '/reset-password'
     | '/settings'
     | '/shop'
+    | '/terms'
     | '/tutorial'
     | '/play/classic'
     | '/play/dropdoku'
@@ -171,8 +201,11 @@ export interface FileRouteTypes {
     | '/explore'
     | '/leaderboard'
     | '/personal'
+    | '/privacy'
+    | '/reset-password'
     | '/settings'
     | '/shop'
+    | '/terms'
     | '/tutorial'
     | '/play/classic'
     | '/play/dropdoku'
@@ -187,8 +220,11 @@ export interface FileRouteTypes {
     | '/explore'
     | '/leaderboard'
     | '/personal'
+    | '/privacy'
+    | '/reset-password'
     | '/settings'
     | '/shop'
+    | '/terms'
     | '/tutorial'
     | '/play/classic'
     | '/play/dropdoku'
@@ -204,8 +240,11 @@ export interface RootRouteChildren {
   ExploreRoute: typeof ExploreRoute
   LeaderboardRoute: typeof LeaderboardRoute
   PersonalRoute: typeof PersonalRoute
+  PrivacyRoute: typeof PrivacyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   ShopRoute: typeof ShopRoute
+  TermsRoute: typeof TermsRoute
   TutorialRoute: typeof TutorialRouteWithChildren
   PlayClassicRoute: typeof PlayClassicRoute
   PlayDropdokuRoute: typeof PlayDropdokuRoute
@@ -220,6 +259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TutorialRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shop': {
       id: '/shop'
       path: '/shop'
@@ -232,6 +278,20 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/personal': {
@@ -335,8 +395,11 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreRoute: ExploreRoute,
   LeaderboardRoute: LeaderboardRoute,
   PersonalRoute: PersonalRoute,
+  PrivacyRoute: PrivacyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   ShopRoute: ShopRoute,
+  TermsRoute: TermsRoute,
   TutorialRoute: TutorialRouteWithChildren,
   PlayClassicRoute: PlayClassicRoute,
   PlayDropdokuRoute: PlayDropdokuRoute,
@@ -344,13 +407,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

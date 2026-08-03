@@ -3,6 +3,7 @@ import { Ticket, Play } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
 import { TICKET_CAP, formatCountdown, msToNextTicket } from "@/game/economy";
 import { useT } from "@/i18n";
+import { showRewardedAd } from "@/lib/ads";
 import { toast } from "sonner";
 
 /**
@@ -31,10 +32,21 @@ export function TicketMeter({ compact = false }: { compact?: boolean }) {
   const full = tickets >= TICKET_CAP;
   const left = videosLeft();
 
-  const onWatch = () => {
+  const onWatch = async () => {
+    if (full) {
+      toast.info(t("Ai deja maximul de tichete."));
+      return;
+    }
+    if (left <= 0) {
+      toast.error(t("Ai epuizat videoclipurile de azi."));
+      return;
+    }
+    const rewarded = await showRewardedAd();
+    if (!rewarded) {
+      toast.error(t("Reclama nu a putut fi afișată."));
+      return;
+    }
     if (watchAd()) toast.success(`+1 🎟 · ${left - 1} ${t("video rămase azi")}`);
-    else if (full) toast.info(t("Ai deja maximul de tichete."));
-    else toast.error(t("Ai epuizat videoclipurile de azi."));
   };
 
   if (compact) {
@@ -45,7 +57,7 @@ export function TicketMeter({ compact = false }: { compact?: boolean }) {
         <button
           type="button"
           disabled={full || left <= 0}
-          onClick={onWatch}
+          onClick={() => void onWatch()}
           className="ml-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40"
           aria-label={t("Vezi o reclamă pentru un tichet")}
         >
@@ -68,7 +80,7 @@ export function TicketMeter({ compact = false }: { compact?: boolean }) {
       <button
         type="button"
         disabled={full || left <= 0}
-        onClick={onWatch}
+        onClick={() => void onWatch()}
 
         className="ml-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40"
         aria-label={t("Vezi o reclamă pentru un tichet")}

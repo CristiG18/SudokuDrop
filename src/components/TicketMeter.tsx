@@ -31,10 +31,21 @@ export function TicketMeter({ compact = false }: { compact?: boolean }) {
   const full = tickets >= TICKET_CAP;
   const left = videosLeft();
 
-  const onWatch = () => {
+  const onWatch = async () => {
+    if (full) {
+      toast.info(t("Ai deja maximul de tichete."));
+      return;
+    }
+    if (left <= 0) {
+      toast.error(t("Ai epuizat videoclipurile de azi."));
+      return;
+    }
+    const rewarded = await showRewardedAd();
+    if (!rewarded) {
+      toast.error(t("Reclama nu a putut fi afișată."));
+      return;
+    }
     if (watchAd()) toast.success(`+1 🎟 · ${left - 1} ${t("video rămase azi")}`);
-    else if (full) toast.info(t("Ai deja maximul de tichete."));
-    else toast.error(t("Ai epuizat videoclipurile de azi."));
   };
 
   if (compact) {

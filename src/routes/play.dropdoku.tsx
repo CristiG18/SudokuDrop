@@ -28,6 +28,7 @@ import { useGameStore, type Helper } from "@/store/game-store";
 import { ArrowLeft, ArrowDown, Gem, Pause, Play, RotateCw } from "lucide-react";
 import { sfx, unlockAudio } from "@/lib/sfx";
 import { PauseSheet } from "@/components/PauseSheet";
+import { ClearFx, type ClearFxItem } from "@/components/game/ClearFx";
 import { RewardedHelperModal } from "@/components/RewardedHelperModal";
 import { useT } from "@/i18n";
 import { estimatePercentile, formatPercentile } from "@/game/economy";
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/play/dropdoku")({
   }),
   component: DropdokuRoute,
   validateSearch: (s: Record<string, unknown>) => {
-    const modes = ["timeattack", "timerush", "rush", "ice"] as const;
+    const modes = ["timeattack", "timerush", "rush"] as const;
     type GameMode = (typeof modes)[number];
     return {
       difficulty: (s.difficulty as Difficulty) || "normal",
@@ -49,6 +50,8 @@ export const Route = createFileRoute("/play/dropdoku")({
       mode: modes.includes(s.mode as GameMode) ? (s.mode as GameMode) : undefined,
       seconds:
         typeof s.seconds === "number" ? s.seconds : s.seconds ? Number(s.seconds) : undefined,
+      // Tournament category this run counts towards (e.g. "duel:hard").
+      tkey: typeof s.tkey === "string" ? s.tkey : undefined,
     };
   },
 
@@ -59,6 +62,7 @@ interface Popup {
   x: number;
   y: number;
   text: string;
+  kind: "score" | "time";
 }
 
 function previewForHelper(
@@ -107,11 +111,10 @@ function DropdokuLoading() {
 
 function DropdokuPage() {
   const t = useT();
-  const { difficulty, resume, mode, seconds: attackSeconds } = Route.useSearch();
+  const { difficulty, resume, mode, seconds: attackSeconds, tkey } = Route.useSearch();
   const isTimeAttack = mode === "timeattack";
   const isTimeRush = mode === "timerush";
   const isRush = mode === "rush";
-  const isIce = mode === "ice";
   const isTimed = isTimeAttack || isTimeRush;
   // Special modes never resume / never persist a session.
   const isSpecial = Boolean(mode);
@@ -135,6 +138,7 @@ function DropdokuPage() {
   const controlMode = useGameStore((s) => s.settings.controlMode);
   const setSetting = useGameStore((s) => s.setSetting);
   const awardRunXp = useGameStore((s) => s.awardRunXp);
+  const recordCategoryScore = useGameStore((s) => s.recordCategoryScore);
 
   const initial = useMemo(() => {
     if (!isSpecial && resume && savedSession && savedSession.difficulty === difficulty) {
@@ -180,8 +184,8 @@ function DropdokuPage() {
   const [helperPresses, setHelperPresses] = useState(0);
   const [swapFirst, setSwapFirst] = useState<{ r: number; c: number } | null>(null);
   const [previewCells, setPreviewCells] = useState<Array<{ r: number; c: number }>>([]);
-  // Ice mode: coordinates of frozen (garbage) cells, for the icy overlay.
-  const [frozenKeys, setFrozenKeys] = useState<string[]>([]);
+  const [fxItems, setFxItems] = useState<ClearFxItem[]>([]);
+  const fxId = useRef(0);
 
   const [bonusSecs, setBonusSecs] = useState(0);
   const [reviveCount, setReviveCount] = useState(0);
@@ -231,46 +235,6 @@ function DropdokuPage() {
       else if (remainingAttack > 0 && remainingAttack % 60 === 0) navigator.vibrate([60, 40, 60]);
     }
   }, [remainingAttack, isTimed, gameOver, score, setHighScore, setSession, soundOn]);
-
-  // Ice mode: a frozen row creeps up from the bottom every few pieces.
-  const lastIceAtRef = useRef(0);
-  useEffect(() => {
-    if (!isIce || gameOver || paused || helperMode) return;
-    const every = difficulty === "easy" ? 12 : difficulty === "normal" ? 9 : 7;
-    if (pieceIndex > 0 && pieceIndex % every === 0 && lastIceAtRef.current !== pieceIndex) {
-      lastIceAtRef.current = pieceIndex;
-      setBoard((b) => {
-        const next = pushGarbageRow(b);
-        setFrozenKeys((prev) => {
-          // everything shifts one row up; the new bottom row is frozen
-          const shifted = prev
-            .map((k) => {
-              const [r, c] = k.split(",").map(Number);
-              return r - 1 >= 0 ? `${r - 1},${c}` : null;
-            })
-            .filter((k): k is string => k !== null);
-          const bottom: string[] = [];
-          for (let c = 0; c < 9; c++) {
-            if (next[8][c] !== null) bottom.push(`8,${c}`);
-          }
-          return Array.from(new Set([...shifted, ...bottom]));
-        });
-        return next;
-      });
-      if (soundOn) sfx.fail();
-    }
-  }, [pieceIndex, isIce, gameOver, paused, helperMode, difficulty, soundOn]);
-
-  // Frozen cells melt as soon as the underlying cell is emptied (cleared).
-  const frozenCells = useMemo(() => {
-    if (!isIce) return [];
-    return frozenKeys
-      .map((k) => {
-        const [r, c] = k.split(",").map(Number);
-        return { r, c };
-      })
-      .filter((p) => board[p.r]?.[p.c] !== null && board[p.r]?.[p.c] !== undefined);
-  }, [frozenKeys, board, isIce]);
 
   useEffect(() => {
     if (gameOver || isSpecial) return;
@@ -324,10 +288,11 @@ function DropdokuPage() {
   useEffect(() => {
     if (!gameOver || xpAwardedRef.current) return;
     xpAwardedRef.current = true;
-    const res = awardRunXp(difficulty, score);
+    const res = awardRunXp(difficulty, score, !!tkey);
+    if (tkey) recordCategoryScore(tkey, score);
     const rank = formatPercentile(estimatePercentile(score, Math.max(1500, highScore || 1500)));
     setEndXp({ xp: res.xpGained, levelsGained: res.levelsGained, rank });
-  }, [gameOver, awardRunXp, difficulty, score, highScore]);
+  }, [gameOver, awardRunXp, difficulty, score, highScore, tkey, recordCategoryScore]);
 
   const cellSize = useMemo(() => {
     if (typeof window === "undefined") return 36;
@@ -338,14 +303,14 @@ function DropdokuPage() {
   cellSizeRef.current = cellSize;
 
   const spawnPopup = useCallback(
-    (text: string, cells: Array<{ r: number; c: number }>, cs: number) => {
+    (text: string, cells: Array<{ r: number; c: number }>, cs: number, kind: "score" | "time" = "score") => {
       if (!cells.length) return;
       const cx = cells.reduce((a, p) => a + p.c, 0) / cells.length;
       const cy = cells.reduce((a, p) => a + p.r, 0) / cells.length;
       const x = (cx + 0.5) * cs;
       const y = (cy + 0.5) * cs;
       const id = ++popupId.current;
-      setPopups((cur) => [...cur, { id, x, y, text }]);
+      setPopups((cur) => [...cur, { id, x, y, text, kind }]);
       setTimeout(() => setPopups((cur) => cur.filter((p) => p.id !== id)), 900);
     },
     [],
@@ -361,6 +326,16 @@ function DropdokuPage() {
       }
       setClearingCells(result.cells);
       setBoard(result.board);
+      const items: ClearFxItem[] = [
+        ...result.rowIdx.map((index) => ({ id: ++fxId.current, kind: "row" as const, index })),
+        ...result.colIdx.map((index) => ({ id: ++fxId.current, kind: "col" as const, index })),
+        ...result.boxIdx.map((b) => ({ id: ++fxId.current, kind: "box" as const, br: b.br, bc: b.bc })),
+      ];
+      setFxItems((cur) => [...cur, ...items]);
+      const ids = new Set(items.map((i) => i.id));
+      setTimeout(() => setFxItems((cur) => cur.filter((i) => !ids.has(i.id))), 700);
+      if (typeof navigator !== "undefined" && navigator.vibrate)
+        navigator.vibrate(result.boxes > 0 ? [18, 30, 22] : 18);
       const mult = multiplierFor(totalClears);
       const gain = Math.round(100 * result.clears * mult);
       setScore((s) => s + gain);
@@ -371,7 +346,7 @@ function DropdokuPage() {
         const extra = (result.rows + result.cols) * 10 + result.boxes * 15;
         if (extra > 0) {
           setBonusSecs((s) => s + extra);
-          spawnPopup(`+${extra}s`, result.cells, cellSizeRef.current);
+          spawnPopup(`+${extra}s`, result.cells, cellSizeRef.current, "time");
         }
       }
       spawnPopup(`+${gain}`, result.cells, cellSizeRef.current);
@@ -733,9 +708,7 @@ function DropdokuPage() {
                 ? t("Time Rush")
                 : mode === "rush"
                   ? t("Rush")
-                  : mode === "ice"
-                    ? t("Ice")
-                    : t("Time Attack")}
+                  : t("Time Attack")}
             </span>
             <span>·</span>
           </>
@@ -763,7 +736,6 @@ function DropdokuPage() {
             board={board}
             piece={piece}
             clearingCells={clearingCells}
-            frozenCells={frozenCells}
             helperMode={helperMode}
             swapFirst={swapFirst}
             previewCells={previewCells}
@@ -774,15 +746,27 @@ function DropdokuPage() {
             onHelperHoverCell={onHelperHover}
             onHelperCommit={applyHelperAt}
           />
+          <ClearFx
+            items={fxItems}
+            cellSize={cellSize}
+            offsetTop={cellSize * 3 + 8}
+            offsetLeft={8}
+          />
           {popups.map((p) => (
             <div
               key={p.id}
-              className="absolute pointer-events-none font-bold text-primary text-sm"
+              className={
+                "absolute pointer-events-none font-bold text-sm drop-shadow-sm " +
+                (p.kind === "time" ? "text-amber-500" : "text-primary")
+              }
               style={{
                 left: p.x + 8,
-                top: p.y + 8,
+                // Board sits below the 3-row preview strip; time bonuses are
+                // lifted further so they never sit on top of the score popup.
+                top: p.y + 8 + cellSize * 3 + (p.kind === "time" ? -26 : 0),
                 transform: "translate(-50%, -50%)",
                 animation: "popup-rise 900ms ease-out forwards",
+                zIndex: 30,
               }}
             >
               {p.text}

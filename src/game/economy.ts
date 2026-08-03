@@ -134,3 +134,64 @@ export function estimateTimePercentile(seconds: number, reference: number) {
   if (seconds <= 0 || reference <= 0) return 50;
   return estimatePercentile(reference / seconds, 1);
 }
+
+/* ----------------------------- Tournaments ------------------------------- */
+
+/**
+ * Weekly tournaments are split into independent categories. You pay the
+ * entry fee (TOURNAMENT_ENTRY_COINS) once per category, per season, and your
+ * ranking inside that category is your best score in a single match.
+ * Entering one category never gives access to another.
+ */
+
+export interface DuelCategory {
+  id: "easy" | "normal" | "hard";
+  name: string;
+  minLevel: number;
+  prizeText: string;
+}
+
+export const DUEL_CATEGORIES: DuelCategory[] = [
+  { id: "easy", name: "Ușor", minLevel: 1, prizeText: "300 🪙 + 25 💎" },
+  { id: "normal", name: "Normal", minLevel: 3, prizeText: "700 🪙 + 60 💎" },
+  { id: "hard", name: "Dificil", minLevel: 6, prizeText: "1500 🪙 + 150 💎 + skin" },
+];
+
+export type TierId = "bronze" | "silver" | "gold" | "platinum";
+
+export interface TimeAttackTier {
+  id: TierId;
+  name: string;
+  minLevel: number;
+  /** Prize multiplier applied on top of the duration base prize. */
+  mult: number;
+}
+
+export const TIME_ATTACK_TIERS: TimeAttackTier[] = [
+  { id: "bronze", name: "Bronz", minLevel: 1, mult: 1 },
+  { id: "silver", name: "Argint", minLevel: 3, mult: 2 },
+  { id: "gold", name: "Aur", minLevel: 6, mult: 3.5 },
+  { id: "platinum", name: "Platină", minLevel: 10, mult: 6 },
+];
+
+/** Only 3, 5 and 10 minute Time Attack tournaments exist. */
+export const TIME_ATTACK_MINUTES = [3, 5, 10] as const;
+export type TimeAttackMinutes = (typeof TIME_ATTACK_MINUTES)[number];
+
+const TA_BASE_PRIZE: Record<number, number> = { 3: 150, 5: 250, 10: 500 };
+
+export function timeAttackPrize(minutes: number, tier: TierId) {
+  const base = TA_BASE_PRIZE[minutes] ?? 150;
+  const t = TIME_ATTACK_TIERS.find((x) => x.id === tier);
+  const coins = Math.round(base * (t?.mult ?? 1));
+  const gems = Math.round(coins / 12);
+  return { coins, gems, text: `${coins} 🪙 + ${gems} 💎` };
+}
+
+/** Stable identifiers for a tournament category (one paid entry each). */
+export function duelKey(difficulty: DuelCategory["id"]) {
+  return `duel:${difficulty}`;
+}
+export function timeAttackKey(minutes: number, tier: TierId) {
+  return `ta:${minutes}:${tier}`;
+}

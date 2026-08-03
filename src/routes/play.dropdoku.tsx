@@ -312,14 +312,19 @@ function DropdokuPage() {
     speed,
   ]);
 
-  // Award XP once per lost run and compute the percentile bucket for the score.
+  // Award XP once per finished run and compute the percentile bucket.
   useEffect(() => {
     if (!gameOver || xpAwardedRef.current) return;
     xpAwardedRef.current = true;
     const res = awardRunXp(difficulty, score, !!tkey || !!vkey);
     if (tkey) recordCategoryScore(tkey, score);
-    if (vkey) recordVersusMatch(score);
-    if (!tkey && !vkey) setModeBest(`free:${mode ?? difficulty}`, score);
+    if (vkey) {
+      recordVersusMatch(score, rival?.target, rival?.name);
+      // Versus never shows Game Over — you go back to the bracket screen.
+      navigate({ to: "/battle" });
+      return;
+    }
+    if (!tkey) setModeBest(`free:${mode ?? difficulty}`, score);
     const rank = formatPercentile(estimatePercentile(score, Math.max(1500, highScore || 1500)));
     setEndXp({ xp: res.xpGained, levelsGained: res.levelsGained, rank });
   }, [

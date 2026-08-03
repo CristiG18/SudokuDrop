@@ -845,6 +845,10 @@ export const useGameStore = create<GameState>()(
           s.coins = Math.max(s.coins ?? 0, 50000);
           s.diamonds = Math.max(s.diamonds ?? 0, 9000);
         }
+        if (version < 12) {
+          // Testing grant for the rebalanced economy.
+          s.diamonds = Math.max(s.diamonds ?? 0, 25000);
+        }
         if (version < 8) {
           // Tickets are now a capped, regenerating resource — clamp old stockpiles
           // and hand out starter coins so the tournament entry is reachable.

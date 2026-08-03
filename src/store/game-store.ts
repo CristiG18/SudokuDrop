@@ -423,12 +423,98 @@ export const useGameStore = create<GameState>()(
         set({ coins: get().coins - n });
         return true;
       },
-      addTickets: (n) => set({ tickets: get().tickets + n }),
+      addTickets: (n) => set({ tickets: Math.max(0, get().tickets + n) }),
       useTicket: () => {
-        if (get().tickets <= 0) return false;
-        set({ tickets: get().tickets - 1 });
+        get().regenTickets();
+        const cur = get().tickets;
+        if (cur <= 0) return false;
+        // Dropping below the cap restarts the regeneration clock.
+        const patch: Partial<GameState> = { tickets: cur - 1 };
+        if (cur >= TICKET_CAP) patch.ticketsUpdatedAt = Date.now();
+        set(patch as GameState);
         return true;
       },
+      regenTickets: () => {
+        const { tickets, ticketsUpdatedAt } = get();
+        const next = regenerated(tickets, ticketsUpdatedAt);
+        if (next.tickets !== tickets || next.ticketsUpdatedAt !== ticketsUpdatedAt) {
+          set({ tickets: next.tickets, ticketsUpdatedAt: next.ticketsUpdatedAt });
+        }
+      },
+      ticketVideosLeft: () => {
+        const today = todayISO();
+        const used = get().ticketVideoDate === today ? get().ticketVideosToday : 0;
+        return Math.max(0, TICKET_VIDEOS_PER_DAY - used);
+      },
+      watchAdForTicket: () => {
+        get().regenTickets();
+        if (get().ticketVideosLeft() <= 0) return false;
+        if (get().tickets >= TICKET_CAP) return false;
+        const today = todayISO();
+        const used = get().ticketVideoDate === today ? get().ticketVideosToday : 0;
+        set({
+          tickets: Math.min(TICKET_CAP, get().tickets + 1),
+          ticketVideosToday: used + 1,
+          ticketVideoDate: today,
+        });
+        return true;
+      },
+      exchangeGemsForCoins: (gems, coins) => {
+        if (get().diamonds < gems) return false;
+        set({ diamonds: get().diamonds - gems, coins: get().coins + coins });
+        return true;
+      },
+      exchangeCoinsForTickets: (coins, tickets) => {
+        if (get().coins < coins) return false;
+        // Purchased tickets may exceed the regeneration cap.
+        set({ coins: get().coins - coins, tickets: get().tickets + tickets });
+        return true;
+      },
+      currentSeasonKey: () => seasonKey(),
+      isTournamentEntered: () => {
+        const tr = get().tournament;
+        return tr.entered && tr.seasonKey === seasonKey();
+      },
+      enterTournament: () => {
+        if (get().isTournamentEntered()) return true;
+        if (get().coins < TOURNAMENT_ENTRY_COINS) return false;
+        set({
+          coins: get().coins - TOURNAMENT_ENTRY_COINS,
+          tournament: { seasonKey: seasonKey(), entered: true, bestScore: 0, runs: 0 },
+        });
+        return true;
+      },
+      recordTournamentRun: (score) => {
+        const tr = get().tournament;
+        const fresh = tr.seasonKey === seasonKey() ? tr : { ...tr, seasonKey: seasonKey(), bestScore: 0, runs: 0 };
+        set({
+          tournament: {
+            ...fresh,
+            bestScore: Math.max(fresh.bestScore, score),
+            runs: fresh.runs + 1,
+          },
+        });
+      },
+      addXp: (n) => {
+        const res = applyXp(get().level, get().xp, n);
+        let coins = 0;
+        let tickets = 0;
+        for (let lv = get().level + 1; lv <= res.level; lv++) {
+          const r = levelUpReward(lv);
+          coins += r.coins;
+          tickets += r.tickets;
+        }
+        set({
+          level: res.level,
+          xp: res.xp,
+          coins: get().coins + coins,
+          tickets: get().tickets + tickets,
+        });
+        return { level: res.level, levelsGained: res.levelsGained, coins, tickets, xpGained: n };
+      },
+      awardRunXp: (difficulty, score, tournament = false) =>
+        get().addXp(xpForRun(difficulty, score, tournament)),
+
       addHelpers: (h, n) => {
         const current = get().helpers[h];
         const safeCurrent = Number.isFinite(current) ? current : 0;

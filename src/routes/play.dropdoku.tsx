@@ -779,11 +779,11 @@ function DropdokuPage() {
             <span>·</span>
           </>
         )}
-        <span>{t("Record")} {highScore}</span>
+        <span>{t("Record")} {fmtNum(highScore)}</span>
         <span>·</span>
         <span>{difficulty.toUpperCase()}</span>
         <span>·</span>
-        <span><Gem className="inline w-3 h-3 text-primary" /> {diamonds}</span>
+        <span><Gem className="inline w-3 h-3 text-primary" /> {fmtNum(diamonds)}</span>
         <span>·</span>
         <button
           onClick={() =>

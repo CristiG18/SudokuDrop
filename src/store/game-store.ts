@@ -427,6 +427,8 @@ export const useGameStore = create<GameState>()(
       xp: 0,
       level: 1,
       tournament: { seasonKey: seasonKey(), entered: false, bestScore: 0, runs: 0 },
+      tournamentEntries: {},
+
       loginStreak: 0,
 
       lastLoginDate: null,

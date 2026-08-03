@@ -31,14 +31,30 @@ export function TicketMeter({ compact = false }: { compact?: boolean }) {
   const full = tickets >= TICKET_CAP;
   const left = videosLeft();
 
+  const onWatch = () => {
+    if (watchAd()) toast.success(`+1 🎟 · ${left - 1} ${t("video rămase azi")}`);
+    else if (full) toast.info(t("Ai deja maximul de tichete."));
+    else toast.error(t("Ai epuizat videoclipurile de azi."));
+  };
+
   if (compact) {
     return (
-      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-card border border-border text-xs font-semibold">
+      <span className="flex items-center gap-1 pl-2.5 pr-1 py-1 rounded-full bg-card border border-border text-xs font-semibold">
         <Ticket className="w-3.5 h-3.5 text-primary" /> {tickets}
         {!full && <span className="text-muted-foreground">· {formatCountdown(remaining)}</span>}
+        <button
+          type="button"
+          disabled={full || left <= 0}
+          onClick={onWatch}
+          className="ml-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40"
+          aria-label={t("Vezi o reclamă pentru un tichet")}
+        >
+          <Play className="w-2.5 h-2.5" />
+        </button>
       </span>
     );
   }
+
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border text-xs font-semibold">

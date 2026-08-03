@@ -11,6 +11,8 @@ import { useGameStore } from "@/store/game-store";
 import { sfx, unlockAudio } from "@/lib/sfx";
 import { PauseSheet } from "@/components/PauseSheet";
 import { useT } from "@/i18n";
+import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/play/classic")({
   head: () => ({ meta: [{ title: "Sudoku Clasic — joc" }] }),

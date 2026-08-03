@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { fmtNum } from "@/lib/format";
 import { User, Trophy, Flame, Coins, Ticket, ShoppingBag, ListOrdered, Gem } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { XpBar } from "@/components/XpBar";
 import { useGameStore } from "@/store/game-store";
 import {
@@ -43,6 +44,17 @@ function Personal() {
   const modeBest = useGameStore((s) => s.modeBest);
   const entries = useGameStore((s) => s.tournamentEntries);
   const [tab, setTab] = useState<RecordTab>("free");
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setEmail(session?.user.email ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+
 
   const helperCount = (key: keyof typeof helpers) => {
     const value = helpers[key];
@@ -81,13 +93,23 @@ function Personal() {
   return (
     <div className="min-h-screen px-5 pt-5 pb-10">
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-          <User className="w-8 h-8" strokeWidth={1.5} />
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
+          {email ? email[0]?.toUpperCase() : <User className="w-8 h-8" strokeWidth={1.5} />}
         </div>
-        <div>
-          <h1 className="text-xl font-bold">{t("Invitat")}</h1>
-          <p className="text-sm text-muted-foreground">{t("Conectare în Phase 3")}</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-bold truncate">{email ?? t("Invitat")}</h1>
+          <p className="text-sm text-muted-foreground">
+            {email ? t("Progresul se sincronizează în cloud") : t("Autentifică-te pentru a salva progresul")}
+          </p>
         </div>
+        {!email && (
+          <Link
+            to="/auth"
+            className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold shrink-0"
+          >
+            {t("Intră")}
+          </Link>
+        )}
       </div>
 
       <div className="mt-6 bg-card border border-border rounded-2xl p-4 shadow-soft">

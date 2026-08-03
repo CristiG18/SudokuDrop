@@ -721,7 +721,7 @@ function DropdokuPage() {
         </button>
         <div className="soft-card px-4 py-1.5 text-base font-bold">
           <span className="text-muted-foreground mr-2 text-xs font-medium">SCOR</span>
-          {score}
+          {fmtNum(score)}
         </div>
         <button
           onClick={() => setPaused((p) => !p)}
@@ -730,6 +730,22 @@ function DropdokuPage() {
           {paused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
         </button>
       </header>
+
+      {isVersus && rival && (
+        <div className="px-4 pb-2">
+          <div className="soft-card px-4 py-2 flex items-center justify-between text-sm">
+            <span className="font-bold text-primary tabular-nums">
+              {t("Tu")} {fmtNum(score)}
+            </span>
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
+              {t("live")}
+            </span>
+            <span className="font-bold tabular-nums">
+              {fmtNum(rivalLive)} {rival.name}
+            </span>
+          </div>
+        </div>
+      )}
 
       {isTimed && (
         <div className="px-4 pb-2 flex flex-col items-center justify-center">
@@ -748,6 +764,7 @@ function DropdokuPage() {
           )}
         </div>
       )}
+
 
       <div className="px-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
         {mode && (

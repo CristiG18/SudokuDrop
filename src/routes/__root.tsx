@@ -148,6 +148,16 @@ function RootComponent() {
     root.dataset.skin = activeSkin;
   }, [activeSkin]);
 
+  // Android hardware back button → in-app navigation instead of closing the app.
+  useEffect(() => {
+    let dispose: (() => void) | undefined;
+    void initNativeShell(() => false).then((fn) => {
+      dispose = fn;
+    });
+    return () => dispose?.();
+  }, []);
+
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen pb-20">

@@ -21,6 +21,9 @@ const config: CapacitorConfig = {
     cleartext: false,
   },
   plugins: {
+    AdMob: {
+      appId: "ca-app-pub-4013371667115642~7583618725",
+    },
     SplashScreen: {
       launchAutoHide: true,
       launchShowDuration: 900,

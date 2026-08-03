@@ -949,11 +949,11 @@ function DropdokuPage() {
         }}
       />
 
-      {gameOver && (
+      {gameOver && !isVersus && (
         <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-30 px-6">
           <div className="soft-card p-8 text-center w-full max-w-sm animate-slide-up">
             <h2 className="text-3xl font-bold mb-1">{t("Game Over")}</h2>
-            <p className="text-muted-foreground mb-1">{t("Scor")}: {score}</p>
+            <p className="text-muted-foreground mb-1">{t("Scor")}: {fmtNum(score)}</p>
             {endXp && (
               <p className="text-sm font-semibold text-primary mb-4">
                 +{endXp.xp} XP · {t(endXp.rank)}
@@ -961,7 +961,7 @@ function DropdokuPage() {
               </p>
             )}
             <div className="flex flex-col gap-3">
-              {!usedFreeRevive && (
+              {canRevive && !usedFreeRevive && (
                 <button
                   onClick={() => revive(true)}
                   className="px-6 py-3 rounded-2xl bg-accent text-accent-foreground font-bold"
@@ -969,10 +969,11 @@ function DropdokuPage() {
                   ▶ {t("Vezi reclama — Reînvie gratuit")}
                 </button>
               )}
-              <button
-                onClick={() => revive(false)}
-                disabled={diamonds < reviveCost}
-                className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-bold disabled:opacity-40"
+              {canRevive && usedFreeRevive && (
+                <button
+                  onClick={() => revive(false)}
+                  disabled={diamonds < reviveCost}
+                  className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-bold disabled:opacity-40"
               >
                 <Gem className="inline w-4 h-4 mr-1" /> {reviveCost} — {t("Reînvie")}
 

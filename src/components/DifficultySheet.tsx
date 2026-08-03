@@ -2,13 +2,14 @@ import { X } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
 import { useT } from "@/i18n";
 
-export type DropDifficulty = "easy" | "normal" | "hard";
+export type DropDifficulty = "easy" | "normal" | "hard" | "extreme";
 export type SpecialMode = "timerush" | "rush";
 
 const LEVELS: Array<{ key: DropDifficulty; label: string; sub: string }> = [
   { key: "easy", label: "Ușor", sub: "2 seturi de cifre · cădere lentă" },
   { key: "normal", label: "Normal", sub: "3 seturi · viteză medie" },
   { key: "hard", label: "Dificil", sub: "4 seturi · cădere rapidă" },
+  { key: "extreme", label: "Extrem", sub: "5 seturi · cădere rapidă" },
 ];
 
 const SPECIALS: Array<{ key: SpecialMode; label: string; sub: string; emoji: string }> = [

@@ -85,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Sudoku Drop, aka Dropdoku: piese cad într-o grilă 9x9, completezi rânduri, coloane și pătrate. Zilnice, evenimente, turnee.",
+          "Sudoku Drop: piese cad într-o grilă 9x9, completezi rânduri, coloane și pătrate. Zilnice, evenimente, turnee.",
       },
       { name: "author", content: "Sudoku Drop" },
       { property: "og:title", content: "Sudoku Drop (Dropdoku)" },

@@ -248,6 +248,13 @@ function DropdokuPage() {
   const remainingAttack = isTimed
     ? Math.max(0, totalAttackSecs + bonusSecs - secondsPlayed)
     : 0;
+  // Rival's live score in a Versus match, paced with the match clock.
+  const rivalLive = rival
+    ? versusRivalLive(
+        rival.target,
+        totalAttackSecs > 0 ? secondsPlayed / totalAttackSecs : 0,
+      )
+    : 0;
   useEffect(() => {
     if (!isTimed || gameOver) return;
     if (remainingAttack === 0) {

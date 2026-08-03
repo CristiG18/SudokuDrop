@@ -124,6 +124,10 @@ function DropdokuPage() {
   const isTimeRush = mode === "timerush";
   const isRush = mode === "rush";
   const isTimed = isTimeAttack || isTimeRush;
+  // Versus bracket match: no game over, no revive — just a win/loss result.
+  const isVersus = Boolean(vkey);
+  // Revive is only offered in Classic and in Time Attack tournaments.
+  const canRevive = Boolean(tkey) && !isVersus;
   // Special modes never resume / never persist a session.
   const isSpecial = Boolean(mode);
   const totalAttackSecs = isTimeAttack

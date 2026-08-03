@@ -414,8 +414,26 @@ function VersusBracket({
     return `${t("Optimi")}`;
   };
 
+  const last = run.matches[run.matches.length - 1];
+  const remaining = run.done ? 0 : totalRounds - run.round;
+
   return (
     <div className="mt-5">
+      {last && (
+        <div
+          className={`mb-3 rounded-2xl p-4 text-center shadow-card ${
+            last.won ? "bg-primary text-primary-foreground" : "bg-card border border-border"
+          }`}
+        >
+          <div className="text-2xl font-bold">
+            {last.won ? `🏅 ${t("Ai câștigat meciul")}` : `❌ ${t("Ai pierdut meciul")}`}
+          </div>
+          <div className="mt-1 text-sm tabular-nums opacity-90">
+            {t("Tu")} {fmtCoins(last.you)} — {fmtCoins(last.rival)} {last.rivalName}
+          </div>
+        </div>
+      )}
+
       <div className="rounded-2xl bg-card border border-border p-4 shadow-soft">
         <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
           Versus · {run.size} {t("jucători")}
@@ -426,28 +444,59 @@ function VersusBracket({
         <div className="text-xs text-muted-foreground mt-0.5">
           {t("Taxă")}: {fmtCoins(run.fee)} 🪙 · {t("Pot")}: {fmtCoins(versusPrize(run.size, run.fee).pot)} 🪙
         </div>
+        {!run.done && (
+          <div className="text-xs text-primary font-semibold mt-1">
+            {remaining} {remaining === 1 ? t("meci rămas") : t("meciuri rămase")}
+          </div>
+        )}
       </div>
 
+      {/* Bracket path: every round played, with the eliminated name crossed out. */}
       <div className="mt-3 space-y-2">
-        {run.matches.map((m) => (
-          <div
-            key={m.round}
-            className={`flex items-center gap-3 rounded-2xl border p-3 ${
-              m.won ? "border-primary/40 bg-accent/40" : "border-border bg-card"
-            }`}
-          >
-            <span className="text-xs font-semibold text-muted-foreground w-20 shrink-0">
-              {roundName(m.round)}
-            </span>
-            <span className="flex-1 text-sm font-semibold tabular-nums">
-              {t("Tu")} {m.you} <span className="text-muted-foreground">vs</span> {m.rival} {m.rivalName}
-            </span>
-            <span className={`text-xs font-bold ${m.won ? "text-primary" : "text-muted-foreground"}`}>
-              {m.won ? t("Victorie") : t("Eliminat")}
-            </span>
-          </div>
-        ))}
+        {Array.from({ length: totalRounds }).map((_, i) => {
+          const m = run.matches[i];
+          if (!m) {
+            return (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded-2xl border border-dashed border-border p-3 opacity-60"
+              >
+                <span className="text-xs font-semibold text-muted-foreground w-20 shrink-0">
+                  {roundName(i)}
+                </span>
+                <span className="flex-1 text-sm text-muted-foreground">
+                  {run.done ? t("nejucat") : t("urmează")}
+                </span>
+              </div>
+            );
+          }
+          return (
+            <div
+              key={i}
+              className={`flex items-center gap-3 rounded-2xl border p-3 ${
+                m.won ? "border-primary/40 bg-accent/40" : "border-border bg-card"
+              }`}
+            >
+              <span className="text-xs font-semibold text-muted-foreground w-20 shrink-0">
+                {roundName(m.round)}
+              </span>
+              <span className="flex-1 text-sm font-semibold tabular-nums">
+                <span className={m.won ? "" : "line-through opacity-50"}>
+                  {t("Tu")} {fmtCoins(m.you)}
+                </span>
+                <span className="text-muted-foreground mx-1">vs</span>
+                <span className={m.won ? "line-through opacity-50" : ""}>
+                  {fmtCoins(m.rival)} {m.rivalName}
+                </span>
+              </span>
+              <span className={`text-xs font-bold ${m.won ? "text-primary" : "text-muted-foreground"}`}>
+                {m.won ? t("Victorie") : t("Eliminat")}
+              </span>
+            </div>
+          );
+        })}
       </div>
+
 
       {run.done ? (
         <div className="mt-4">

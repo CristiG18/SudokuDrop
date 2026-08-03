@@ -530,7 +530,18 @@ function ClassicGame() {
         })}
       </div>
 
+      <HintShopModal
+        open={hintShop}
+        adsUsed={hintAdsUsed}
+        onClose={() => setHintShop(false)}
+        onGrant={(n, fromAd) => {
+          setHintsLeft((h) => h + n);
+          if (fromAd) setHintAdsUsed((a) => a + 1);
+        }}
+      />
+
       <PauseSheet
+
         open={paused && !backOpen && !won && !lost}
         onResume={() => setPaused(false)}
         onRestart={startFresh}

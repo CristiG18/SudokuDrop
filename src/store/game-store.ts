@@ -665,7 +665,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 9,
+      version: 10,
       // Only data is persisted — actions always come from fresh code.
       partialize: (state) =>
         ({
@@ -678,6 +678,7 @@ export const useGameStore = create<GameState>()(
           xp: state.xp,
           level: state.level,
           tournament: state.tournament,
+          tournamentEntries: state.tournamentEntries,
           loginStreak: state.loginStreak,
           lastLoginDate: state.lastLoginDate,
           monthlyProgress: state.monthlyProgress,
@@ -709,6 +710,11 @@ export const useGameStore = create<GameState>()(
         }
         if (version < 9) {
           // Testing grant for skin/theme testing
+          s.diamonds = Math.max(s.diamonds ?? 0, 9000);
+        }
+        if (version < 10) {
+          // Tournaments are now per-category; the old single entry is dropped.
+          s.tournamentEntries = {};
           s.diamonds = Math.max(s.diamonds ?? 0, 9000);
         }
         if (version < 8) {

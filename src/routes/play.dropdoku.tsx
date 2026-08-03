@@ -48,7 +48,7 @@ export const Route = createFileRoute("/play/dropdoku")({
   }),
   component: DropdokuRoute,
   validateSearch: (s: Record<string, unknown>) => {
-    const modes = ["timeattack", "timerush", "rush"] as const;
+    const modes = ["timeattack"] as const;
     type GameMode = (typeof modes)[number];
     return {
       difficulty: (s.difficulty as Difficulty) || "normal",
@@ -121,20 +121,14 @@ function DropdokuPage() {
   const t = useT();
   const { difficulty, resume, mode, seconds: attackSeconds, tkey, vkey } = Route.useSearch();
   const isTimeAttack = mode === "timeattack";
-  const isTimeRush = mode === "timerush";
-  const isRush = mode === "rush";
-  const isTimed = isTimeAttack || isTimeRush;
+  const isTimed = isTimeAttack;
   // Versus bracket match: no game over, no revive — just a win/loss result.
   const isVersus = Boolean(vkey);
   // Revive is only offered in Classic and in Time Attack tournaments.
   const canRevive = Boolean(tkey) && !isVersus;
   // Special modes never resume / never persist a session.
   const isSpecial = Boolean(mode);
-  const totalAttackSecs = isTimeAttack
-    ? Math.max(30, attackSeconds ?? 120)
-    : isTimeRush
-      ? 180
-      : 0;
+  const totalAttackSecs = isTimeAttack ? Math.max(30, attackSeconds ?? 120) : 0;
   const navigate = useNavigate();
 
 
@@ -219,9 +213,7 @@ function DropdokuPage() {
   const [reviveCount, setReviveCount] = useState(0);
 
   const baseSpeed = difficulty === "easy" ? 900 : difficulty === "normal" ? 700 : 520;
-  const rushFactor = isRush ? 0.6 : 1;
-  const rampPerClear = isRush ? 18 : 8;
-  const speed = Math.max(isRush ? 150 : 220, baseSpeed * rushFactor - totalClears * rampPerClear);
+  const speed = Math.max(220, baseSpeed - totalClears * 8);
   const gravityNextAtRef = useRef(Date.now() + speed);
 
   const startedAtRef = useRef(initial.startedAt);
@@ -244,7 +236,7 @@ function DropdokuPage() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  // Countdown for the timed modes (Time Attack, Time Rush).
+  // Countdown for Time Attack.
   const remainingAttack = isTimed
     ? Math.max(0, totalAttackSecs + bonusSecs - secondsPlayed)
     : 0;
@@ -397,14 +389,6 @@ function DropdokuPage() {
       setScore((s) => s + gain);
       setTotalClears((t) => t + result.clears);
       if (soundOn) sfx.clear(result.clears);
-      // Time Rush: lines/columns add 10s, completed boxes add 15s.
-      if (isTimeRush) {
-        const extra = (result.rows + result.cols) * 10 + result.boxes * 15;
-        if (extra > 0) {
-          setBonusSecs((s) => s + extra);
-          spawnPopup(`+${extra}s`, result.cells, cellSizeRef.current, "time");
-        }
-      }
       spawnPopup(`+${gain}`, result.cells, cellSizeRef.current);
 
       setTimeout(() => {
@@ -418,7 +402,7 @@ function DropdokuPage() {
         }
       }, 320);
     },
-    [totalClears, soundOn, spawnPopup, isTimeRush],
+    [totalClears, soundOn, spawnPopup],
   );
 
   const boardRef = useRef(board);
@@ -764,11 +748,6 @@ function DropdokuPage() {
           >
             {fmtMS(remainingAttack)}
           </div>
-          {isTimeRush && (
-            <p className="text-[11px] text-muted-foreground mt-1">
-              {t("Linie/coloană +10s · box +15s")}
-            </p>
-          )}
         </div>
       )}
 
@@ -777,11 +756,7 @@ function DropdokuPage() {
         {mode && (
           <>
             <span className="px-2 py-0.5 rounded-full bg-accent text-accent-foreground font-semibold uppercase">
-              {mode === "timerush"
-                ? t("Time Rush")
-                : mode === "rush"
-                  ? t("Rush")
-                  : t("Time Attack")}
+              {t("Time Attack")}
             </span>
             <span>·</span>
           </>

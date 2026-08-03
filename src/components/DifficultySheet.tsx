@@ -3,7 +3,6 @@ import { useGameStore } from "@/store/game-store";
 import { useT } from "@/i18n";
 
 export type DropDifficulty = "easy" | "normal" | "hard" | "extreme";
-export type SpecialMode = "timerush" | "rush";
 
 const LEVELS: Array<{ key: DropDifficulty; label: string; sub: string }> = [
   { key: "easy", label: "Ușor", sub: "2 seturi de cifre · cădere lentă" },
@@ -12,16 +11,10 @@ const LEVELS: Array<{ key: DropDifficulty; label: string; sub: string }> = [
   { key: "extreme", label: "Extrem", sub: "5 seturi · cădere rapidă" },
 ];
 
-const SPECIALS: Array<{ key: SpecialMode; label: string; sub: string; emoji: string }> = [
-  { key: "timerush", label: "Time Rush", sub: "3 min · +10s/linie", emoji: "⏱️" },
-  { key: "rush", label: "Rush", sub: "cădere rapidă", emoji: "⚡" },
-];
-
 interface Props {
   open: boolean;
   onClose: () => void;
   onPick: (d: DropDifficulty, resume: boolean) => void;
-  onPickMode?: (m: SpecialMode) => void;
 }
 
 function fmt(sec: number) {
@@ -30,7 +23,7 @@ function fmt(sec: number) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export function DifficultySheet({ open, onClose, onPick, onPickMode }: Props) {
+export function DifficultySheet({ open, onClose, onPick }: Props) {
   const t = useT();
   const session = useGameStore((s) => s.dropdokuSession);
   if (!open) return null;
@@ -87,26 +80,6 @@ export function DifficultySheet({ open, onClose, onPick, onPickMode }: Props) {
           ))}
         </div>
 
-        {onPickMode && (
-          <>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-5 mb-2">
-              {t("Moduri speciale")}
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {SPECIALS.map((m) => (
-                <button
-                  key={m.key}
-                  onClick={() => onPickMode(m.key)}
-                  className="rounded-2xl bg-muted p-3 text-left active:scale-[0.98] transition"
-                >
-                  <div className="text-lg">{m.emoji}</div>
-                  <div className="font-semibold text-sm mt-0.5">{t(m.label)}</div>
-                  <div className="text-[10px] text-muted-foreground leading-tight">{t(m.sub)}</div>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
 
       </div>
     </div>

@@ -30,7 +30,14 @@ import { PauseSheet } from "@/components/PauseSheet";
 import { ClearFx, type ClearFxItem } from "@/components/game/ClearFx";
 import { RewardedHelperModal } from "@/components/RewardedHelperModal";
 import { useT } from "@/i18n";
-import { estimatePercentile, formatPercentile } from "@/game/economy";
+import {
+  estimatePercentile,
+  formatPercentile,
+  versusRivalLive,
+  versusRivalName,
+  versusRivalScore,
+} from "@/game/economy";
+import { fmtNum } from "@/lib/format";
 
 export const Route = createFileRoute("/play/dropdoku")({
   head: () => ({

@@ -9,7 +9,6 @@ import {
   Blocks,
   Settings as SettingsIcon,
   ShoppingBag,
-  Ticket,
   Coins,
   Timer,
   Zap,
@@ -45,7 +44,6 @@ function Home() {
   const t = useT();
   const diamonds = useGameStore((s) => s.diamonds);
   const coins = useGameStore((s) => s.coins);
-  const tickets = useGameStore((s) => s.tickets);
   const streak = useGameStore((s) => s.classicStreak);
   const activeTheme = useGameStore((s) => s.activeTheme);
   const month = currentMonthTheme();

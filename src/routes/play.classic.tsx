@@ -195,13 +195,21 @@ function ClassicGame() {
       const score = computeFinalScore(difficulty, secondsUsed, mistakesUsed, hintsUsedFinal);
       setFinalScore(score);
       setClassicHighScore(difficulty, score);
+      const xpRes = awardRunXp(difficulty, score);
+      setXpGained(xpRes.xpGained);
+      if (xpRes.levelsGained > 0) {
+        toast.success(
+          `${t("Nivel")} ${xpRes.level}! +${xpRes.coins} 🪙${xpRes.tickets ? ` +${xpRes.tickets} 🎟` : ""}`,
+        );
+      }
       const next = bumpStreak();
       if (next === 3) addDiamonds(20);
       else if (next === 5) addDiamonds(50);
       else if (next === 10) addDiamonds(150);
     },
-    [bumpStreak, addDiamonds, setSession, soundOn, difficulty, setClassicHighScore],
+    [bumpStreak, addDiamonds, setSession, soundOn, difficulty, setClassicHighScore, awardRunXp, t],
   );
+
 
   const tryAutoComplete = useCallback(
     (next: SudokuGrid, mistakesUsed: number, hintsUsedFinal: number) => {

@@ -597,6 +597,12 @@ function DropdokuPage() {
   // Helpers
   const startHelper = (h: Helper) => {
     if (helpers[h] <= 0 || gameOver) return;
+    // After 3 presses without using it, the helper stays locked until the
+    // next piece lands — no more resetting the timer by tapping.
+    if (helperLocked || helperPresses >= 3) {
+      setHelperLocked(true);
+      return;
+    }
     setHelperMode(h);
     setSwapFirst(null);
     setPreviewCells([]);
@@ -604,15 +610,16 @@ function DropdokuPage() {
     setPaused(true);
   };
 
-  const helperSeconds =
-    helperPresses === 0 ? 10 : helperPresses === 1 ? 10 : helperPresses === 2 ? 6 : 3;
+  const helperSeconds = helperPresses <= 1 ? 10 : helperPresses === 2 ? 6 : 3;
 
   const cancelHelper = () => {
     setHelperMode(null);
     setSwapFirst(null);
     setPreviewCells([]);
     setPaused(false);
+    if (helperPresses >= 3) setHelperLocked(true);
   };
+
 
   const onHelperHover = (r: number, c: number | null) => {
     if (!helperMode) return;

@@ -187,7 +187,7 @@ function SettingsPage() {
                 className="flex-1 py-3 rounded-2xl bg-destructive text-destructive-foreground font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {t("Șterge")}
+                {t("Șterge contul")}
               </button>
             </div>
           </div>

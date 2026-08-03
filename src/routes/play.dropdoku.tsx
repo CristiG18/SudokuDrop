@@ -516,11 +516,10 @@ function DropdokuPage() {
   const doHardDrop = () => {
     if (!piece || paused || gameOver || helperMode) return;
     const dropped = hardDrop(board, piece);
-    const locked = lockPiece(board, dropped);
     setPiece(null);
-    if (soundOn) sfx.drop();
-    resolveClears(locked);
+    commitLock(board, dropped);
   };
+
 
   // Gesture handlers (only active in gesture mode)
   const onDragMove = (delta: number) => moveBy(delta);

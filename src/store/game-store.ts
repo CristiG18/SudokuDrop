@@ -109,6 +109,15 @@ export interface TournamentState {
   runs: number;
 }
 
+/** A paid entry in one tournament category, valid for a single season. */
+export interface TournamentEntry {
+  seasonKey: string;
+  bestScore: number;
+  runs: number;
+  enteredAt: number;
+}
+
+
 export interface LevelUpResult {
   level: number;
   levelsGained: number;

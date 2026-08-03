@@ -16,6 +16,7 @@ import { SKIN_SURFACES, SKIN_SURFACE_KEYS } from "@/game/cosmetics";
 import { useGameStore } from "../store/game-store";
 import { useCloudSync } from "../lib/cloud-sync";
 import { initNativeShell } from "../lib/native";
+import { initAds } from "../lib/ads";
 
 
 

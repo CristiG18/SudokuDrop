@@ -642,16 +642,17 @@ export const useGameStore = create<GameState>()(
         });
         return true;
       },
-      recordVersusMatch: (score) => {
+      recordVersusMatch: (score, rivalOverride, rivalNameOverride) => {
         const run = get().versus;
         if (!run || run.done) return null;
         // Rivals get progressively stronger each round.
         const diffBase =
           run.difficulty === "hard" ? 4200 : run.difficulty === "medium" ? 3000 : 2000;
-        const rival = Math.round(
-          diffBase * (1 + run.round * 0.22) * (0.75 + Math.random() * 0.6),
-        );
-        const rivalName = RIVAL_NAMES[Math.floor(Math.random() * RIVAL_NAMES.length)];
+        const rival =
+          rivalOverride ??
+          Math.round(diffBase * (1 + run.round * 0.22) * (0.75 + Math.random() * 0.6));
+        const rivalName =
+          rivalNameOverride ?? RIVAL_NAMES[Math.floor(Math.random() * RIVAL_NAMES.length)];
         const won = score >= rival;
         const totalRounds = Math.round(Math.log2(run.size));
         const matches = [...run.matches, { round: run.round, you: score, rival, rivalName, won }];

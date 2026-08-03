@@ -207,7 +207,19 @@ export const TIME_ATTACK_TIERS: TimeAttackTier[] = [
 export const TIME_ATTACK_MINUTES = [3, 5, 10] as const;
 export type TimeAttackMinutes = (typeof TIME_ATTACK_MINUTES)[number];
 
-const TA_BASE_PRIZE: Record<number, number> = { 3: 150, 5: 250, 10: 500 };
+/**
+ * Duration only mildly changes the payout: 10 min is at most double 3 min.
+ */
+const TA_BASE_PRIZE: Record<number, number> = { 3: 250, 5: 350, 10: 500 };
+const TA_DURATION_GEM_MULT: Record<number, number> = { 3: 1, 5: 1.4, 10: 2 };
+
+/** First-place gem pool per tier — deliberately small on Ușor. */
+const TA_TIER_GEMS: Record<TierId, number> = {
+  easy: 5,
+  medium: 12,
+  hard: 25,
+  extreme: 50,
+};
 
 export interface PrizeRow {
   place: string;
@@ -218,16 +230,18 @@ export interface PrizeRow {
 
 /**
  * Weekly Time Attack payout. Top 3 get the big cuts, then smaller tiers
- * down to top 25% so mid-table play still pays.
+ * down to top 25% so mid-table play still pays. Gems scale mostly with
+ * difficulty, only slightly with duration.
  */
 export function timeAttackPrizeTable(minutes: number, tier: TierId): PrizeRow[] {
-  const base = TA_BASE_PRIZE[minutes] ?? 150;
+  const base = TA_BASE_PRIZE[minutes] ?? 250;
   const t = TIME_ATTACK_TIERS.find((x) => x.id === tier);
   const unit = Math.round(base * (t?.mult ?? 1));
+  const gemUnit = (TA_TIER_GEMS[tier] ?? 5) * (TA_DURATION_GEM_MULT[minutes] ?? 1);
   const row = (place: string, k: number, extra?: string): PrizeRow => ({
     place,
     coins: Math.round(unit * k),
-    gems: Math.round((unit * k) / 12),
+    gems: Math.round((gemUnit * k) / 10),
     ...(extra ? { extra } : {}),
   });
   return [
@@ -243,6 +257,32 @@ export function timeAttackPrize(minutes: number, tier: TierId) {
   const first = timeAttackPrizeTable(minutes, tier)[0];
   return { coins: first.coins, gems: first.gems, text: `${first.coins} 🪙 + ${first.gems} 💎` };
 }
+
+/* ------------------------------ Versus rivals ----------------------------- */
+
+export const VERSUS_RIVAL_NAMES = [
+  "Andrei", "Maria", "Cristi", "Ioana", "Vlad", "Elena", "Mihai", "Ana",
+  "Radu", "Diana", "George", "Sara", "Tudor", "Bianca", "Stefan", "Carmen",
+];
+
+/** Target score the simulated rival will reach by the end of the match. */
+export function versusRivalScore(difficulty: string, round: number) {
+  const diffBase = difficulty === "hard" ? 4200 : difficulty === "medium" ? 3000 : 2000;
+  return Math.round(diffBase * (1 + round * 0.22) * (0.75 + Math.random() * 0.6));
+}
+
+export function versusRivalName() {
+  return VERSUS_RIVAL_NAMES[Math.floor(Math.random() * VERSUS_RIVAL_NAMES.length)];
+}
+
+/** Rival's live score at a given progress (0..1) — slightly uneven pacing. */
+export function versusRivalLive(target: number, progress: number) {
+  const p = Math.min(1, Math.max(0, progress));
+  // Ease-in a touch so the rival doesn't look perfectly linear.
+  const curve = 0.85 * p + 0.15 * p * p;
+  return Math.round(target * curve);
+}
+
 
 /** Stable identifiers for a tournament category (one paid entry each). */
 export function timeAttackKey(minutes: number, tier: TierId) {

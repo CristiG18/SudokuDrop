@@ -168,6 +168,10 @@ interface GameState {
   isTournamentEntered: () => boolean;
   enterTournament: () => boolean;
   recordTournamentRun: (score: number) => void;
+  getTournamentEntry: (key: string) => TournamentEntry | null;
+  enterTournamentCategory: (key: string) => boolean;
+  recordCategoryScore: (key: string, score: number) => void;
+
   addXp: (n: number) => LevelUpResult;
   awardRunXp: (difficulty: string, score: number, tournament?: boolean) => LevelUpResult;
   addHelpers: (h: Helper, n: number) => void;

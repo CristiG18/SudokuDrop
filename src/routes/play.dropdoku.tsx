@@ -31,6 +31,8 @@ import { PauseSheet } from "@/components/PauseSheet";
 import { ClearFx, type ClearFxItem } from "@/components/game/ClearFx";
 import { RewardedHelperModal } from "@/components/RewardedHelperModal";
 import { useT } from "@/i18n";
+import { showRewardedAd } from "@/lib/ads";
+import { isNative } from "@/lib/native";
 import {
   estimatePercentile,
   formatPercentile,
@@ -1004,7 +1006,7 @@ function DropdokuPage() {
             <div className="flex flex-col gap-3">
               {canRevive && !usedFreeRevive && (
                 <button
-                  onClick={() => revive(true)}
+                  onClick={() => void revive(true)}
                   className="px-6 py-3 rounded-2xl bg-accent text-accent-foreground font-bold"
                 >
                   ▶ {t("Vezi reclama — Reînvie gratuit")}
@@ -1012,7 +1014,7 @@ function DropdokuPage() {
               )}
               {canRevive && usedFreeRevive && (
                 <button
-                  onClick={() => revive(false)}
+                  onClick={() => void revive(false)}
                   disabled={diamonds < reviveCost}
                   className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-bold disabled:opacity-40"
                 >

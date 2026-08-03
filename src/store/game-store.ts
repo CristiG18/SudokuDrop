@@ -127,6 +127,9 @@ interface GameState {
   xp: number;
   level: number;
   tournament: TournamentState;
+  /** One paid entry per category (duel:<difficulty> or ta:<minutes>:<tier>). */
+  tournamentEntries: Record<string, TournamentEntry>;
+
   loginStreak: number;
   lastLoginDate: string | null; // YYYY-MM-DD
   monthlyProgress: Record<string, boolean>; // key: YYYY-MM-day

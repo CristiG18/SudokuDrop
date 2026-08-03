@@ -199,7 +199,7 @@ interface GameState {
   enterTournamentCategory: (key: string, cost?: number) => boolean;
   setModeBest: (key: string, score: number) => void;
   startVersus: (key: string, size: number, difficulty: string, fee: number) => boolean;
-  recordVersusMatch: (score: number) => VersusRun | null;
+  recordVersusMatch: (score: number, rival?: number, rivalName?: string) => VersusRun | null;
   clearVersus: () => void;
   recordCategoryScore: (key: string, score: number) => void;
 

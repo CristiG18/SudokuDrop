@@ -109,6 +109,15 @@ export interface TournamentState {
   runs: number;
 }
 
+/** A paid entry in one tournament category, valid for a single season. */
+export interface TournamentEntry {
+  seasonKey: string;
+  bestScore: number;
+  runs: number;
+  enteredAt: number;
+}
+
+
 export interface LevelUpResult {
   level: number;
   levelsGained: number;
@@ -127,6 +136,9 @@ interface GameState {
   xp: number;
   level: number;
   tournament: TournamentState;
+  /** One paid entry per category (duel:<difficulty> or ta:<minutes>:<tier>). */
+  tournamentEntries: Record<string, TournamentEntry>;
+
   loginStreak: number;
   lastLoginDate: string | null; // YYYY-MM-DD
   monthlyProgress: Record<string, boolean>; // key: YYYY-MM-day
@@ -156,6 +168,10 @@ interface GameState {
   isTournamentEntered: () => boolean;
   enterTournament: () => boolean;
   recordTournamentRun: (score: number) => void;
+  getTournamentEntry: (key: string) => TournamentEntry | null;
+  enterTournamentCategory: (key: string) => boolean;
+  recordCategoryScore: (key: string, score: number) => void;
+
   addXp: (n: number) => LevelUpResult;
   awardRunXp: (difficulty: string, score: number, tournament?: boolean) => LevelUpResult;
   addHelpers: (h: Helper, n: number) => void;
@@ -295,6 +311,22 @@ function sanitizeDropdokuSession(v: unknown): DropdokuSession | null {
   };
 }
 
+function sanitizeEntries(raw: unknown): Record<string, TournamentEntry> {
+  const out: Record<string, TournamentEntry> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!v || typeof v !== "object") continue;
+    const e = v as Record<string, unknown>;
+    out[k] = {
+      seasonKey: typeof e.seasonKey === "string" ? e.seasonKey : seasonKey(),
+      bestScore: Math.max(0, Math.floor(num(e.bestScore, 0))),
+      runs: Math.max(0, Math.floor(num(e.runs, 0))),
+      enteredAt: num(e.enteredAt, Date.now()),
+    };
+  }
+  return out;
+}
+
 /**
  * Repairs any persisted blob so a stale / partial / corrupted save can never
  * crash the app. Every field falls back to a valid default.
@@ -343,6 +375,8 @@ export function sanitizeState(raw: unknown): Partial<GameState> {
       bestScore: Math.max(0, Math.floor(num(tour.bestScore, 0))),
       runs: Math.max(0, Math.floor(num(tour.runs, 0))),
     },
+    tournamentEntries: sanitizeEntries(s.tournamentEntries),
+
     loginStreak: Math.max(0, Math.floor(num(s.loginStreak, 0))),
     lastLoginDate: typeof s.lastLoginDate === "string" ? s.lastLoginDate : null,
 
@@ -393,6 +427,8 @@ export const useGameStore = create<GameState>()(
       xp: 0,
       level: 1,
       tournament: { seasonKey: seasonKey(), entered: false, bestScore: 0, runs: 0 },
+      tournamentEntries: {},
+
       loginStreak: 0,
 
       lastLoginDate: null,
@@ -495,6 +531,34 @@ export const useGameStore = create<GameState>()(
           },
         });
       },
+      getTournamentEntry: (key) => {
+        const e = get().tournamentEntries[key];
+        return e && e.seasonKey === seasonKey() ? e : null;
+      },
+      enterTournamentCategory: (key) => {
+        if (get().getTournamentEntry(key)) return true;
+        if (get().coins < TOURNAMENT_ENTRY_COINS) return false;
+        set({
+          coins: get().coins - TOURNAMENT_ENTRY_COINS,
+          tournamentEntries: {
+            ...get().tournamentEntries,
+            [key]: { seasonKey: seasonKey(), bestScore: 0, runs: 0, enteredAt: Date.now() },
+          },
+        });
+        return true;
+      },
+      recordCategoryScore: (key, score) => {
+        const cur = get().getTournamentEntry(key);
+        if (!cur) return;
+        set({
+          tournamentEntries: {
+            ...get().tournamentEntries,
+            // Only your best single match counts — the ranking never goes down.
+            [key]: { ...cur, bestScore: Math.max(cur.bestScore, score), runs: cur.runs + 1 },
+          },
+        });
+      },
+
       addXp: (n) => {
         const res = applyXp(get().level, get().xp, n);
         let coins = 0;
@@ -601,7 +665,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 9,
+      version: 10,
       // Only data is persisted — actions always come from fresh code.
       partialize: (state) =>
         ({
@@ -614,6 +678,7 @@ export const useGameStore = create<GameState>()(
           xp: state.xp,
           level: state.level,
           tournament: state.tournament,
+          tournamentEntries: state.tournamentEntries,
           loginStreak: state.loginStreak,
           lastLoginDate: state.lastLoginDate,
           monthlyProgress: state.monthlyProgress,
@@ -645,6 +710,11 @@ export const useGameStore = create<GameState>()(
         }
         if (version < 9) {
           // Testing grant for skin/theme testing
+          s.diamonds = Math.max(s.diamonds ?? 0, 9000);
+        }
+        if (version < 10) {
+          // Tournaments are now per-category; the old single entry is dropped.
+          s.tournamentEntries = {};
           s.diamonds = Math.max(s.diamonds ?? 0, 9000);
         }
         if (version < 8) {

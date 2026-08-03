@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Snowflake, Square, Blocks, Flame } from "lucide-react";
+import { BookOpen, Square, Blocks, Flame } from "lucide-react";
 import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/explore")({
@@ -22,13 +22,6 @@ const VARIANTS = [
     sub: "Puzzle clasic 9×9",
     Icon: Square,
     available: true,
-  },
-  {
-    to: "#",
-    title: "Ice Sudoku",
-    sub: "Piese de gheață se sparg",
-    Icon: Snowflake,
-    available: false,
   },
   {
     to: "#",

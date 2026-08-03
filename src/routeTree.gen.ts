@@ -15,7 +15,6 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as ExploreRouteImport } from './routes/explore'
-import { Route as EventsRouteImport } from './routes/events'
 import { Route as DailyRouteImport } from './routes/daily'
 import { Route as ClassicRouteImport } from './routes/classic'
 import { Route as BattleRouteImport } from './routes/battle'
@@ -53,11 +52,6 @@ const LeaderboardRoute = LeaderboardRouteImport.update({
 const ExploreRoute = ExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventsRoute = EventsRouteImport.update({
-  id: '/events',
-  path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DailyRoute = DailyRouteImport.update({
@@ -107,7 +101,6 @@ export interface FileRoutesByFullPath {
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
-  '/events': typeof EventsRoute
   '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
@@ -124,7 +117,6 @@ export interface FileRoutesByTo {
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
-  '/events': typeof EventsRoute
   '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
@@ -142,7 +134,6 @@ export interface FileRoutesById {
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
-  '/events': typeof EventsRoute
   '/explore': typeof ExploreRoute
   '/leaderboard': typeof LeaderboardRoute
   '/personal': typeof PersonalRoute
@@ -161,7 +152,6 @@ export interface FileRouteTypes {
     | '/battle'
     | '/classic'
     | '/daily'
-    | '/events'
     | '/explore'
     | '/leaderboard'
     | '/personal'
@@ -178,7 +168,6 @@ export interface FileRouteTypes {
     | '/battle'
     | '/classic'
     | '/daily'
-    | '/events'
     | '/explore'
     | '/leaderboard'
     | '/personal'
@@ -195,7 +184,6 @@ export interface FileRouteTypes {
     | '/battle'
     | '/classic'
     | '/daily'
-    | '/events'
     | '/explore'
     | '/leaderboard'
     | '/personal'
@@ -213,7 +201,6 @@ export interface RootRouteChildren {
   BattleRoute: typeof BattleRoute
   ClassicRoute: typeof ClassicRoute
   DailyRoute: typeof DailyRoute
-  EventsRoute: typeof EventsRoute
   ExploreRoute: typeof ExploreRoute
   LeaderboardRoute: typeof LeaderboardRoute
   PersonalRoute: typeof PersonalRoute
@@ -266,13 +253,6 @@ declare module '@tanstack/react-router' {
       path: '/explore'
       fullPath: '/explore'
       preLoaderRoute: typeof ExploreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/events': {
-      id: '/events'
-      path: '/events'
-      fullPath: '/events'
-      preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/daily': {
@@ -352,7 +332,6 @@ const rootRouteChildren: RootRouteChildren = {
   BattleRoute: BattleRoute,
   ClassicRoute: ClassicRoute,
   DailyRoute: DailyRoute,
-  EventsRoute: EventsRoute,
   ExploreRoute: ExploreRoute,
   LeaderboardRoute: LeaderboardRoute,
   PersonalRoute: PersonalRoute,

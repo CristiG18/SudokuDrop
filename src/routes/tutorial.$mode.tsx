@@ -76,16 +76,6 @@ const LESSONS: Record<string, Lesson> = {
     ],
     play: { to: "/daily", label: "Vezi provocarea de azi" },
   },
-  events: {
-    title: "Evenimente lunare",
-    intro:
-      "100 de niveluri tematice care se resetează la 1 ale lunii. Dificultatea crește treptat: niveluri 1–25 ușoare, 91–100 master.",
-    steps: [
-      { title: "Hartă liniară", body: "Deblochezi următorul nivel pe rând." },
-      { title: "Recompense", body: "Diamante, helpers și un skin tematic la final." },
-    ],
-    play: { to: "/events", label: "Deschide evenimentul" },
-  },
   battle: {
     title: "Turnee 1v1",
     intro:
@@ -93,7 +83,7 @@ const LESSONS: Record<string, Lesson> = {
     steps: [
       {
         title: "Tiere",
-        body: "Bronz, Argint, Aur, Platină, Master — câștigi puncte ca să avansezi.",
+        body: "Bronz, Argint, Aur, Platină — te înscrii separat la fiecare categorie, cu 1000 🪙.",
       },
       { title: "Premii", body: "Top fiecărui sezon primește diamante și skinuri exclusive." },
     ],

@@ -133,6 +133,10 @@ export interface ClearResult {
   cols: number;
   boxes: number;
   cells: Array<{ r: number; c: number }>;
+  /** Indices of the cleared units, used to drive the visual effects. */
+  rowIdx: number[];
+  colIdx: number[];
+  boxIdx: Array<{ br: number; bc: number }>;
 }
 
 export function findAndClear(board: Board): ClearResult {
@@ -141,11 +145,15 @@ export function findAndClear(board: Board): ClearResult {
   let rows = 0;
   let cols = 0;
   let boxes = 0;
+  const rowIdx: number[] = [];
+  const colIdx: number[] = [];
+  const boxIdx: Array<{ br: number; bc: number }> = [];
 
   for (let r = 0; r < ROWS; r++) {
     if (isUnitComplete(board[r])) {
       clears++;
       rows++;
+      rowIdx.push(r);
       for (let c = 0; c < COLS; c++) toClear.add(`${r},${c}`);
     }
   }
@@ -154,6 +162,7 @@ export function findAndClear(board: Board): ClearResult {
     if (isUnitComplete(col)) {
       clears++;
       cols++;
+      colIdx.push(c);
       for (let r = 0; r < ROWS; r++) toClear.add(`${r},${c}`);
     }
   }
@@ -165,13 +174,26 @@ export function findAndClear(board: Board): ClearResult {
       if (isUnitComplete(cells)) {
         clears++;
         boxes++;
+        boxIdx.push({ br, bc });
         for (let r = br * 3; r < br * 3 + 3; r++)
           for (let c = bc * 3; c < bc * 3 + 3; c++) toClear.add(`${r},${c}`);
       }
     }
   }
 
-  if (clears === 0) return { board, clears: 0, rows: 0, cols: 0, boxes: 0, cells: [] };
+  if (clears === 0)
+    return {
+      board,
+      clears: 0,
+      rows: 0,
+      cols: 0,
+      boxes: 0,
+      cells: [],
+      rowIdx: [],
+      colIdx: [],
+      boxIdx: [],
+    };
+
 
   const next = board.map((row) => row.slice());
   const cleared: Array<{ r: number; c: number }> = [];
@@ -180,7 +202,7 @@ export function findAndClear(board: Board): ClearResult {
     next[r][c] = null;
     cleared.push({ r, c });
   }
-  return { board: next, clears, rows, cols, boxes, cells: cleared };
+  return { board: next, clears, rows, cols, boxes, cells: cleared, rowIdx, colIdx, boxIdx };
 }
 
 // Ice mode: pushes a partially-filled "frozen" row up from the bottom.

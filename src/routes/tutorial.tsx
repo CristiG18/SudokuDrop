@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, Blocks, Calendar, Sparkles, Square, Swords } from "lucide-react";
+import { ArrowLeft, Blocks, Calendar, Square, Swords } from "lucide-react";
 import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/tutorial")({
@@ -11,8 +11,7 @@ const MODES = [
   { key: "dropdoku", title: "Sudoku Drop", sub: "Piese care cad — endless", Icon: Blocks },
   { key: "classic", title: "Sudoku Clasic", sub: "Puzzle 9×9 tradițional", Icon: Square },
   { key: "daily", title: "Provocarea Zilnică", sub: "Un puzzle nou în fiecare zi", Icon: Calendar },
-  { key: "events", title: "Evenimente lunare", sub: "100 niveluri tematice", Icon: Sparkles },
-  { key: "battle", title: "Turnee 1v1", sub: "Bronz → Master", Icon: Swords },
+  { key: "battle", title: "Turnee 1v1", sub: "Bronz → Platină", Icon: Swords },
 ];
 
 function TutorialLayout() {

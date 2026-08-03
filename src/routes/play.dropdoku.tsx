@@ -652,9 +652,9 @@ function DropdokuPage() {
   const revive = (free: boolean) => {
     if (!free && !spendDiamonds(reviveCost)) return;
     if (free) setUsedFreeRevive(true);
+    else setReviveCount((n) => n + 1);
     xpAwardedRef.current = false;
     setEndXp(null);
-    else setReviveCount((n) => n + 1);
     if (isTimed) setBonusSecs((s) => s + 30);
     setBoard((b) => clearTopRows(b, 3));
     setGameOver(false);

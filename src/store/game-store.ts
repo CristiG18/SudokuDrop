@@ -387,7 +387,14 @@ export const useGameStore = create<GameState>()(
       diamonds: 250,
       coins: 0,
       tickets: 3,
+      ticketsUpdatedAt: Date.now(),
+      ticketVideosToday: 0,
+      ticketVideoDate: null,
+      xp: 0,
+      level: 1,
+      tournament: { seasonKey: seasonKey(), entered: false, bestScore: 0, runs: 0 },
       loginStreak: 0,
+
       lastLoginDate: null,
       monthlyProgress: {},
       highScores: {

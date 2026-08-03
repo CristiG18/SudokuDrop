@@ -4,7 +4,6 @@ import {
   Crown,
   Flame,
   BookOpen,
-  Sparkles,
   Trophy,
   Blocks,
   Settings as SettingsIcon,
@@ -12,7 +11,6 @@ import {
   Coins,
   Timer,
   Zap,
-  Snowflake,
 
 } from "lucide-react";
 import { useState, useEffect } from "react";

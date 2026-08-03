@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, Blocks, Calendar, Sparkles, Square, Swords } from "lucide-react";
+import { ArrowLeft, Blocks, Calendar, Square, Swords } from "lucide-react";
 import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/tutorial")({

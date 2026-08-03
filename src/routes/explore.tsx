@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Snowflake, Square, Blocks, Flame } from "lucide-react";
+import { BookOpen, Square, Blocks, Flame } from "lucide-react";
 import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/explore")({

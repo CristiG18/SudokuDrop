@@ -1,8 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, LogIn, LogOut, UserCircle2 } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Loader2,
+  LogIn,
+  LogOut,
+  Shield,
+  Trash2,
+  UserCircle2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/game-store";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteMyAccount } from "@/lib/account.functions";
 import { toast } from "sonner";
 import { ThemePicker } from "@/components/ThemePicker";
 import { SkinPicker } from "@/components/SkinPicker";

@@ -102,10 +102,31 @@ export interface DailyClaim {
   tickets: number;
 }
 
+export interface TournamentState {
+  seasonKey: string; // ISO week, e.g. 2026-W32
+  entered: boolean;
+  bestScore: number;
+  runs: number;
+}
+
+export interface LevelUpResult {
+  level: number;
+  levelsGained: number;
+  coins: number;
+  tickets: number;
+  xpGained: number;
+}
+
 interface GameState {
   diamonds: number;
   coins: number;
   tickets: number;
+  ticketsUpdatedAt: number;
+  ticketVideosToday: number;
+  ticketVideoDate: string | null;
+  xp: number;
+  level: number;
+  tournament: TournamentState;
   loginStreak: number;
   lastLoginDate: string | null; // YYYY-MM-DD
   monthlyProgress: Record<string, boolean>; // key: YYYY-MM-day
@@ -126,6 +147,17 @@ interface GameState {
   spendCoins: (n: number) => boolean;
   addTickets: (n: number) => void;
   useTicket: () => boolean;
+  regenTickets: () => void;
+  ticketVideosLeft: () => number;
+  watchAdForTicket: () => boolean;
+  exchangeGemsForCoins: (gems: number, coins: number) => boolean;
+  exchangeCoinsForTickets: (coins: number, tickets: number) => boolean;
+  currentSeasonKey: () => string;
+  isTournamentEntered: () => boolean;
+  enterTournament: () => boolean;
+  recordTournamentRun: (score: number) => void;
+  addXp: (n: number) => LevelUpResult;
+  awardRunXp: (difficulty: string, score: number, tournament?: boolean) => LevelUpResult;
   addHelpers: (h: Helper, n: number) => void;
   useHelper: (h: Helper) => boolean;
   setDropdokuHighScore: (score: number) => void;
@@ -146,6 +178,17 @@ interface GameState {
   checkDailyPending: () => DailyClaim | null;
   claimDaily: () => DailyClaim | null;
 }
+
+/** ISO-week key, e.g. 2026-W32 — Monday 00:00 to Sunday 23:59. */
+export function seasonKey(date = new Date()) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
 
 function todayISO() {
   const d = new Date();

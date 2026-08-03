@@ -840,6 +840,9 @@ export const useGameStore = create<GameState>()(
           s.tournamentEntries = {};
           s.versus = null;
           s.modeBest = {};
+          // Testing grant so every tournament tier is reachable.
+          s.coins = Math.max(s.coins ?? 0, 50000);
+          s.diamonds = Math.max(s.diamonds ?? 0, 9000);
         }
         if (version < 8) {
           // Tickets are now a capped, regenerating resource — clamp old stockpiles

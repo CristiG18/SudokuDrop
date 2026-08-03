@@ -728,7 +728,9 @@ function DropdokuPage() {
   // Gem revives double each time: 100 → 200 → 400 …
   const reviveCost = 100 * Math.pow(2, reviveCount);
 
-  const revive = (free: boolean) => {
+  const revive = async (free: boolean) => {
+    // The free revive is paid for with a rewarded ad on device.
+    if (free && isNative() && !(await showRewardedAd())) return;
     if (!free && !spendDiamonds(reviveCost)) return;
     if (free) setUsedFreeRevive(true);
     else setReviveCount((n) => n + 1);

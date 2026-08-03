@@ -11,6 +11,7 @@ import {
 import { useGameStore } from "@/store/game-store";
 import { sfx, unlockAudio } from "@/lib/sfx";
 import { PauseSheet } from "@/components/PauseSheet";
+import { HintShopModal } from "@/components/HintShopModal";
 import { useT } from "@/i18n";
 import { toast } from "sonner";
 
@@ -120,6 +121,8 @@ function ClassicGame() {
   const [won, setWon] = useState(false);
   const [hintsLeft, setHintsLeft] = useState(init.hintsLeft);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [hintShop, setHintShop] = useState(false);
+  const [hintAdsUsed, setHintAdsUsed] = useState(0);
   const [flashCells, setFlashCells] = useState<Set<string>>(new Set());
   const startedAtRef = useRef(init.startedAt);
   const [finalScore, setFinalScore] = useState<number | null>(null);
@@ -491,7 +494,6 @@ function ClassicGame() {
           Icon={Lightbulb}
           label={`${t("Indiciu")} ${hintsLeft}`}
           onClick={useHint}
-          disabled={hintsLeft <= 0}
         />
       </div>
 

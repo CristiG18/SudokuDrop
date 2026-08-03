@@ -15,6 +15,8 @@ import { BottomTabs } from "../components/BottomTabs";
 import { SKIN_SURFACES, SKIN_SURFACE_KEYS } from "@/game/cosmetics";
 import { useGameStore } from "../store/game-store";
 import { useCloudSync } from "../lib/cloud-sync";
+import { initNativeShell } from "../lib/native";
+
 
 
 function NotFoundComponent() {
@@ -147,6 +149,16 @@ function RootComponent() {
     if (vars) Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
     root.dataset.skin = activeSkin;
   }, [activeSkin]);
+
+  // Android hardware back button → in-app navigation instead of closing the app.
+  useEffect(() => {
+    let dispose: (() => void) | undefined;
+    void initNativeShell(() => false).then((fn) => {
+      dispose = fn;
+    });
+    return () => dispose?.();
+  }, []);
+
 
   return (
     <QueryClientProvider client={queryClient}>

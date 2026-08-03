@@ -11,6 +11,11 @@ import {
   versusPrize,
 } from "@/game/economy";
 
+/** Clean launch balance — identical for new accounts and migrated ones. */
+export const START_DIAMONDS = 100;
+export const START_COINS = 100;
+export const START_TICKETS = 5;
+
 
 export type Helper = "hammer" | "swap" | "boom" | "cross";
 export type ControlMode = "buttons" | "gestures";
@@ -408,9 +413,10 @@ export function sanitizeState(raw: unknown): Partial<GameState> {
   const tour = (s.tournament ?? {}) as Record<string, unknown>;
 
   return {
-    diamonds: Math.max(0, Math.floor(num(s.diamonds, 250))),
-    coins: Math.max(0, Math.floor(num(s.coins, 0))),
-    tickets: Math.max(0, Math.floor(num(s.tickets, 3))),
+    diamonds: Math.max(0, Math.floor(num(s.diamonds, START_DIAMONDS))),
+    coins: Math.max(0, Math.floor(num(s.coins, START_COINS))),
+    tickets: Math.max(0, Math.floor(num(s.tickets, START_TICKETS))),
+
     ticketsUpdatedAt: num(s.ticketsUpdatedAt, Date.now()),
     ticketVideosToday: Math.max(0, Math.floor(num(s.ticketVideosToday, 0))),
     ticketVideoDate: typeof s.ticketVideoDate === "string" ? s.ticketVideoDate : null,
@@ -475,9 +481,10 @@ export function sanitizeState(raw: unknown): Partial<GameState> {
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
-      diamonds: 250,
-      coins: 0,
-      tickets: 3,
+      diamonds: START_DIAMONDS,
+      coins: START_COINS,
+      tickets: START_TICKETS,
+
       ticketsUpdatedAt: Date.now(),
       ticketVideosToday: 0,
       ticketVideoDate: null,
@@ -782,7 +789,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 12,
+      version: 13,
       // Only data is persisted — actions always come from fresh code.
       partialize: (state) =>
         ({
@@ -815,52 +822,22 @@ export const useGameStore = create<GameState>()(
         }) as unknown as GameState,
       migrate: (persisted: unknown, version) => {
         const s = sanitizeState(persisted);
-        if (version < 3) {
-          s.activeTheme = "emerald";
-          s.ownedThemes = ["emerald"];
-          s.diamonds = Math.max(s.diamonds ?? 0, 1000);
-          s.tickets = Math.max(s.tickets ?? 0, 1000);
-          s.dropdokuSession = null;
-          s.classicSession = null;
-        }
-        if (version < 6) {
-          // Testing grant
-          s.diamonds = Math.max(s.diamonds ?? 0, 9000);
-        }
-        if (version < 9) {
-          // Testing grant for skin/theme testing
-          s.diamonds = Math.max(s.diamonds ?? 0, 9000);
-        }
-        if (version < 10) {
-          // Tournaments are now per-category; the old single entry is dropped.
-          s.tournamentEntries = {};
-          s.diamonds = Math.max(s.diamonds ?? 0, 9000);
-        }
-        if (version < 11) {
-          // Tournament structure changed (Versus brackets + renamed TA tiers).
+        if (version < 13) {
+          // Launch economy reset: no more testing grants. Everyone starts from
+          // the same clean balance.
+          s.activeTheme = s.activeTheme ?? "emerald";
           s.tournamentEntries = {};
           s.versus = null;
-          s.modeBest = {};
-          // Testing grant so every tournament tier is reachable.
-          s.coins = Math.max(s.coins ?? 0, 50000);
-          s.diamonds = Math.max(s.diamonds ?? 0, 9000);
-        }
-        if (version < 12) {
-          // Testing grant for the rebalanced economy.
-          s.diamonds = Math.max(s.diamonds ?? 0, 25000);
-        }
-        if (version < 8) {
-          // Tickets are now a capped, regenerating resource — clamp old stockpiles
-          // and hand out starter coins so the tournament entry is reachable.
-          s.tickets = Math.min(TICKET_CAP, s.tickets ?? TICKET_CAP);
+          s.diamonds = START_DIAMONDS;
+          s.coins = START_COINS;
+          s.tickets = START_TICKETS;
           s.ticketsUpdatedAt = Date.now();
-          s.coins = Math.max(s.coins ?? 0, 2000);
           s.xp = s.xp ?? 0;
           s.level = s.level ?? 1;
         }
         return s as GameState;
-
       },
+
       // Last line of defense: whatever comes out of storage is repaired before
       // it reaches any component, so a partial blob can never crash a screen.
       merge: (persisted, current) => ({ ...current, ...sanitizeState(persisted) }),

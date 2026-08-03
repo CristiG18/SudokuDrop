@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Crown, Medal } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchTop, type LeaderRow } from "@/lib/leaderboard";
+
 import { useGameStore, type ClassicDifficulty } from "@/store/game-store";
 import {
   TIME_ATTACK_MINUTES,
@@ -110,7 +112,25 @@ function Leaderboard() {
       .reduce((m, [, v]) => Math.max(m, v), 0);
   }
 
-  const rows = makeBoard(hash(key), Math.round(max), you);
+  const [remote, setRemote] = useState<LeaderRow[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setRemote(null);
+    const [m, ...rest] = key.split(":");
+    fetchTop(m ?? key, rest.join(":")).then((r) => {
+      if (alive) setRemote(r);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [key]);
+
+  const rows =
+    remote && remote.length > 0
+      ? remote.map((r) => ({ name: r.name, score: r.score, you: false }))
+      : makeBoard(hash(key), Math.round(max), you);
+  const isGlobal = !!remote && remote.length > 0;
+
 
   return (
     <div className="min-h-screen px-5 pt-5 pb-10">
@@ -223,7 +243,10 @@ function Leaderboard() {
       </div>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        {t("Clasament local · sincronizare globală vine cu Lovable Cloud.")}
+        {isGlobal
+          ? t("Clasament global · actualizat în timp real.")
+          : t("Clasament local · conectează-te pentru clasamentul global.")}
+
       </p>
     </div>
   );

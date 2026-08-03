@@ -509,6 +509,34 @@ export const useGameStore = create<GameState>()(
           },
         });
       },
+      getTournamentEntry: (key) => {
+        const e = get().tournamentEntries[key];
+        return e && e.seasonKey === seasonKey() ? e : null;
+      },
+      enterTournamentCategory: (key) => {
+        if (get().getTournamentEntry(key)) return true;
+        if (get().coins < TOURNAMENT_ENTRY_COINS) return false;
+        set({
+          coins: get().coins - TOURNAMENT_ENTRY_COINS,
+          tournamentEntries: {
+            ...get().tournamentEntries,
+            [key]: { seasonKey: seasonKey(), bestScore: 0, runs: 0, enteredAt: Date.now() },
+          },
+        });
+        return true;
+      },
+      recordCategoryScore: (key, score) => {
+        const cur = get().getTournamentEntry(key);
+        if (!cur) return;
+        set({
+          tournamentEntries: {
+            ...get().tournamentEntries,
+            // Only your best single match counts — the ranking never goes down.
+            [key]: { ...cur, bestScore: Math.max(cur.bestScore, score), runs: cur.runs + 1 },
+          },
+        });
+      },
+
       addXp: (n) => {
         const res = applyXp(get().level, get().xp, n);
         let coins = 0;

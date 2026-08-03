@@ -311,6 +311,22 @@ function sanitizeDropdokuSession(v: unknown): DropdokuSession | null {
   };
 }
 
+function sanitizeEntries(raw: unknown): Record<string, TournamentEntry> {
+  const out: Record<string, TournamentEntry> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!v || typeof v !== "object") continue;
+    const e = v as Record<string, unknown>;
+    out[k] = {
+      seasonKey: typeof e.seasonKey === "string" ? e.seasonKey : seasonKey(),
+      bestScore: Math.max(0, Math.floor(num(e.bestScore, 0))),
+      runs: Math.max(0, Math.floor(num(e.runs, 0))),
+      enteredAt: num(e.enteredAt, Date.now()),
+    };
+  }
+  return out;
+}
+
 /**
  * Repairs any persisted blob so a stale / partial / corrupted save can never
  * crash the app. Every field falls back to a valid default.

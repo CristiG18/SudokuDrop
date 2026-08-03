@@ -974,10 +974,10 @@ function DropdokuPage() {
                   onClick={() => revive(false)}
                   disabled={diamonds < reviveCost}
                   className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-bold disabled:opacity-40"
-              >
-                <Gem className="inline w-4 h-4 mr-1" /> {reviveCost} — {t("Reînvie")}
-
-              </button>
+                >
+                  <Gem className="inline w-4 h-4 mr-1" /> {fmtNum(reviveCost)} — {t("Reînvie")}
+                </button>
+              )}
               <button onClick={startFresh} className="px-6 py-3 rounded-2xl bg-muted font-bold">
                 {t("Joc nou")}
               </button>

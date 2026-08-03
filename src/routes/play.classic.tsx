@@ -492,7 +492,7 @@ function ClassicGame() {
         <ToolBtn Icon={Eraser} label={t("Șterge")} onClick={() => enter(null)} />
         <ToolBtn
           Icon={Lightbulb}
-          label={`${t("Indiciu")} ${hintsLeft}`}
+          label={hintsLeft > 0 ? `${t("Indiciu")} ${hintsLeft}` : `+ ${t("Indiciu")}`}
           onClick={useHint}
         />
       </div>

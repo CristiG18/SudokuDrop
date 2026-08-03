@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomTabs } from "../components/BottomTabs";
 import { SKIN_SURFACES, SKIN_SURFACE_KEYS } from "@/game/cosmetics";
 import { useGameStore } from "../store/game-store";
+import { useCloudSync } from "../lib/cloud-sync";
 
 
 function NotFoundComponent() {
@@ -129,6 +130,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const activeTheme = useGameStore((s) => s.activeTheme);
   const activeSkin = useGameStore((s) => s.activeSkin);
+
+  // Mirrors the signed-in player's progress to their account.
+  useCloudSync();
 
   // Theme is applied app-wide (not per page) so every screen matches.
   useEffect(() => {

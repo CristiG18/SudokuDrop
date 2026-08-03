@@ -54,10 +54,7 @@ function Personal() {
     records = FREE_DIFFS.map((d) => ({
       label: d,
       value: modeBest[`free:${d}`] ?? (d === "normal" ? dropHigh : 0),
-    })).concat([
-      { label: "Time Rush", value: modeBest["free:timerush"] ?? 0 },
-      { label: "Rush", value: modeBest["free:rush"] ?? 0 },
-    ]);
+    }));
   } else if (tab === "classic") {
     records = CLASSIC_DIFFS.map((d) => ({ label: d, value: classic?.[d] ?? 0 }));
   } else if (tab === "ta") {

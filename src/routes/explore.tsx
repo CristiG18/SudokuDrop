@@ -9,7 +9,7 @@ export const Route = createFileRoute("/explore")({
       {
         name: "description",
         content:
-          "Toate modurile din Sudoku Drop explicate pe larg: liber, clasic, Time Rush, Rush, Versus și Time Attack.",
+          "Toate modurile din Sudoku Drop explicate pe larg: liber, clasic, Versus și Time Attack.",
       },
     ],
   }),
@@ -43,24 +43,6 @@ const VARIANTS: Variant[] = [
     Icon: Square,
     body: "Sudoku-ul pe care îl știi: completezi grila astfel încât fiecare linie, coloană și box de 3×3 să conțină cifrele 1-9 o singură dată. Ai 3 indicii, maximum 3 greșeli și o limită de timp care scade odată cu dificultatea (de la 30 de minute la Ușor până la 12 minute la Extrem). Scorul depinde de cât de repede termini și de câte greșeli faci.",
     prize: "XP + monede la serii de victorii consecutive",
-  },
-  {
-    to: "/play/dropdoku",
-    search: { difficulty: "normal" as const, mode: "timerush" as const },
-    title: "Time Rush",
-    tag: "Gratuit · 3 minute",
-    Icon: Timer,
-    body: "Pornești cu 3 minute pe ceas și te lupți cu timpul, nu cu grila. Fiecare linie sau coloană spartă îți adaugă 10 secunde, fiecare box îți adaugă 15. Dacă spargi constant, poți ține runda în viață foarte mult; dacă te blochezi, ceasul te scoate afară. Ideal pentru sesiuni scurte și intense.",
-    prize: "XP dublu față de o rundă liberă echivalentă",
-  },
-  {
-    to: "/play/dropdoku",
-    search: { difficulty: "normal" as const, mode: "rush" as const },
-    title: "Rush",
-    tag: "Gratuit · viteză mare",
-    Icon: Zap,
-    body: "Aceleași reguli ca la modul liber, dar piesele cad mult mai repede de la început și accelerează pe măsură ce spargi zone. E un test de reflexe și de planificare rapidă — un mod bun de antrenament înainte de turnee.",
-    prize: "XP + record personal",
   },
   {
     to: "/battle",

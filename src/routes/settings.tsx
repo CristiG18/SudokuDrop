@@ -108,6 +108,63 @@ function SettingsPage() {
           onToggle={(v) => setSetting("haptics", v)}
         />
       </div>
+
+      <div className="mt-6 space-y-2">
+        <Link
+          to="/terms"
+          className="w-full flex items-center gap-3 bg-card border border-border rounded-2xl px-4 py-3.5 shadow-soft"
+        >
+          <FileText className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-semibold">{t("Termeni și condiții")}</span>
+        </Link>
+        <Link
+          to="/privacy"
+          className="w-full flex items-center gap-3 bg-card border border-border rounded-2xl px-4 py-3.5 shadow-soft"
+        >
+          <Shield className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-semibold">{t("Politica de confidențialitate")}</span>
+        </Link>
+
+        {email && (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="w-full flex items-center gap-3 bg-card border border-destructive/30 rounded-2xl px-4 py-3.5 shadow-soft text-destructive"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span className="text-sm font-semibold">{t("Șterge contul")}</span>
+          </button>
+        )}
+      </div>
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-4 pb-6">
+          <div className="w-full max-w-md rounded-3xl bg-card border border-border p-5 shadow-card">
+            <h2 className="text-lg font-bold">{t("Ștergi definitiv contul?")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t(
+                "Progresul, gemurile, monedele, skinurile și scorurile din clasamente se șterg definitiv. Acțiunea nu poate fi anulată.",
+              )}
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-2xl bg-muted font-semibold text-sm"
+              >
+                {t("Anulează")}
+              </button>
+              <button
+                onClick={removeAccount}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-2xl bg-destructive text-destructive-foreground font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {t("Șterge")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

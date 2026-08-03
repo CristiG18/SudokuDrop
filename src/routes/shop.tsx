@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Gem, Check } from "lucide-react";
+import { ArrowLeft, Gem, Check, Coins, Ticket, ArrowLeftRight } from "lucide-react";
 import { useState } from "react";
 import { useGameStore, type Helper, type Skin } from "@/store/game-store";
 import { SKIN_CATALOG, THEME_CATALOG } from "@/game/cosmetics";
 import { skinStyle } from "@/components/game/Jewel";
 import { toast } from "sonner";
 import { useT } from "@/i18n";
+import { ExchangeSheet } from "@/components/ExchangeSheet";
 
 export const Route = createFileRoute("/shop")({
   head: () => ({ meta: [{ title: "Magazin" }] }),
@@ -45,6 +46,9 @@ function PreviewBlock({ kind }: { kind: Skin }) {
 function ShopPage() {
   const t = useT();
   const [tab, setTab] = useState<Tab>("diamonds");
+  const [exchange, setExchange] = useState(false);
+  const coins = useGameStore((s) => s.coins);
+  const tickets = useGameStore((s) => s.tickets);
   const diamonds = useGameStore((s) => s.diamonds);
   const ownedSkins = useGameStore((s) => s.ownedSkins);
   const activeSkin = useGameStore((s) => s.activeSkin);
@@ -108,9 +112,16 @@ function ShopPage() {
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-sm font-semibold">
-          <Gem className="w-4 h-4 text-primary" />
-          {diamonds}
+        <div className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-card border border-border text-xs font-semibold">
+            <Ticket className="w-3.5 h-3.5 text-primary" /> {tickets}
+          </span>
+          <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-card border border-border text-xs font-semibold">
+            <Coins className="w-3.5 h-3.5 text-amber-500" /> {coins}
+          </span>
+          <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-card border border-border text-xs font-semibold">
+            <Gem className="w-3.5 h-3.5 text-primary" /> {diamonds}
+          </span>
         </div>
       </div>
       <h1 className="display text-3xl font-bold mt-5">{t("Magazin")}</h1>
@@ -139,7 +150,24 @@ function ShopPage() {
       </div>
 
       {tab === "diamonds" && (
-        <div className="mt-5 grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => setExchange(true)}
+          className="mt-5 w-full flex items-center gap-3 p-4 rounded-2xl bg-card border border-border shadow-soft"
+        >
+          <ArrowLeftRight className="w-5 h-5 text-primary" />
+          <span className="text-left flex-1">
+            <span className="block font-semibold text-sm">{t("Schimb valutar")}</span>
+            <span className="block text-xs text-muted-foreground">
+              {t("Gemuri → monede → tichete")}
+            </span>
+          </span>
+          <span className="text-muted-foreground">›</span>
+        </button>
+      )}
+
+      {tab === "diamonds" && (
+        <div className="mt-4 grid grid-cols-2 gap-3">
           {DIAMOND_PACKS.map((p) => (
             <button
               key={p.n}
@@ -263,6 +291,7 @@ function ShopPage() {
           ))}
         </div>
       )}
+      <ExchangeSheet open={exchange} onOpenChange={setExchange} />
     </div>
   );
 }

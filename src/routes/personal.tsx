@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { User, Trophy, Flame, Clock, ShoppingBag, ListOrdered } from "lucide-react";
+import { User, Trophy, Flame, Coins, Ticket, ShoppingBag, ListOrdered } from "lucide-react";
+import { XpBar } from "@/components/XpBar";
 import { useGameStore } from "@/store/game-store";
 import { useT } from "@/i18n";
 
@@ -13,6 +14,9 @@ function Personal() {
   const diamonds = useGameStore((s) => s.diamonds);
   const helpers = useGameStore((s) => s.helpers);
   const high = useGameStore((s) => s.highScores.dropdoku);
+  const coins = useGameStore((s) => s.coins);
+  const tickets = useGameStore((s) => s.tickets);
+  const streak = useGameStore((s) => s.classicStreak);
   const helperCount = (key: keyof typeof helpers) => {
     const value = helpers[key];
     return typeof value === "number" && Number.isFinite(value) ? value : 0;
@@ -30,10 +34,15 @@ function Personal() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-6 bg-card border border-border rounded-2xl p-4 shadow-soft">
+        <XpBar />
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
         <Stat Icon={Trophy} label={t("Best Dropdoku")} value={high} />
-        <Stat Icon={Flame} label={t("Streak")} value={0} />
-        <Stat Icon={Clock} label={t("Total time")} value="0h" />
+        <Stat Icon={Flame} label={t("Streak")} value={streak} />
+        <Stat Icon={Coins} label={t("Monede")} value={coins} />
+        <Stat Icon={Ticket} label={t("Tichete")} value={tickets} />
         <Stat Icon={Trophy} label={t("Diamonds")} value={diamonds} />
       </div>
 

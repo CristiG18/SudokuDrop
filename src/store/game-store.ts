@@ -601,7 +601,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 8,
+      version: 9,
       // Only data is persisted — actions always come from fresh code.
       partialize: (state) =>
         ({
@@ -641,6 +641,10 @@ export const useGameStore = create<GameState>()(
         }
         if (version < 6) {
           // Testing grant
+          s.diamonds = Math.max(s.diamonds ?? 0, 9000);
+        }
+        if (version < 9) {
+          // Testing grant for skin/theme testing
           s.diamonds = Math.max(s.diamonds ?? 0, 9000);
         }
         if (version < 8) {

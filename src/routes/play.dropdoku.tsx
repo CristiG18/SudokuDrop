@@ -30,6 +30,7 @@ import { sfx, unlockAudio } from "@/lib/sfx";
 import { PauseSheet } from "@/components/PauseSheet";
 import { RewardedHelperModal } from "@/components/RewardedHelperModal";
 import { useT } from "@/i18n";
+import { estimatePercentile, formatPercentile } from "@/game/economy";
 
 export const Route = createFileRoute("/play/dropdoku")({
   head: () => ({
@@ -133,6 +134,7 @@ function DropdokuPage() {
   const soundOn = useGameStore((s) => s.settings.sound);
   const controlMode = useGameStore((s) => s.settings.controlMode);
   const setSetting = useGameStore((s) => s.setSetting);
+  const awardRunXp = useGameStore((s) => s.awardRunXp);
 
   const initial = useMemo(() => {
     if (!isSpecial && resume && savedSession && savedSession.difficulty === difficulty) {
@@ -168,6 +170,8 @@ function DropdokuPage() {
   const [paused, setPaused] = useState(false);
   const [backOpen, setBackOpen] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [endXp, setEndXp] = useState<{ xp: number; levelsGained: number; rank: string } | null>(null);
+  const xpAwardedRef = useRef(false);
   const [usedFreeRevive, setUsedFreeRevive] = useState(false);
   const [popups, setPopups] = useState<Popup[]>([]);
   const popupId = useRef(0);
@@ -315,6 +319,15 @@ function DropdokuPage() {
     soundOn,
     speed,
   ]);
+
+  // Award XP once per lost run and compute the percentile bucket for the score.
+  useEffect(() => {
+    if (!gameOver || xpAwardedRef.current) return;
+    xpAwardedRef.current = true;
+    const res = awardRunXp(difficulty, score);
+    const rank = formatPercentile(estimatePercentile(score, Math.max(1500, highScore || 1500)));
+    setEndXp({ xp: res.xpGained, levelsGained: res.levelsGained, rank });
+  }, [gameOver, awardRunXp, difficulty, score, highScore]);
 
   const cellSize = useMemo(() => {
     if (typeof window === "undefined") return 36;
@@ -640,6 +653,8 @@ function DropdokuPage() {
     if (!free && !spendDiamonds(reviveCost)) return;
     if (free) setUsedFreeRevive(true);
     else setReviveCount((n) => n + 1);
+    xpAwardedRef.current = false;
+    setEndXp(null);
     if (isTimed) setBonusSecs((s) => s + 30);
     setBoard((b) => clearTopRows(b, 3));
     setGameOver(false);
@@ -648,6 +663,8 @@ function DropdokuPage() {
 
   const startFresh = () => {
     setSession(null);
+    xpAwardedRef.current = false;
+    setEndXp(null);
     startedAtRef.current = Date.now();
     setBoard(emptyBoard());
     setBag(createBag(difficulty));
@@ -879,7 +896,13 @@ function DropdokuPage() {
         <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-30 px-6">
           <div className="soft-card p-8 text-center w-full max-w-sm animate-slide-up">
             <h2 className="text-3xl font-bold mb-1">{t("Game Over")}</h2>
-            <p className="text-muted-foreground mb-4">{t("Scor")}: {score}</p>
+            <p className="text-muted-foreground mb-1">{t("Scor")}: {score}</p>
+            {endXp && (
+              <p className="text-sm font-semibold text-primary mb-4">
+                +{endXp.xp} XP · {t(endXp.rank)}
+                {endXp.levelsGained > 0 && ` · ${t("Nivel nou!")}`}
+              </p>
+            )}
             <div className="flex flex-col gap-3">
               {!usedFreeRevive && (
                 <button

@@ -413,9 +413,10 @@ export function sanitizeState(raw: unknown): Partial<GameState> {
   const tour = (s.tournament ?? {}) as Record<string, unknown>;
 
   return {
-    diamonds: Math.max(0, Math.floor(num(s.diamonds, 250))),
-    coins: Math.max(0, Math.floor(num(s.coins, 0))),
-    tickets: Math.max(0, Math.floor(num(s.tickets, 3))),
+    diamonds: Math.max(0, Math.floor(num(s.diamonds, START_DIAMONDS))),
+    coins: Math.max(0, Math.floor(num(s.coins, START_COINS))),
+    tickets: Math.max(0, Math.floor(num(s.tickets, START_TICKETS))),
+
     ticketsUpdatedAt: num(s.ticketsUpdatedAt, Date.now()),
     ticketVideosToday: Math.max(0, Math.floor(num(s.ticketVideosToday, 0))),
     ticketVideoDate: typeof s.ticketVideoDate === "string" ? s.ticketVideoDate : null,

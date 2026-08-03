@@ -57,7 +57,7 @@ export function TicketMeter({ compact = false }: { compact?: boolean }) {
         <button
           type="button"
           disabled={full || left <= 0}
-          onClick={onWatch}
+          onClick={() => void onWatch()}
           className="ml-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40"
           aria-label={t("Vezi o reclamă pentru un tichet")}
         >
@@ -80,7 +80,7 @@ export function TicketMeter({ compact = false }: { compact?: boolean }) {
       <button
         type="button"
         disabled={full || left <= 0}
-        onClick={onWatch}
+        onClick={() => void onWatch()}
 
         className="ml-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40"
         aria-label={t("Vezi o reclamă pentru un tichet")}

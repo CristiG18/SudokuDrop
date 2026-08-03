@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Gem, Play, X } from "lucide-react";
 import { useGameStore, type Helper } from "@/store/game-store";
 import { useT } from "@/i18n";
+import { showRewardedAd } from "@/lib/ads";
+import { isNative } from "@/lib/native";
 
 const LABELS: Record<Helper, string> = {
   hammer: "Hammer",
@@ -117,7 +119,7 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
 
             <div className="mt-4 space-y-2">
               <button
-                onClick={() => setAdPlaying(true)}
+                onClick={() => void startAd()}
                 disabled={adsLeft <= 0}
                 className="w-full py-3 rounded-2xl bg-accent text-accent-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-40"
               >

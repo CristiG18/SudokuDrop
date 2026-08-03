@@ -326,12 +326,26 @@ export function sanitizeState(raw: unknown): Partial<GameState> {
     ? (s.activeTheme as ThemeKey)
     : "emerald";
 
+  const tour = (s.tournament ?? {}) as Record<string, unknown>;
+
   return {
     diamonds: Math.max(0, Math.floor(num(s.diamonds, 250))),
     coins: Math.max(0, Math.floor(num(s.coins, 0))),
     tickets: Math.max(0, Math.floor(num(s.tickets, 3))),
+    ticketsUpdatedAt: num(s.ticketsUpdatedAt, Date.now()),
+    ticketVideosToday: Math.max(0, Math.floor(num(s.ticketVideosToday, 0))),
+    ticketVideoDate: typeof s.ticketVideoDate === "string" ? s.ticketVideoDate : null,
+    xp: Math.max(0, Math.floor(num(s.xp, 0))),
+    level: Math.max(1, Math.floor(num(s.level, 1))),
+    tournament: {
+      seasonKey: typeof tour.seasonKey === "string" ? tour.seasonKey : seasonKey(),
+      entered: bool(tour.entered, false),
+      bestScore: Math.max(0, Math.floor(num(tour.bestScore, 0))),
+      runs: Math.max(0, Math.floor(num(tour.runs, 0))),
+    },
     loginStreak: Math.max(0, Math.floor(num(s.loginStreak, 0))),
     lastLoginDate: typeof s.lastLoginDate === "string" ? s.lastLoginDate : null,
+
     monthlyProgress:
       s.monthlyProgress && typeof s.monthlyProgress === "object"
         ? (s.monthlyProgress as Record<string, boolean>)

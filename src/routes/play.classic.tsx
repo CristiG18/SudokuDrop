@@ -581,9 +581,13 @@ function ClassicGame() {
                 <span className="text-3xl font-bold">{finalScore}</span>
               </div>
             )}
-            {streak > 1 && (
-              <p className="text-xs text-muted-foreground mt-3">🔥 {streak} {t("victorii consecutive")}</p>
+            {xpGained > 0 && (
+              <p className="text-xs font-semibold text-primary mt-3">+{xpGained} XP</p>
             )}
+            {streak > 1 && (
+              <p className="text-xs text-muted-foreground mt-1">🔥 {streak} {t("victorii consecutive")}</p>
+            )}
+
             <div className="flex flex-col gap-2 mt-5">
               <button
                 onClick={startFresh}

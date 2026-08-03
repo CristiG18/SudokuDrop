@@ -601,13 +601,19 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 6,
+      version: 8,
       // Only data is persisted — actions always come from fresh code.
       partialize: (state) =>
         ({
           diamonds: state.diamonds,
           coins: state.coins,
           tickets: state.tickets,
+          ticketsUpdatedAt: state.ticketsUpdatedAt,
+          ticketVideosToday: state.ticketVideosToday,
+          ticketVideoDate: state.ticketVideoDate,
+          xp: state.xp,
+          level: state.level,
+          tournament: state.tournament,
           loginStreak: state.loginStreak,
           lastLoginDate: state.lastLoginDate,
           monthlyProgress: state.monthlyProgress,
@@ -637,7 +643,17 @@ export const useGameStore = create<GameState>()(
           // Testing grant
           s.diamonds = Math.max(s.diamonds ?? 0, 9000);
         }
+        if (version < 8) {
+          // Tickets are now a capped, regenerating resource — clamp old stockpiles
+          // and hand out starter coins so the tournament entry is reachable.
+          s.tickets = Math.min(TICKET_CAP, s.tickets ?? TICKET_CAP);
+          s.ticketsUpdatedAt = Date.now();
+          s.coins = Math.max(s.coins ?? 0, 2000);
+          s.xp = s.xp ?? 0;
+          s.level = s.level ?? 1;
+        }
         return s as GameState;
+
       },
       // Last line of defense: whatever comes out of storage is repaired before
       // it reaches any component, so a partial blob can never crash a screen.

@@ -448,6 +448,31 @@ function DropdokuPage() {
   soundOnRef.current = soundOn;
   resolveClearsRef.current = resolveClears;
 
+  // Locking a piece: if any of its cells is still above the top line, the
+  // stack has overflowed the grid → game over. Otherwise it just settles.
+  const commitLock = useCallback(
+    (b: BoardT, p: Piece) => {
+      const overflow = p.cells.some((cell) => p.r + cell.dr < 0);
+      const locked = lockPiece(b, p);
+      if (soundOnRef.current) sfx.drop();
+      setHelperPresses(0);
+      setHelperLocked(false);
+      if (overflow) {
+        setBoard(locked);
+        setGameOver(true);
+        setHighScore(score);
+        setSession(null);
+        if (soundOnRef.current) sfx.fail();
+        return;
+      }
+      resolveClearsRef.current(locked);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [score, setHighScore, setSession],
+  );
+  const commitLockRef = useRef(commitLock);
+  commitLockRef.current = commitLock;
+
   useEffect(() => {
     if (paused || backOpen || gameOver || helperMode) {
       gravityNextAtRef.current = Date.now() + speedRef.current;
@@ -462,14 +487,13 @@ function DropdokuPage() {
         if (!cur) return cur;
         const latestBoard = boardRef.current;
         if (!collides(latestBoard, cur, 1, 0)) return { ...cur, r: cur.r + 1 };
-        const locked = lockPiece(latestBoard, cur);
-        if (soundOnRef.current) sfx.drop();
-        resolveClearsRef.current(locked);
+        commitLockRef.current(latestBoard, cur);
         return null;
       });
     }, 50);
     return () => clearInterval(id);
   }, [paused, backOpen, gameOver, helperMode]);
+
 
   const moveBy = (dc: number) => {
     if (!piece || paused || gameOver || helperMode) return;

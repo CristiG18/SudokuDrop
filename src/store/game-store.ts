@@ -481,9 +481,10 @@ export function sanitizeState(raw: unknown): Partial<GameState> {
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
-      diamonds: 250,
-      coins: 0,
-      tickets: 3,
+      diamonds: START_DIAMONDS,
+      coins: START_COINS,
+      tickets: START_TICKETS,
+
       ticketsUpdatedAt: Date.now(),
       ticketVideosToday: 0,
       ticketVideoDate: null,

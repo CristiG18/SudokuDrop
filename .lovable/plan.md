@@ -1,85 +1,70 @@
-# Phase 4 — Polish, Skins, Game Over, Fixuri + Moduri Noi
+# Roadmap: Economie, Turnee, Killer Sudoku și pași până la lansare
 
-## 1. Temă / Culori (setare user)
-- Culoare **default: Verde Smarald**.
-- `ThemePicker` în `/settings` cu 4 nuanțe inițiale: Verde Smarald (default), Portocaliu-maroniu, Albastru, Roz-coral.
-- Aplicare prin `data-theme="..."` pe `<html>` + override CSS variables în `styles.css`.
-- Elimin culorile hardcodate care creau flip portocaliu↔albastru; totul pe `--primary`.
-- 20+ nuanțe suplimentare de skin în `/shop` tab „Teme" — cumpărate cu gemuri sau câștigate ca premii turneu. `ownedThemes` în store.
+## 1. Economie unificată (3 monede, roluri clare)
 
-## 2. Brand + Logo
-- Numele afișat: **Sudoku Drop** cu subtitlu / alias **„aka Dropdoku"**. Folosit în tot UI-ul (home, splash, meta head).
-- Logo nou: grilă Sudoku 3×3 stilizată din care o piesă de tip domino / bloc cade în celula finală, palette verde smarald cu accent (bijuterie subtilă). Generat cu `imagegen` premium (text legibil „Sudoku Drop"), salvat în `src/assets/logo.png`.
-- Update `head()` în `__root.tsx` cu titlu/descriere „Sudoku Drop (Dropdoku)".
+| Monedă | Cum se câștigă | Ce cumpără |
+|---|---|---|
+| 💎 Gemuri | bani reali, top turnee, daily zi 7, reclame recompensate, come-back bonus | revive, pachete superputeri, skinuri/culori premium, intrare extra turneu |
+| 🎟️ Tichete | regenerare 1/45min (max 5), daily, cumpărate cu monede (150 🪙), turnee | intrare în Battle / Time Attack / turneu (1 tichet) |
+| 🪙 Monede | scor la finalul fiecărei partide, daily streak, level-up, premii turneu | tichete, skinuri ieftine, hinturi clasic, continue |
 
-## 3. Dropdoku — fixuri majore
-- **Piesele continuă să cadă când ies din app**: tick în `useRef` + cleanup; pauză la `visibilitychange` (tab hidden) și la unmount. Salvez `paused: true`.
-- **Butoane rapide opresc căderea**: gravity interval separat de input, deps stabile în `useRef`.
-- **Spawn deasupra tablei**: piesele apar la `r: -3`; rendering ignoră r<0; se opresc corect jos.
-- **Toate dificultățile funcționale**: fix la Ușor/Normal/Dificil.
-- **Game Over**: opresc render piesă curentă + next; afișez `GameOverModal`:
-  - **Revive video** (rewarded simulat) — 1x/joc, gratis
-  - **Revive gems** — 100 → 200 → 400 → 800 (dublare fiecare folosire)
-  - **Joc nou** / **Meniu**
-  - Revive = curăț top 3 rânduri.
+Reguli:
+- Gemurile nu se câștigă din gameplay normal (doar rar), monedele nu se cumpără cu bani.
+- Fiecare cosmetic are preț dublu: monede SAU gemuri (gemuri ≈ preț monede / 10).
+- Recompensă la final de partidă: monede = f(scor, dificultate, mod), cu bonus pentru linii/box-uri.
 
-## 4. Continue Card condiționat
-- Session ștearsă la game over / new game / meniu.
-- Apare doar dacă există sesiune activă neterminată — separat Drop și Clasic.
+## 2. Sistem de nivel (XP) și deblocări
+- XP la fiecare partidă terminată; curbă crescătoare pe nivel.
+- Deblocări: Hard la nivel 5, Expert la 10, Extreme la 15, moduri speciale (Rush / Time Rush) la 3 / 8.
+- Level-up → recompensă monede + ocazional gemuri/skin.
+- Bară de XP vizibilă pe home și în Personal.
 
-## 5. Daily reward + Come-back bonus
-- Modal daily doar prima dată/zi (`dailySeenAt` sessionStorage).
-- La reintrare în app după ≥6h: 1 💎 per 6h (max 3 💎 la 18h+). Micro popup „Bine ai revenit! +N 💎". Persist `lastAppExit` în localStorage.
+## 3. Turnee săptămânale
+- Sezon luni 00:00 → duminică 23:59 UTC, countdown vizibil.
+- Înscriere: 1 tichet. Scorul reținut = cel mai bun din sezon (per mod).
+- Clasament live pe server, cu poziția proprie evidențiată.
+- Premii DOAR la închiderea sezonului: top 1-3 (gemuri + skin exclusiv), top 10 / 100 / participare (monede).
+- Divizii pe nivel (Bronze < 5, Silver 5-14, Gold 15+) ca să nu concureze începătorii cu veteranii.
 
-## 6. Rute cu eroare
-- `/leaderboard` Clasic: tab funcțional cu difficulty selector.
-- `/events` play level: navigare corectă → `/play/classic?level=N&event=monthly`; la win `markMonthlyLevel(N)`.
-- `/daily`: redirect `/play/classic?daily=YYYY-MM-DD` cu seed determinist.
+## 4. Moduri de joc
+- **Se elimină Ice Mode** complet (rutare, UI, logica de îngheț, intrări din shop/explore).
+- **Se adaugă Killer Sudoku** ca mod de dificultate premium în Clasic:
+  - grilă fără cifre date, împărțită în cuști marcate punctat, cu sumă în colțul stânga-sus;
+  - cifrele dintr-o cușcă nu se repetă și trebuie să dea suma;
+  - generator: se pornește de la o soluție validă și se agregă celule în cuști de 1-5;
+  - dificultate dată de mărimea cuștilor și numărul de indicii vizibile.
 
-## 7. Shop — pop-up „Not enough gems"
-- Când `diamonds < cost` → `BuyGemsModal` cu 4 pachete (100 / 500 / 1500 / 5000 💎).
+## 5. Monetizare reală
+- Cont obligatoriu (deja există auth) + balanță de monede/gemuri în baza de date, nu doar local. Localul devine cache.
+- Pachete de gemuri: 100 / 500 / 1500 / 5000 la prețuri fixe.
+- Web: checkout prin integrarea de plăți Lovable; webhook verificat pe server creditează gemurile.
+- Android (Capacitor): Google Play Billing obligatoriu pentru bunuri digitale, cu validare server-side a chitanței.
+- Reclame recompensate reale (AdMob) în locul celor simulate, cu limită zilnică.
 
-## 8. Battle — Time Attack
-- **Cost fix: 1 tichet indiferent de timp**.
-- Selector: **2 / 3 / 5 / 10 min**.
-- `?mode=timeattack&seconds=N`.
-- Timer descrescător mare vizibil.
-- `navigator.vibrate` la fiecare minut trecut.
-- Ultimele 10s: countdown pulsant + vibrație scurtă + tick sound.
-- La 0 → game over.
+## 6. Pași până la publicare
 
-## 9. Moduri noi (3)
-- **Ice Mode** (`?variant=ice`): 3-5 celule înghețate — nu poți plasa peste ele; se sparg când completezi rândul/coloana adiacentă.
-- **Rush Mode** (`?variant=rush`): gravity +15% la fiecare 30s.
-- **Time Rush** (`?variant=timerush`) — NOU:
-  - **3 minute** scor max.
-  - **+10s** la fiecare linie/coloană spartă.
-  - **+15s** la fiecare box 3×3 complet.
-  - Grade de dificultate (bag mai mic la Ușor).
-  - La 0 → revive video → revive gems (100/200/400...).
-- Toate accesibile din `/explore`.
+**Etapa A — Fundație de cont (blocant)**
+1. Tabele pentru profil, balanțe, scoruri, înscrieri turneu + RLS și grants.
+2. Sincronizare progres local ↔ cloud, cu server ca sursă de adevăr pentru monede.
 
-## 10. Fișiere
+**Etapa B — Economie și progres**
+3. Implementare XP/nivel + deblocări dificultăți.
+4. Recompense de final de partidă în monede, regenerare tichete pe timp.
+5. Shop cu preț dublu (monede / gemuri) și magazin de tichete.
 
-**Nou:**
-- `src/components/GameOverModal.tsx`
-- `src/components/BuyGemsModal.tsx`
-- `src/components/ThemePicker.tsx`
-- `src/components/ComeBackBonus.tsx`
-- `src/assets/logo.png` (generat)
+**Etapa C — Conținut**
+6. Eliminare Ice, adăugare Killer Sudoku (generator + UI cuști + validare).
+7. Turnee săptămânale server-side cu premiere la final de sezon.
 
-**Modificate:**
-- `src/store/game-store.ts` — theme (default emerald), ownedThemes, reviveCount, lastAppExit, dailySeenAt
-- `src/routes/play.dropdoku.tsx` — tick useRef, spawn r=-3, visibility pause, game over + revive, timeattack, variants (ice/rush/timerush)
-- `src/routes/battle.tsx` — Time Attack cost fix 1 tichet + selector timp
-- `src/routes/leaderboard.tsx` — tab Clasic
-- `src/routes/events.tsx` + `src/routes/daily.tsx` — navigare + progres
-- `src/routes/shop.tsx` — tab Teme + BuyGemsModal
-- `src/routes/settings.tsx` — ThemePicker
-- `src/routes/__root.tsx` — data-theme, logo, meta „Sudoku Drop"
-- `src/routes/index.tsx` — logo nou, brand „Sudoku Drop (aka Dropdoku)", daily modal condiționat, continue card fix
-- `src/styles.css` — verde smarald ca default + variante teme + 20+ skinuri
-- `src/routes/explore.tsx` — 3 moduri noi
-- `src/game/engine.ts` — return `boxCleared` pentru timer bonus
+**Etapa D — Bani**
+8. Integrare plăți + pachete de gemuri, creditare prin webhook.
+9. Reclame recompensate reale.
 
-Confirmi și încep?
+**Etapa E — Lansare**
+10. Onboarding de 30 secunde, misiuni zilnice, notificări (energie plină / sezon se încheie).
+11. Privacy Policy, Termeni, consimțământ GDPR — necesare la Play Store.
+12. Build Capacitor, testare pe dispozitive, iconițe/capturi/store listing.
+
+## Decizii de confirmat
+- Valorile exacte de recompense (monede per partidă, preț tichet) — pot propune eu un set de start.
+- Începem cu Etapa A (cont + balanțe în cloud), care e blocantă pentru tot restul?

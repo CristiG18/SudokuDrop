@@ -305,7 +305,7 @@ function Battle() {
                         ? `${t("Deblochezi la nivelul")} ${tier.minLevel}`
                         : joined
                           ? `${t("Cel mai bun scor")}: ${entry?.bestScore ?? 0}`
-                          : `${t("Locul 1")}: ${fmtCoins(table[0].coins)} 🪙 + ${table[0].gems} 💎`}
+                          : `${t("Locul 1")}: ${fmtCoins(table[0].coins)} 🪙 + ${fmtCoins(table[0].gems)} 💎`}
                     </div>
                   </div>
                   <button
@@ -317,7 +317,7 @@ function Battle() {
                         ),
                         rows: table.map(
                           (r) =>
-                            `${t(r.place)}: ${fmtCoins(r.coins)} 🪙 + ${r.gems} 💎${r.extra ? ` + ${t(r.extra)}` : ""}`,
+                            `${t(r.place)}: ${fmtCoins(r.coins)} 🪙 + ${fmtCoins(r.gems)} 💎${r.extra ? ` + ${t(r.extra)}` : ""}`,
                         ),
                       })
                     }

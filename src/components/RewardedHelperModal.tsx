@@ -55,6 +55,21 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
   const adsLeft = Math.max(0, MAX_FREE - used);
   const label = t(LABELS[helper]);
 
+  const grantFree = () => {
+    bumpReward(helper);
+    addHelpers(helper, 1);
+    onClose();
+  };
+
+  /** Real rewarded ad on device, simulated ad break in the browser. */
+  const startAd = async () => {
+    if (!isNative()) {
+      setAdPlaying(true);
+      return;
+    }
+    if (await showRewardedAd()) grantFree();
+  };
+
   const buy = () => {
     if (spendDiamonds(BUNDLE_COST)) {
       addHelpers(helper, BUNDLE_SIZE);

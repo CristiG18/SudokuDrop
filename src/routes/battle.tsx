@@ -1,9 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Info, Trophy, Swords, Clock, Ticket, Coins, ArrowLeft } from "lucide-react";
+import { Info, Trophy, Swords, Clock, Ticket, Coins, ArrowLeft, Repeat, Lock } from "lucide-react";
 import { useState } from "react";
 import { useGameStore } from "@/store/game-store";
 import { toast } from "sonner";
 import { useT } from "@/i18n";
+import { TicketMeter } from "@/components/TicketMeter";
+import { ExchangeSheet } from "@/components/ExchangeSheet";
+import { TOURNAMENT_ENTRY_COINS } from "@/game/economy";
 
 export const Route = createFileRoute("/battle")({
   head: () => ({ meta: [{ title: "Bătălie — Sudoku Drop" }] }),
@@ -13,10 +16,10 @@ export const Route = createFileRoute("/battle")({
 type Mode = "duel" | "timeattack";
 
 const TIERS = [
-  { id: "bronze", name: "Bronz", ticket: 1, prize: 100, prizeText: "100 🪙" },
-  { id: "silver", name: "Argint", ticket: 2, prize: 250, prizeText: "250 🪙" },
-  { id: "gold", name: "Aur", ticket: 3, prize: 500, prizeText: "500 🪙 + skin" },
-  { id: "master", name: "Maestru", ticket: 5, prize: 1000, prizeText: "1000 🪙 + skin exclusiv" },
+  { id: "bronze", name: "Bronz", minLevel: 1, prize: 100, prizeText: "100 🪙" },
+  { id: "silver", name: "Argint", minLevel: 3, prize: 250, prizeText: "250 🪙" },
+  { id: "gold", name: "Aur", minLevel: 6, prize: 500, prizeText: "500 🪙 + skin" },
+  { id: "master", name: "Maestru", minLevel: 10, prize: 1000, prizeText: "1000 🪙 + skin exclusiv" },
 ];
 
 const ATTACK_TIMES = [
@@ -31,23 +34,32 @@ function Battle() {
   const [mode, setMode] = useState<Mode>("duel");
   const [attackMin, setAttackMin] = useState<number>(3);
   const [showInfo, setShowInfo] = useState(false);
+  const [exchangeOpen, setExchangeOpen] = useState(false);
   const tickets = useGameStore((s) => s.tickets);
   const coins = useGameStore((s) => s.coins);
+  const level = useGameStore((s) => s.level);
   const useTicket = useGameStore((s) => s.useTicket);
-  const addCoins = useGameStore((s) => s.addCoins);
+  const entered = useGameStore((s) => s.isTournamentEntered)();
+  const enterTournament = useGameStore((s) => s.enterTournament);
+  const tournament = useGameStore((s) => s.tournament);
   const navigate = useNavigate();
   const month = new Date().toLocaleDateString("ro-RO", { month: "long" });
 
-  const play = (tier: typeof TIERS[number]) => {
-    // Time Attack: always 1 ticket, regardless of tier or duration.
-    const cost = mode === "timeattack" ? 1 : tier.ticket;
-    if (tickets < cost) {
-      toast.error(`${t("Ai nevoie de")} ${cost} ${t("tichete. Ai")} ${tickets}.`);
+  const play = (tier: (typeof TIERS)[number]) => {
+    if (level < tier.minLevel) {
+      toast.error(`${t("Deblochezi la nivelul")} ${tier.minLevel}.`);
       return;
     }
-    for (let i = 0; i < cost; i++) useTicket();
-    toast.success(`${t("Meci")} ${t(tier.name)} ${t("pornit")} · ${cost} 🎟`);
-    addCoins(Math.round(tier.prize * 0.5));
+    if (!entered) {
+      toast.error(t("Înscrie-te în turneul săptămânii mai întâi."));
+      return;
+    }
+    // Every tournament run costs exactly one ticket, regardless of tier or duration.
+    if (!useTicket()) {
+      toast.error(t("Nu ai tichete. Așteaptă regenerarea sau schimbă monede."));
+      return;
+    }
+    toast.success(`${t("Meci")} ${t(tier.name)} ${t("pornit")} · 1 🎟`);
     if (mode === "timeattack") {
       navigate({
         to: "/play/dropdoku",
@@ -69,12 +81,14 @@ function Battle() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-card border border-border text-xs font-semibold">
-            <Ticket className="w-3.5 h-3.5 text-primary" /> {tickets}
-          </span>
-          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-card border border-border text-xs font-semibold">
+          <TicketMeter />
+          <button
+            onClick={() => setExchangeOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-card border border-border text-xs font-semibold"
+          >
             <Coins className="w-3.5 h-3.5 text-amber-500" /> {coins}
-          </span>
+            <Repeat className="w-3 h-3 text-muted-foreground" />
+          </button>
           <button
             onClick={() => setShowInfo((v) => !v)}
             className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center"
@@ -89,10 +103,46 @@ function Battle() {
 
       {showInfo && (
         <div className="mt-3 rounded-2xl bg-accent/50 p-3 text-xs text-muted-foreground">
-          🎟 {t("Tichetele se câștigă din login zilnic și turnee.")} 🪙 {t("Monedele vin din bătălii câștigate")}
-          {t("și din login. Diamantele sunt doar pentru achiziții.")}
+          🎟 {t("Un tichet la 45 min, maxim 5. Fiecare meci de turneu costă 1 tichet.")} 🪙{" "}
+          {t("Înscrierea în turneu costă")} {TOURNAMENT_ENTRY_COINS} 🪙.{" "}
+          {t("Monedele se schimbă în tichete, gemurile în monede.")}
         </div>
       )}
+
+      {/* Weekly tournament pass */}
+      <div className="mt-5 rounded-3xl bg-card border border-border shadow-card p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-bold">{t("Turneul săptămânii")}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {entered
+                ? `${t("Înscris")} · ${t("cel mai bun scor")}: ${tournament.bestScore}`
+                : `${t("Înscriere")}: ${TOURNAMENT_ENTRY_COINS} 🪙`}
+            </p>
+          </div>
+          {entered ? (
+            <span className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+              {t("Activ")}
+            </span>
+          ) : (
+            <button
+              onClick={() => {
+                if (enterTournament()) toast.success(t("Te-ai înscris în turneu!"));
+                else {
+                  toast.error(t("Nu ai suficiente monede."));
+                  setExchangeOpen(true);
+                }
+              }}
+              className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold"
+            >
+              {t("Înscrie-te")}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <ExchangeSheet open={exchangeOpen} onOpenChange={setExchangeOpen} />
+
 
       <div className="mt-5 rounded-3xl bg-card border border-border shadow-card p-5 flex flex-col items-center text-center">
         <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
@@ -159,30 +209,35 @@ function Battle() {
       </h3>
       <div className="space-y-2.5">
         {TIERS.map((tier) => {
-          const cost = mode === "timeattack" ? 1 : tier.ticket;
-          const canPlay = tickets >= cost;
+          const locked = level < tier.minLevel;
+          const canPlay = !locked && entered && tickets >= 1;
           return (
             <div
               key={tier.id}
               className="flex items-center gap-3 bg-card border border-border rounded-2xl p-4 shadow-soft"
             >
               <div className="w-11 h-11 rounded-xl bg-accent/60 flex items-center justify-center text-primary">
-                <Trophy className="w-5 h-5" />
+                {locked ? <Lock className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
               </div>
               <div className="flex-1">
                 <div className="font-semibold">{t(tier.name)}</div>
-                <div className="text-xs text-muted-foreground">{t("Premiu")}: {tier.prizeText}</div>
+                <div className="text-xs text-muted-foreground">
+                  {locked
+                    ? `${t("Deblochezi la nivelul")} ${tier.minLevel}`
+                    : `${t("Premiu")}: ${tier.prizeText}`}
+                </div>
               </div>
               <button
                 onClick={() => play(tier)}
                 disabled={!canPlay}
                 className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 flex items-center gap-1"
               >
-                {t("Joacă")} · {cost} <Ticket className="w-3.5 h-3.5" />
+                {t("Joacă")} · 1 <Ticket className="w-3.5 h-3.5" />
               </button>
             </div>
           );
         })}
+
       </div>
 
       <Link

@@ -1,5 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  TICKET_CAP,
+  TICKET_VIDEOS_PER_DAY,
+  TOURNAMENT_ENTRY_COINS,
+  applyXp,
+  levelUpReward,
+  regenerated,
+  xpForRun,
+} from "@/game/economy";
+
 
 export type Helper = "hammer" | "swap" | "boom" | "cross";
 export type ControlMode = "buttons" | "gestures";
@@ -92,10 +102,31 @@ export interface DailyClaim {
   tickets: number;
 }
 
+export interface TournamentState {
+  seasonKey: string; // ISO week, e.g. 2026-W32
+  entered: boolean;
+  bestScore: number;
+  runs: number;
+}
+
+export interface LevelUpResult {
+  level: number;
+  levelsGained: number;
+  coins: number;
+  tickets: number;
+  xpGained: number;
+}
+
 interface GameState {
   diamonds: number;
   coins: number;
   tickets: number;
+  ticketsUpdatedAt: number;
+  ticketVideosToday: number;
+  ticketVideoDate: string | null;
+  xp: number;
+  level: number;
+  tournament: TournamentState;
   loginStreak: number;
   lastLoginDate: string | null; // YYYY-MM-DD
   monthlyProgress: Record<string, boolean>; // key: YYYY-MM-day
@@ -116,6 +147,17 @@ interface GameState {
   spendCoins: (n: number) => boolean;
   addTickets: (n: number) => void;
   useTicket: () => boolean;
+  regenTickets: () => void;
+  ticketVideosLeft: () => number;
+  watchAdForTicket: () => boolean;
+  exchangeGemsForCoins: (gems: number, coins: number) => boolean;
+  exchangeCoinsForTickets: (coins: number, tickets: number) => boolean;
+  currentSeasonKey: () => string;
+  isTournamentEntered: () => boolean;
+  enterTournament: () => boolean;
+  recordTournamentRun: (score: number) => void;
+  addXp: (n: number) => LevelUpResult;
+  awardRunXp: (difficulty: string, score: number, tournament?: boolean) => LevelUpResult;
   addHelpers: (h: Helper, n: number) => void;
   useHelper: (h: Helper) => boolean;
   setDropdokuHighScore: (score: number) => void;
@@ -136,6 +178,17 @@ interface GameState {
   checkDailyPending: () => DailyClaim | null;
   claimDaily: () => DailyClaim | null;
 }
+
+/** ISO-week key, e.g. 2026-W32 — Monday 00:00 to Sunday 23:59. */
+export function seasonKey(date = new Date()) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
 
 function todayISO() {
   const d = new Date();
@@ -273,12 +326,26 @@ export function sanitizeState(raw: unknown): Partial<GameState> {
     ? (s.activeTheme as ThemeKey)
     : "emerald";
 
+  const tour = (s.tournament ?? {}) as Record<string, unknown>;
+
   return {
     diamonds: Math.max(0, Math.floor(num(s.diamonds, 250))),
     coins: Math.max(0, Math.floor(num(s.coins, 0))),
     tickets: Math.max(0, Math.floor(num(s.tickets, 3))),
+    ticketsUpdatedAt: num(s.ticketsUpdatedAt, Date.now()),
+    ticketVideosToday: Math.max(0, Math.floor(num(s.ticketVideosToday, 0))),
+    ticketVideoDate: typeof s.ticketVideoDate === "string" ? s.ticketVideoDate : null,
+    xp: Math.max(0, Math.floor(num(s.xp, 0))),
+    level: Math.max(1, Math.floor(num(s.level, 1))),
+    tournament: {
+      seasonKey: typeof tour.seasonKey === "string" ? tour.seasonKey : seasonKey(),
+      entered: bool(tour.entered, false),
+      bestScore: Math.max(0, Math.floor(num(tour.bestScore, 0))),
+      runs: Math.max(0, Math.floor(num(tour.runs, 0))),
+    },
     loginStreak: Math.max(0, Math.floor(num(s.loginStreak, 0))),
     lastLoginDate: typeof s.lastLoginDate === "string" ? s.lastLoginDate : null,
+
     monthlyProgress:
       s.monthlyProgress && typeof s.monthlyProgress === "object"
         ? (s.monthlyProgress as Record<string, boolean>)
@@ -320,7 +387,14 @@ export const useGameStore = create<GameState>()(
       diamonds: 250,
       coins: 0,
       tickets: 3,
+      ticketsUpdatedAt: Date.now(),
+      ticketVideosToday: 0,
+      ticketVideoDate: null,
+      xp: 0,
+      level: 1,
+      tournament: { seasonKey: seasonKey(), entered: false, bestScore: 0, runs: 0 },
       loginStreak: 0,
+
       lastLoginDate: null,
       monthlyProgress: {},
       highScores: {
@@ -349,12 +423,98 @@ export const useGameStore = create<GameState>()(
         set({ coins: get().coins - n });
         return true;
       },
-      addTickets: (n) => set({ tickets: get().tickets + n }),
+      addTickets: (n) => set({ tickets: Math.max(0, get().tickets + n) }),
       useTicket: () => {
-        if (get().tickets <= 0) return false;
-        set({ tickets: get().tickets - 1 });
+        get().regenTickets();
+        const cur = get().tickets;
+        if (cur <= 0) return false;
+        // Dropping below the cap restarts the regeneration clock.
+        const patch: Partial<GameState> = { tickets: cur - 1 };
+        if (cur >= TICKET_CAP) patch.ticketsUpdatedAt = Date.now();
+        set(patch as GameState);
         return true;
       },
+      regenTickets: () => {
+        const { tickets, ticketsUpdatedAt } = get();
+        const next = regenerated(tickets, ticketsUpdatedAt);
+        if (next.tickets !== tickets || next.ticketsUpdatedAt !== ticketsUpdatedAt) {
+          set({ tickets: next.tickets, ticketsUpdatedAt: next.ticketsUpdatedAt });
+        }
+      },
+      ticketVideosLeft: () => {
+        const today = todayISO();
+        const used = get().ticketVideoDate === today ? get().ticketVideosToday : 0;
+        return Math.max(0, TICKET_VIDEOS_PER_DAY - used);
+      },
+      watchAdForTicket: () => {
+        get().regenTickets();
+        if (get().ticketVideosLeft() <= 0) return false;
+        if (get().tickets >= TICKET_CAP) return false;
+        const today = todayISO();
+        const used = get().ticketVideoDate === today ? get().ticketVideosToday : 0;
+        set({
+          tickets: Math.min(TICKET_CAP, get().tickets + 1),
+          ticketVideosToday: used + 1,
+          ticketVideoDate: today,
+        });
+        return true;
+      },
+      exchangeGemsForCoins: (gems, coins) => {
+        if (get().diamonds < gems) return false;
+        set({ diamonds: get().diamonds - gems, coins: get().coins + coins });
+        return true;
+      },
+      exchangeCoinsForTickets: (coins, tickets) => {
+        if (get().coins < coins) return false;
+        // Purchased tickets may exceed the regeneration cap.
+        set({ coins: get().coins - coins, tickets: get().tickets + tickets });
+        return true;
+      },
+      currentSeasonKey: () => seasonKey(),
+      isTournamentEntered: () => {
+        const tr = get().tournament;
+        return tr.entered && tr.seasonKey === seasonKey();
+      },
+      enterTournament: () => {
+        if (get().isTournamentEntered()) return true;
+        if (get().coins < TOURNAMENT_ENTRY_COINS) return false;
+        set({
+          coins: get().coins - TOURNAMENT_ENTRY_COINS,
+          tournament: { seasonKey: seasonKey(), entered: true, bestScore: 0, runs: 0 },
+        });
+        return true;
+      },
+      recordTournamentRun: (score) => {
+        const tr = get().tournament;
+        const fresh = tr.seasonKey === seasonKey() ? tr : { ...tr, seasonKey: seasonKey(), bestScore: 0, runs: 0 };
+        set({
+          tournament: {
+            ...fresh,
+            bestScore: Math.max(fresh.bestScore, score),
+            runs: fresh.runs + 1,
+          },
+        });
+      },
+      addXp: (n) => {
+        const res = applyXp(get().level, get().xp, n);
+        let coins = 0;
+        let tickets = 0;
+        for (let lv = get().level + 1; lv <= res.level; lv++) {
+          const r = levelUpReward(lv);
+          coins += r.coins;
+          tickets += r.tickets;
+        }
+        set({
+          level: res.level,
+          xp: res.xp,
+          coins: get().coins + coins,
+          tickets: get().tickets + tickets,
+        });
+        return { level: res.level, levelsGained: res.levelsGained, coins, tickets, xpGained: n };
+      },
+      awardRunXp: (difficulty, score, tournament = false) =>
+        get().addXp(xpForRun(difficulty, score, tournament)),
+
       addHelpers: (h, n) => {
         const current = get().helpers[h];
         const safeCurrent = Number.isFinite(current) ? current : 0;
@@ -441,13 +601,19 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 6,
+      version: 8,
       // Only data is persisted — actions always come from fresh code.
       partialize: (state) =>
         ({
           diamonds: state.diamonds,
           coins: state.coins,
           tickets: state.tickets,
+          ticketsUpdatedAt: state.ticketsUpdatedAt,
+          ticketVideosToday: state.ticketVideosToday,
+          ticketVideoDate: state.ticketVideoDate,
+          xp: state.xp,
+          level: state.level,
+          tournament: state.tournament,
           loginStreak: state.loginStreak,
           lastLoginDate: state.lastLoginDate,
           monthlyProgress: state.monthlyProgress,
@@ -477,7 +643,17 @@ export const useGameStore = create<GameState>()(
           // Testing grant
           s.diamonds = Math.max(s.diamonds ?? 0, 9000);
         }
+        if (version < 8) {
+          // Tickets are now a capped, regenerating resource — clamp old stockpiles
+          // and hand out starter coins so the tournament entry is reachable.
+          s.tickets = Math.min(TICKET_CAP, s.tickets ?? TICKET_CAP);
+          s.ticketsUpdatedAt = Date.now();
+          s.coins = Math.max(s.coins ?? 0, 2000);
+          s.xp = s.xp ?? 0;
+          s.level = s.level ?? 1;
+        }
         return s as GameState;
+
       },
       // Last line of defense: whatever comes out of storage is repaired before
       // it reaches any component, so a partial blob can never crash a screen.

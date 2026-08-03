@@ -11,6 +11,8 @@ import { useGameStore } from "@/store/game-store";
 import { sfx, unlockAudio } from "@/lib/sfx";
 import { PauseSheet } from "@/components/PauseSheet";
 import { useT } from "@/i18n";
+import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/play/classic")({
   head: () => ({ meta: [{ title: "Sudoku Clasic — joc" }] }),
@@ -72,7 +74,10 @@ function ClassicGame() {
   const streak = useGameStore((s) => s.classicStreak);
   const addDiamonds = useGameStore((s) => s.addDiamonds);
   const setClassicHighScore = useGameStore((s) => s.setClassicHighScore);
+  const awardRunXp = useGameStore((s) => s.awardRunXp);
   const highScore = useGameStore((s) => s.highScores.classic?.[difficulty] ?? 0);
+  const [xpGained, setXpGained] = useState(0);
+
 
   const init = useMemo(() => {
     if (resume && session && session.difficulty === difficulty) {
@@ -195,13 +200,21 @@ function ClassicGame() {
       const score = computeFinalScore(difficulty, secondsUsed, mistakesUsed, hintsUsedFinal);
       setFinalScore(score);
       setClassicHighScore(difficulty, score);
+      const xpRes = awardRunXp(difficulty, score);
+      setXpGained(xpRes.xpGained);
+      if (xpRes.levelsGained > 0) {
+        toast.success(
+          `${t("Nivel")} ${xpRes.level}! +${xpRes.coins} 🪙${xpRes.tickets ? ` +${xpRes.tickets} 🎟` : ""}`,
+        );
+      }
       const next = bumpStreak();
       if (next === 3) addDiamonds(20);
       else if (next === 5) addDiamonds(50);
       else if (next === 10) addDiamonds(150);
     },
-    [bumpStreak, addDiamonds, setSession, soundOn, difficulty, setClassicHighScore],
+    [bumpStreak, addDiamonds, setSession, soundOn, difficulty, setClassicHighScore, awardRunXp, t],
   );
+
 
   const tryAutoComplete = useCallback(
     (next: SudokuGrid, mistakesUsed: number, hintsUsedFinal: number) => {
@@ -568,9 +581,13 @@ function ClassicGame() {
                 <span className="text-3xl font-bold">{finalScore}</span>
               </div>
             )}
-            {streak > 1 && (
-              <p className="text-xs text-muted-foreground mt-3">🔥 {streak} {t("victorii consecutive")}</p>
+            {xpGained > 0 && (
+              <p className="text-xs font-semibold text-primary mt-3">+{xpGained} XP</p>
             )}
+            {streak > 1 && (
+              <p className="text-xs text-muted-foreground mt-1">🔥 {streak} {t("victorii consecutive")}</p>
+            )}
+
             <div className="flex flex-col gap-2 mt-5">
               <button
                 onClick={startFresh}

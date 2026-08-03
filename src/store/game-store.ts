@@ -1,5 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  TICKET_CAP,
+  TICKET_VIDEOS_PER_DAY,
+  TOURNAMENT_ENTRY_COINS,
+  applyXp,
+  levelUpReward,
+  regenerated,
+  xpForRun,
+} from "@/game/economy";
+
 
 export type Helper = "hammer" | "swap" | "boom" | "cross";
 export type ControlMode = "buttons" | "gestures";

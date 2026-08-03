@@ -31,6 +31,8 @@ function SettingsPage() {
   const navigate = useNavigate();
   const t = useT();
   const [email, setEmail] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
@@ -44,6 +46,22 @@ function SettingsPage() {
     await supabase.auth.signOut();
     toast.success(t("Deconectat"));
   };
+
+  const removeAccount = async () => {
+    setDeleting(true);
+    try {
+      await deleteMyAccount();
+      await supabase.auth.signOut();
+      setConfirmDelete(false);
+      toast.success(t("Contul a fost șters."));
+      navigate({ to: "/" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("Eroare"));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen px-5 pt-5 pb-8">

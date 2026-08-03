@@ -652,6 +652,8 @@ function DropdokuPage() {
   const revive = (free: boolean) => {
     if (!free && !spendDiamonds(reviveCost)) return;
     if (free) setUsedFreeRevive(true);
+    xpAwardedRef.current = false;
+    setEndXp(null);
     else setReviveCount((n) => n + 1);
     if (isTimed) setBonusSecs((s) => s + 30);
     setBoard((b) => clearTopRows(b, 3));
@@ -661,6 +663,8 @@ function DropdokuPage() {
 
   const startFresh = () => {
     setSession(null);
+    xpAwardedRef.current = false;
+    setEndXp(null);
     startedAtRef.current = Date.now();
     setBoard(emptyBoard());
     setBag(createBag(difficulty));

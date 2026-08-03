@@ -202,7 +202,7 @@ export function findAndClear(board: Board): ClearResult {
     next[r][c] = null;
     cleared.push({ r, c });
   }
-  return { board: next, clears, rows, cols, boxes, cells: cleared };
+  return { board: next, clears, rows, cols, boxes, cells: cleared, rowIdx, colIdx, boxIdx };
 }
 
 // Ice mode: pushes a partially-filled "frozen" row up from the bottom.

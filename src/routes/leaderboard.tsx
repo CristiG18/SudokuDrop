@@ -2,14 +2,28 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Crown, Medal } from "lucide-react";
 import { useState } from "react";
 import { useGameStore, type ClassicDifficulty } from "@/store/game-store";
+import {
+  TIME_ATTACK_MINUTES,
+  TIME_ATTACK_TIERS,
+  VERSUS_DIFFICULTIES,
+  timeAttackKey,
+} from "@/game/economy";
 import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/leaderboard")({
-  head: () => ({ meta: [{ title: "Clasament" }] }),
+  head: () => ({
+    meta: [
+      { title: "Clasamente — Sudoku Drop" },
+      {
+        name: "description",
+        content: "Clasamente separate pentru Sudoku Clasic, Sudoku Drop liber și turnee.",
+      },
+    ],
+  }),
   component: Leaderboard,
 });
 
-type Mode = "dropdoku" | "classic";
+type Tab = "classic" | "free" | "tournaments";
 
 const NAMES = [
   "Andrei", "Maria", "Cristi", "Ioana", "Vlad", "Elena", "Mihai", "Ana",
@@ -26,29 +40,77 @@ function seedRng(seed: number) {
   };
 }
 
-function makeBoard(seed: number, max: number, you: number, label: string) {
+function hash(str: string) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function makeBoard(seed: number, max: number, you: number) {
   const rng = seedRng(seed);
-  const out = NAMES.map((name) => ({
+  const rows = NAMES.map((name) => ({
     name,
-    score: Math.floor(max * (0.5 + rng() * 0.5)),
+    score: Math.floor(max * (0.4 + rng() * 0.6)),
     you: false,
   }));
-  if (you > 0) out.push({ name: "Tu", score: you, you: true });
-  out.sort((a, b) => b.score - a.score);
-  return { rows: out, label };
+  if (you > 0) rows.push({ name: "Tu", score: you, you: true });
+  rows.sort((a, b) => b.score - a.score);
+  return rows;
 }
+
+const DROP_DIFFS = ["easy", "normal", "hard", "extreme"] as const;
+const CLASSIC_DIFFS: ClassicDifficulty[] = ["easy", "medium", "hard", "expert", "extreme"];
 
 function Leaderboard() {
   const t = useT();
-  const [mode, setMode] = useState<Mode>("dropdoku");
-  const [diff, setDiff] = useState<ClassicDifficulty>("medium");
-  const drop = useGameStore((s) => s.highScores.dropdoku);
-  const classic = useGameStore((s) => s.highScores.classic);
+  const [tab, setTab] = useState<Tab>("free");
+  const [classicDiff, setClassicDiff] = useState<ClassicDifficulty>("medium");
+  const [dropDiff, setDropDiff] = useState<string>("normal");
+  const [tType, setTType] = useState<"ta" | "vs">("ta");
+  const [taMin, setTaMin] = useState<number>(3);
+  const [taTier, setTaTier] = useState<string>("easy");
+  const [vsDiff, setVsDiff] = useState<string>("easy");
 
-  const board =
-    mode === "dropdoku"
-      ? makeBoard(101, 8400, drop, "Sudoku Drop")
-      : makeBoard(diff.charCodeAt(0) * 7, diff === "extreme" ? 5200 : 3200, classic?.[diff] ?? 0, `Clasic · ${diff}`);
+  const classic = useGameStore((s) => s.highScores.classic);
+  const modeBest = useGameStore((s) => s.modeBest);
+  const entries = useGameStore((s) => s.tournamentEntries);
+  const dropHigh = useGameStore((s) => s.highScores.dropdoku);
+
+  let key = "";
+  let label = "";
+  let max = 3000;
+  let you = 0;
+
+  if (tab === "classic") {
+    key = `classic:${classicDiff}`;
+    label = `${t("Clasic")} · ${classicDiff}`;
+    max = classicDiff === "extreme" ? 5200 : 3200;
+    you = classic?.[classicDiff] ?? 0;
+  } else if (tab === "free") {
+    key = `free:${dropDiff}`;
+    label = `${t("Liber")} · ${dropDiff}`;
+    max = dropDiff === "extreme" ? 12000 : dropDiff === "hard" ? 9500 : dropDiff === "normal" ? 8000 : 6000;
+    you = modeBest[key] ?? (dropDiff === "normal" ? dropHigh : 0);
+  } else if (tType === "ta") {
+    key = timeAttackKey(taMin, taTier as never);
+    const tier = TIME_ATTACK_TIERS.find((x) => x.id === taTier);
+    label = `Time Attack ${taMin} min · ${t(tier?.name ?? "")}`;
+    max = 3000 * (tier?.mult ?? 1) * (taMin / 3);
+    you = entries[key]?.bestScore ?? 0;
+  } else {
+    key = `vs:${vsDiff}`;
+    const d = VERSUS_DIFFICULTIES.find((x) => x.id === vsDiff);
+    label = `Versus · ${t(d?.name ?? "")}`;
+    max = vsDiff === "hard" ? 9000 : vsDiff === "medium" ? 6500 : 4500;
+    you = Object.entries(modeBest)
+      .filter(([k]) => k.startsWith("vs:") && k.split(":")[2] === vsDiff)
+      .reduce((m, [, v]) => Math.max(m, v), 0);
+  }
+
+  const rows = makeBoard(hash(key), Math.round(max), you);
 
   return (
     <div className="min-h-screen px-5 pt-5 pb-10">
@@ -61,48 +123,83 @@ function Leaderboard() {
         </Link>
         <Crown className="w-6 h-6 text-primary" />
       </div>
-      <h1 className="display text-3xl font-bold mt-5">{t("Clasament")}</h1>
-      <p className="text-sm text-muted-foreground mt-1">{t("Top jucători")}</p>
+      <h1 className="display text-3xl font-bold mt-5">{t("Clasamente")}</h1>
+      <p className="text-sm text-muted-foreground mt-1">{label}</p>
 
       <div className="mt-4 flex gap-1 p-1 bg-muted rounded-full">
-        {(["dropdoku", "classic"] as Mode[]).map((m) => (
+        {([
+          ["free", "Sudoku Drop"],
+          ["classic", t("Clasic")],
+          ["tournaments", t("Turnee")],
+        ] as Array<[Tab, string]>).map(([m, lbl]) => (
           <button
             key={m}
-            onClick={() => setMode(m)}
-            className={`flex-1 py-2 rounded-full text-sm font-semibold transition ${
-              mode === m ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"
+            onClick={() => setTab(m)}
+            className={`flex-1 py-2 rounded-full text-xs font-semibold transition ${
+              tab === m ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"
             }`}
           >
-            {m === "dropdoku" ? "Sudoku Drop" : t("Clasic")}
+            {lbl}
           </button>
         ))}
       </div>
 
-      {mode === "classic" && (
-        <div className="mt-3 flex gap-1.5 overflow-x-auto no-scrollbar">
-          {(["easy", "medium", "hard", "expert", "extreme"] as ClassicDifficulty[]).map((d) => (
-            <button
-              key={d}
-              onClick={() => setDiff(d)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize whitespace-nowrap ${
-                diff === d ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground"
-              }`}
-            >
-              {d}
-            </button>
-          ))}
-        </div>
+      {tab === "classic" && (
+        <Chips
+          items={CLASSIC_DIFFS.map((d) => ({ id: d, label: d }))}
+          active={classicDiff}
+          onPick={(v) => setClassicDiff(v as ClassicDifficulty)}
+        />
+      )}
+
+      {tab === "free" && (
+        <Chips
+          items={DROP_DIFFS.map((d) => ({ id: d, label: d }))}
+          active={dropDiff}
+          onPick={setDropDiff}
+        />
+      )}
+
+      {tab === "tournaments" && (
+        <>
+          <Chips
+            items={[
+              { id: "ta", label: "Time Attack" },
+              { id: "vs", label: "Versus" },
+            ]}
+            active={tType}
+            onPick={(v) => setTType(v as "ta" | "vs")}
+          />
+          {tType === "ta" ? (
+            <>
+              <Chips
+                items={TIME_ATTACK_MINUTES.map((m) => ({ id: String(m), label: `${m} min` }))}
+                active={String(taMin)}
+                onPick={(v) => setTaMin(Number(v))}
+              />
+              <Chips
+                items={TIME_ATTACK_TIERS.map((x) => ({ id: x.id, label: t(x.name) }))}
+                active={taTier}
+                onPick={setTaTier}
+              />
+            </>
+          ) : (
+            <Chips
+              items={VERSUS_DIFFICULTIES.map((x) => ({ id: x.id, label: t(x.name) }))}
+              active={vsDiff}
+              onPick={setVsDiff}
+            />
+          )}
+        </>
       )}
 
       <div className="mt-4 bg-card border border-border rounded-2xl shadow-soft divide-y divide-border">
-        {board.rows.slice(0, 50).map((row, i) => (
+        {rows.slice(0, 50).map((row, i) => (
           <div
             key={`${row.name}-${i}`}
             className={`flex items-center px-4 py-2.5 ${row.you ? "bg-accent" : ""}`}
           >
-            <span className="w-7 text-sm font-bold text-muted-foreground tabular-nums">
-              {i + 1}
-            </span>
+            <span className="w-7 text-sm font-bold text-muted-foreground tabular-nums">{i + 1}</span>
             {i < 3 ? (
               <Medal
                 className={`w-4 h-4 mr-2 ${
@@ -128,6 +225,34 @@ function Leaderboard() {
       <p className="mt-4 text-center text-xs text-muted-foreground">
         {t("Clasament local · sincronizare globală vine cu Lovable Cloud.")}
       </p>
+    </div>
+  );
+}
+
+function Chips({
+  items,
+  active,
+  onPick,
+}: {
+  items: Array<{ id: string; label: string }>;
+  active: string;
+  onPick: (id: string) => void;
+}) {
+  return (
+    <div className="mt-3 flex gap-1.5 overflow-x-auto no-scrollbar">
+      {items.map((it) => (
+        <button
+          key={it.id}
+          onClick={() => onPick(it.id)}
+          className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize whitespace-nowrap ${
+            active === it.id
+              ? "bg-primary text-primary-foreground"
+              : "bg-card border border-border text-muted-foreground"
+          }`}
+        >
+          {it.label}
+        </button>
+      ))}
     </div>
   );
 }

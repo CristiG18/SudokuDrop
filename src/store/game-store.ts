@@ -8,6 +8,7 @@ import {
   levelUpReward,
   regenerated,
   xpForRun,
+  versusPrize,
 } from "@/game/economy";
 
 
@@ -118,6 +119,29 @@ export interface TournamentEntry {
 }
 
 
+/** A knockout bracket run: you vs simulated rivals, 3 minutes per match. */
+export interface VersusMatch {
+  round: number;
+  you: number;
+  rival: number;
+  rivalName: string;
+  won: boolean;
+}
+
+export interface VersusRun {
+  key: string;
+  size: number;
+  difficulty: string;
+  fee: number;
+  /** 0-based round index; rounds = log2(size). */
+  round: number;
+  matches: VersusMatch[];
+  done: boolean;
+  /** 1 = champion, 2 = runner-up, otherwise the round you went out in. */
+  place: number | null;
+  reward: number;
+}
+
 export interface LevelUpResult {
   level: number;
   levelsGained: number;
@@ -138,6 +162,9 @@ interface GameState {
   tournament: TournamentState;
   /** One paid entry per category (duel:<difficulty> or ta:<minutes>:<tier>). */
   tournamentEntries: Record<string, TournamentEntry>;
+  /** Best score per mode key (free:<diff>, classic:<diff>, ta:.., vs:..). */
+  modeBest: Record<string, number>;
+  versus: VersusRun | null;
 
   loginStreak: number;
   lastLoginDate: string | null; // YYYY-MM-DD
@@ -169,7 +196,11 @@ interface GameState {
   enterTournament: () => boolean;
   recordTournamentRun: (score: number) => void;
   getTournamentEntry: (key: string) => TournamentEntry | null;
-  enterTournamentCategory: (key: string) => boolean;
+  enterTournamentCategory: (key: string, cost?: number) => boolean;
+  setModeBest: (key: string, score: number) => void;
+  startVersus: (key: string, size: number, difficulty: string, fee: number) => boolean;
+  recordVersusMatch: (score: number) => VersusRun | null;
+  clearVersus: () => void;
   recordCategoryScore: (key: string, score: number) => void;
 
   addXp: (n: number) => LevelUpResult;
@@ -327,6 +358,22 @@ function sanitizeEntries(raw: unknown): Record<string, TournamentEntry> {
   return out;
 }
 
+function sanitizeVersus(v: unknown): VersusRun | null {
+  const r = v as Partial<VersusRun> | null | undefined;
+  if (!r || typeof r !== "object" || typeof r.key !== "string") return null;
+  return {
+    key: r.key,
+    size: num(r.size, 4),
+    difficulty: typeof r.difficulty === "string" ? r.difficulty : "easy",
+    fee: num(r.fee, 100),
+    round: num(r.round, 0),
+    matches: Array.isArray(r.matches) ? (r.matches as VersusMatch[]) : [],
+    done: bool(r.done, false),
+    place: typeof r.place === "number" ? r.place : null,
+    reward: num(r.reward, 0),
+  };
+}
+
 /**
  * Repairs any persisted blob so a stale / partial / corrupted save can never
  * crash the app. Every field falls back to a valid default.
@@ -376,6 +423,16 @@ export function sanitizeState(raw: unknown): Partial<GameState> {
       runs: Math.max(0, Math.floor(num(tour.runs, 0))),
     },
     tournamentEntries: sanitizeEntries(s.tournamentEntries),
+    modeBest:
+      s.modeBest && typeof s.modeBest === "object"
+        ? Object.fromEntries(
+            Object.entries(s.modeBest as Record<string, unknown>).map(([k, v]) => [
+              k,
+              Math.max(0, Math.floor(num(v, 0))),
+            ]),
+          )
+        : {},
+    versus: sanitizeVersus(s.versus),
 
     loginStreak: Math.max(0, Math.floor(num(s.loginStreak, 0))),
     lastLoginDate: typeof s.lastLoginDate === "string" ? s.lastLoginDate : null,
@@ -428,6 +485,8 @@ export const useGameStore = create<GameState>()(
       level: 1,
       tournament: { seasonKey: seasonKey(), entered: false, bestScore: 0, runs: 0 },
       tournamentEntries: {},
+      modeBest: {},
+      versus: null,
 
       loginStreak: 0,
 
@@ -535,11 +594,11 @@ export const useGameStore = create<GameState>()(
         const e = get().tournamentEntries[key];
         return e && e.seasonKey === seasonKey() ? e : null;
       },
-      enterTournamentCategory: (key) => {
+      enterTournamentCategory: (key, cost = TOURNAMENT_ENTRY_COINS) => {
         if (get().getTournamentEntry(key)) return true;
-        if (get().coins < TOURNAMENT_ENTRY_COINS) return false;
+        if (get().coins < cost) return false;
         set({
-          coins: get().coins - TOURNAMENT_ENTRY_COINS,
+          coins: get().coins - cost,
           tournamentEntries: {
             ...get().tournamentEntries,
             [key]: { seasonKey: seasonKey(), bestScore: 0, runs: 0, enteredAt: Date.now() },
@@ -557,7 +616,64 @@ export const useGameStore = create<GameState>()(
             [key]: { ...cur, bestScore: Math.max(cur.bestScore, score), runs: cur.runs + 1 },
           },
         });
+        get().setModeBest(key, score);
       },
+
+      setModeBest: (key, score) => {
+        const cur = get().modeBest[key] ?? 0;
+        if (score <= cur) return;
+        set({ modeBest: { ...get().modeBest, [key]: score } });
+      },
+      startVersus: (key, size, difficulty, fee) => {
+        if (get().coins < fee) return false;
+        set({
+          coins: get().coins - fee,
+          versus: {
+            key,
+            size,
+            difficulty,
+            fee,
+            round: 0,
+            matches: [],
+            done: false,
+            place: null,
+            reward: 0,
+          },
+        });
+        return true;
+      },
+      recordVersusMatch: (score) => {
+        const run = get().versus;
+        if (!run || run.done) return null;
+        // Rivals get progressively stronger each round.
+        const diffBase =
+          run.difficulty === "hard" ? 4200 : run.difficulty === "medium" ? 3000 : 2000;
+        const rival = Math.round(
+          diffBase * (1 + run.round * 0.22) * (0.75 + Math.random() * 0.6),
+        );
+        const rivalName = RIVAL_NAMES[Math.floor(Math.random() * RIVAL_NAMES.length)];
+        const won = score >= rival;
+        const totalRounds = Math.round(Math.log2(run.size));
+        const matches = [...run.matches, { round: run.round, you: score, rival, rivalName, won }];
+        const isFinal = run.round === totalRounds - 1;
+        let next: VersusRun;
+        if (!won) {
+          const place = isFinal ? 2 : Math.pow(2, totalRounds - run.round);
+          const prize = versusPrize(run.size, run.fee);
+          const reward = isFinal ? prize.second : 0;
+          next = { ...run, matches, done: true, place, reward };
+        } else if (isFinal) {
+          const prize = versusPrize(run.size, run.fee);
+          next = { ...run, matches, done: true, place: 1, reward: prize.first };
+        } else {
+          next = { ...run, matches, round: run.round + 1 };
+        }
+        set({ versus: next });
+        if (next.reward > 0) set({ coins: get().coins + next.reward });
+        get().setModeBest(run.key, score);
+        return next;
+      },
+      clearVersus: () => set({ versus: null }),
 
       addXp: (n) => {
         const res = applyXp(get().level, get().xp, n);
@@ -665,7 +781,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "sudoku-drop-store",
-      version: 10,
+      version: 11,
       // Only data is persisted — actions always come from fresh code.
       partialize: (state) =>
         ({
@@ -679,6 +795,8 @@ export const useGameStore = create<GameState>()(
           level: state.level,
           tournament: state.tournament,
           tournamentEntries: state.tournamentEntries,
+          modeBest: state.modeBest,
+          versus: state.versus,
           loginStreak: state.loginStreak,
           lastLoginDate: state.lastLoginDate,
           monthlyProgress: state.monthlyProgress,
@@ -717,6 +835,12 @@ export const useGameStore = create<GameState>()(
           s.tournamentEntries = {};
           s.diamonds = Math.max(s.diamonds ?? 0, 9000);
         }
+        if (version < 11) {
+          // Tournament structure changed (Versus brackets + renamed TA tiers).
+          s.tournamentEntries = {};
+          s.versus = null;
+          s.modeBest = {};
+        }
         if (version < 8) {
           // Tickets are now a capped, regenerating resource — clamp old stockpiles
           // and hand out starter coins so the tournament entry is reachable.
@@ -735,6 +859,11 @@ export const useGameStore = create<GameState>()(
     },
   ),
 );
+
+const RIVAL_NAMES = [
+  "Andrei", "Maria", "Cristi", "Ioana", "Vlad", "Elena", "Mihai", "Ana",
+  "Radu", "Diana", "George", "Sara", "Tudor", "Bianca", "Stefan", "Carmen",
+];
 
 // Daily login rewards: alternating 3-day / 4-day cycles, tickets grow by 1 each cycle.
 // Days 1-3 → 1 ticket, 4-7 → 2, 8-10 → 3, 11-14 → 4, 15-17 → 5, 18-21 → 6, ...

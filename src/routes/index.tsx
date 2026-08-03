@@ -5,17 +5,13 @@ import {
   Flame,
   BookOpen,
   Trophy,
-  Blocks,
   Settings as SettingsIcon,
   ShoppingBag,
   Coins,
-  Timer,
-  Zap,
-
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useGameStore } from "@/store/game-store";
-import { currentMonthTheme, dailyForDate } from "@/game/schedule";
+import { dailyForDate } from "@/game/schedule";
 import { DifficultySheet, type DropDifficulty } from "@/components/DifficultySheet";
 import { ContinueCard } from "@/components/ContinueCard";
 import { DailyRewardModal } from "@/components/DailyRewardModal";
@@ -27,12 +23,19 @@ import { XpBar } from "@/components/XpBar";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Sudoku Drop (Dropdoku) — Acasă" },
+      { title: "Sudoku Drop — puzzle cu piese care cad" },
       {
         name: "description",
         content:
-          "Sudoku Drop, aka Dropdoku — piese care cad într-o grilă 9x9. Zilnice, turnee și moduri contra-cronometru.",
+          "Sudoku Drop: piese care cad într-o grilă 9x9. Provocări zilnice, turnee Versus și ligi Time Attack.",
       },
+      { property: "og:title", content: "Sudoku Drop" },
+      {
+        property: "og:description",
+        content: "Piese care cad într-o grilă 9x9. Zilnice, turnee Versus și Time Attack.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Home,
@@ -44,7 +47,6 @@ function Home() {
   const coins = useGameStore((s) => s.coins);
   const streak = useGameStore((s) => s.classicStreak);
   const activeTheme = useGameStore((s) => s.activeTheme);
-  const month = currentMonthTheme();
   const today = new Date();
   const todayDiff = dailyForDate(today);
   const monthShort = today.toLocaleDateString("ro-RO", { month: "short" });
@@ -52,7 +54,6 @@ function Home() {
   const navigate = useNavigate();
   const [sheet, setSheet] = useState(false);
 
-  // Apply user's chosen theme (do NOT auto-switch by month — that was jarring).
   useEffect(() => {
     if (typeof document !== "undefined") {
       document.documentElement.dataset.theme = activeTheme;
@@ -66,13 +67,8 @@ function Home() {
 
   return (
     <div className="min-h-screen flex flex-col pb-6">
-      <header className="px-5 pt-5 flex items-start justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            {monthShort} · {month.name}
-          </p>
-          <h1 className="display text-2xl font-bold mt-0.5">Sudoku Drop</h1>
-        </div>
+      <header className="px-5 pt-5 flex items-center justify-between">
+        <h1 className="display text-2xl font-bold">Sudoku Drop</h1>
         <div className="flex items-center gap-2">
           <Link
             to="/shop"
@@ -96,7 +92,7 @@ function Home() {
       <div className="px-5 mt-4 flex flex-wrap gap-2">
         <Chip Icon={Flame} label={`${streak} ${t("consecutive")}`} />
         <Chip Icon={Coins} label={`${coins}`} tint="amber" />
-        <TicketMeter />
+        <TicketMeter compact />
         <Link
           to="/leaderboard"
           className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground"
@@ -111,29 +107,22 @@ function Home() {
 
       <ContinueCard />
 
-      <div className="mt-5 -mx-1 overflow-x-auto no-scrollbar">
-        <div className="flex gap-3 px-4 snap-x snap-mandatory">
-          <CarouselCard to="/daily" tag={t("Zilnică")} title={`${monthShort} ${day}`} sub={todayDiff.toUpperCase()} Icon={Trophy} />
-          <CarouselCard
-            to="/play/dropdoku"
-            search={{ difficulty: "normal", mode: "timerush" }}
-            tag={t("Mod nou")}
-            title="Time Rush"
-            sub={`3 ${t("min")} · +10s/${t("linie")}, +15s/box`}
-            Icon={Timer}
-          />
-          <CarouselCard
-            to="/play/dropdoku"
-            search={{ difficulty: "normal", mode: "rush" }}
-            tag={t("Mod nou")}
-            title="Rush"
-            sub={t("Cădere rapidă, scor mare")}
-            Icon={Zap}
-          />
-          <CarouselCard to="/battle" tag={t("Turneu")} title={t("Bronz")} sub={t("Începe acum")} Icon={Trophy} />
-          <CarouselCard to="/classic" tag={t("Clasic")} title="Sudoku 9×9" sub={t("Puzzle clasic")} Icon={Blocks} />
-
-        </div>
+      <div className="px-5 mt-4">
+        <Link
+          to="/daily"
+          className="flex items-center gap-3 rounded-2xl bg-card border border-border px-4 py-3 shadow-soft active:scale-[0.99] transition"
+        >
+          <div className="w-9 h-9 rounded-xl bg-accent text-primary flex items-center justify-center shrink-0">
+            <Trophy className="w-4.5 h-4.5" strokeWidth={1.7} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold leading-tight">{t("Provocarea zilei")}</div>
+            <div className="text-[11px] text-muted-foreground uppercase tracking-wide">
+              {monthShort} {day} · {todayDiff}
+            </div>
+          </div>
+          <span className="text-primary">→</span>
+        </Link>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
@@ -144,14 +133,13 @@ function Home() {
           />
           <img
             src={logo}
-            alt="Sudoku Drop logo — grilă 3x3 cu o piesă bijuterie ce cade"
+            alt="Sudoku Drop logo — grilă 3x3 cu o piesă care cade"
             width={144}
             height={144}
             className="relative w-36 h-36 object-contain drop-shadow-xl"
           />
         </div>
         <h2 className="display text-4xl font-bold tracking-tight mt-6">Sudoku Drop</h2>
-        <p className="text-xs uppercase tracking-widest text-muted-foreground mt-1">aka Dropdoku</p>
         <p className="text-sm text-muted-foreground mt-2">{t("Piesele cad. Tu completezi.")}</p>
         <Link
           to="/tutorial"
@@ -196,41 +184,5 @@ function Chip({ Icon, label, tint }: { Icon: typeof Flame; label: string; tint?:
       <Icon className={`w-3.5 h-3.5 ${tint === "amber" ? "text-amber-500" : ""}`} />
       {label}
     </div>
-  );
-}
-
-function CarouselCard({
-  to,
-  search,
-  tag,
-  title,
-  sub,
-  Icon,
-}: {
-  to: string;
-  search?: Record<string, unknown>;
-  tag: string;
-  title: string;
-  sub: string;
-  Icon: typeof Trophy;
-}) {
-  return (
-    <Link
-      to={to}
-      search={search as never}
-      className="snap-start shrink-0 w-44 h-52 rounded-2xl p-4 flex flex-col justify-between bg-card border border-border shadow-soft active:scale-[0.98] transition relative overflow-hidden"
-    >
-      <span className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-primary" />
-      <div className="pl-2">
-        <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">{tag}</p>
-        <h3 className="text-xl font-bold mt-1 leading-tight">{title}</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
-      </div>
-      <div className="flex justify-end pl-2">
-        <div className="w-12 h-12 rounded-2xl bg-accent text-primary flex items-center justify-center">
-          <Icon className="w-6 h-6" strokeWidth={1.6} />
-        </div>
-      </div>
-    </Link>
   );
 }

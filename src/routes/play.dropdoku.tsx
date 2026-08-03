@@ -324,6 +324,14 @@ function DropdokuPage() {
       return;
     }
     if (!tkey) setModeBest(`free:${mode ?? difficulty}`, score);
+    // Global leaderboard (no-op when signed out or offline).
+    if (tkey) {
+      const [, ...rest] = tkey.split(":");
+      void submitScore("ta", rest.join(":"), score);
+    } else {
+      void submitScore("free", String(mode ?? difficulty), score);
+    }
+
     const rank = formatPercentile(estimatePercentile(score, Math.max(1500, highScore || 1500)));
     setEndXp({ xp: res.xpGained, levelsGained: res.levelsGained, rank });
   }, [

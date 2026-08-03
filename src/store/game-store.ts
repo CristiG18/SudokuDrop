@@ -343,6 +343,8 @@ export function sanitizeState(raw: unknown): Partial<GameState> {
       bestScore: Math.max(0, Math.floor(num(tour.bestScore, 0))),
       runs: Math.max(0, Math.floor(num(tour.runs, 0))),
     },
+    tournamentEntries: sanitizeEntries(s.tournamentEntries),
+
     loginStreak: Math.max(0, Math.floor(num(s.loginStreak, 0))),
     lastLoginDate: typeof s.lastLoginDate === "string" ? s.lastLoginDate : null,
 

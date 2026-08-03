@@ -284,20 +284,29 @@ function DropdokuPage() {
     let nextBag = bag;
     if (nextBag.length < 2) nextBag = [...nextBag, ...createBag(difficulty)];
     const p = spawnPiece(nextBag, pieceIndex);
-    // Game over: if this piece, translated so its top row is 0, would already
-    // overlap the stack, there's no room left for new pieces.
+    // Game over only when the stack has truly overflowed the grid: the piece is
+    // shifted sideways to look for ANY free entry column on the top row. As long
+    // as one exists, the player can keep playing and clear a line.
     const atTop: Piece = { ...p, r: 0 };
-    if (collides(board, atTop, 0, 0)) {
+    let spawned: Piece | null = null;
+    for (const dc of [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5, -6, 6, -7, 7, -8, 8]) {
+      if (!collides(board, atTop, 0, dc)) {
+        spawned = { ...p, c: p.c + dc };
+        break;
+      }
+    }
+    if (!spawned) {
       setGameOver(true);
       setHighScore(score);
       setSession(null);
       if (soundOn) sfx.fail();
       return;
     }
-    setPiece(p);
+    setPiece(spawned);
     gravityNextAtRef.current = Date.now() + speed;
     setBag(nextBag);
     setPieceIndex((i) => i + 1);
+
   }, [
     piece,
     gameOver,

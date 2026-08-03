@@ -1,5 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// Generated DB types lag behind these RPCs, so call them through a thin
+// untyped wrapper instead of fighting the generated signatures.
+const rpc = supabase.rpc.bind(supabase) as unknown as (
+  fn: string,
+  args: Record<string, unknown>,
+) => Promise<{ data: unknown; error: unknown }>;
+
 export type LeaderRow = { position: number; userId: string | null; name: string; score: number };
 
 /**
@@ -12,7 +19,7 @@ export async function submitScore(mode: string, difficulty: string, score: numbe
   try {
     const { data: auth } = await supabase.auth.getSession();
     if (!auth.session) return;
-    await supabase.rpc("submit_score", {
+    await rpc("submit_score", {
       _mode: mode,
       _difficulty: difficulty ?? "",
       _score: Math.floor(score),
@@ -24,7 +31,7 @@ export async function submitScore(mode: string, difficulty: string, score: numbe
 
 export async function fetchTop(mode: string, difficulty: string, limit = 50): Promise<LeaderRow[]> {
   try {
-    const { data, error } = await supabase.rpc("leaderboard_top", {
+    const { data, error } = await rpc("leaderboard_top", {
       _mode: mode,
       _difficulty: difficulty ?? "",
       _limit: limit,
@@ -48,7 +55,7 @@ export async function fetchMyRank(
   try {
     const { data: auth } = await supabase.auth.getSession();
     if (!auth.session) return null;
-    const { data, error } = await supabase.rpc("leaderboard_rank", {
+    const { data, error } = await rpc("leaderboard_rank", {
       _mode: mode,
       _difficulty: difficulty ?? "",
     });

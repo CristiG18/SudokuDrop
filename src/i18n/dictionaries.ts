@@ -230,6 +230,15 @@ const TABLE: Record<string, readonly [string, string, string, string, string, st
   "Feedback haptic la atingere.": ["Haptic feedback on touch.", "Respuesta háptica al tocar.", "Retour haptique au toucher.", "Haptisches Feedback bei Berührung.", "Feedback aptico al tocco.", "Feedback tátil ao toque."],
 
   // auth & profile
+  "Termeni și condiții": ["Terms of Service", "Términos y condiciones", "Conditions d'utilisation", "Nutzungsbedingungen", "Termini e condizioni", "Termos e condições"],
+  "Politica de confidențialitate": ["Privacy Policy", "Política de privacidad", "Politique de confidentialité", "Datenschutzerklärung", "Informativa sulla privacy", "Política de privacidade"],
+  "Șterge contul": ["Delete account", "Eliminar cuenta", "Supprimer le compte", "Konto löschen", "Elimina account", "Eliminar conta"],
+  "Ștergi definitiv contul?": ["Permanently delete your account?", "¿Eliminar la cuenta definitivamente?", "Supprimer définitivement le compte ?", "Konto endgültig löschen?", "Eliminare definitivamente l'account?", "Eliminar a conta definitivamente?"],
+  "Progresul, gemurile, monedele, skinurile și scorurile din clasamente se șterg definitiv. Acțiunea nu poate fi anulată.": ["Progress, gems, coins, skins and leaderboard scores are deleted permanently. This cannot be undone.", "El progreso, las gemas, las monedas, las skins y las puntuaciones se eliminan de forma permanente. No se puede deshacer.", "La progression, les gemmes, les pièces, les skins et les scores sont supprimés définitivement. Action irréversible.", "Fortschritt, Edelsteine, Münzen, Skins und Bestenlisten-Punkte werden endgültig gelöscht. Das kann nicht rückgängig gemacht werden.", "Progressi, gemme, monete, skin e punteggi vengono eliminati definitivamente. L'azione è irreversibile.", "Progresso, gemas, moedas, skins e pontuações são eliminados definitivamente. A ação é irreversível."],
+  "Anulează": ["Cancel", "Cancelar", "Annuler", "Abbrechen", "Annulla", "Cancelar"],
+  "Șterge": ["Delete", "Eliminar", "Supprimer", "Löschen", "Elimina", "Eliminar"],
+  "Contul a fost șters.": ["Your account was deleted.", "Tu cuenta ha sido eliminada.", "Ton compte a été supprimé.", "Dein Konto wurde gelöscht.", "Il tuo account è stato eliminato.", "A tua conta foi eliminada."],
+  "Reclama nu a putut fi afișată.": ["The ad could not be shown.", "No se pudo mostrar el anuncio.", "La publicité n'a pas pu être affichée.", "Die Werbung konnte nicht angezeigt werden.", "Impossibile mostrare l'annuncio.", "Não foi possível mostrar o anúncio."],
   "Invitat": ["Guest", "Invitado", "Invité", "Gast", "Ospite", "Convidado"],
   "Conectare în Phase 3": ["Sign-in in Phase 3", "Inicio de sesión en la fase 3", "Connexion en phase 3", "Anmeldung in Phase 3", "Accesso nella fase 3", "Início de sessão na fase 3"],
   "Autentificat": ["Signed in", "Sesión iniciada", "Connecté", "Angemeldet", "Accesso effettuato", "Sessão iniciada"],

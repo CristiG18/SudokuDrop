@@ -339,6 +339,8 @@ function DropdokuPage() {
     recordCategoryScore,
     recordVersusMatch,
     setModeBest,
+    rival,
+    navigate,
   ]);
 
   const cellSize = useMemo(() => {

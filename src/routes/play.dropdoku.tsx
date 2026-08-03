@@ -153,6 +153,20 @@ function DropdokuPage() {
   const recordCategoryScore = useGameStore((s) => s.recordCategoryScore);
   const recordVersusMatch = useGameStore((s) => s.recordVersusMatch);
   const setModeBest = useGameStore((s) => s.setModeBest);
+  const versusRun = useGameStore((s) => s.versus);
+
+  // The rival for this Versus match is drawn once, so the live score can be
+  // shown while playing and reused when the match is recorded.
+  const rival = useMemo(() => {
+    if (!vkey) return null;
+    return {
+      target: versusRivalScore(versusRun?.difficulty ?? "easy", versusRun?.round ?? 0),
+      name: versusRivalName(),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vkey]);
+
+
 
   const initial = useMemo(() => {
     if (!isSpecial && resume && savedSession && savedSession.difficulty === difficulty) {

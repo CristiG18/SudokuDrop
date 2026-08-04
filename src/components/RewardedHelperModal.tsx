@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Gem, Play, X } from "lucide-react";
 import { useGameStore, type Helper } from "@/store/game-store";
 import { useT } from "@/i18n";
-import { showRewardedAd, type RewardedAdKind } from "@/lib/ads";
+import { showRewardedAd } from "@/lib/ads";
 import { isNative } from "@/lib/native";
 
 const LABELS: Record<Helper, string> = {
@@ -69,7 +69,7 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
       setAdPlaying(true);
       return;
     }
-    if (await showRewardedAd()) grantFree();
+    if (await showRewardedAd("powerup")) grantFree();
   };
 
   const buy = () => {

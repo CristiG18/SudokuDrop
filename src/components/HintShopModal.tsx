@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Gem, Play, X } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
 import { useT } from "@/i18n";
-import { showRewardedAd, type RewardedAdKind } from "@/lib/ads";
+import { showRewardedAd } from "@/lib/ads";
 import { isNative } from "@/lib/native";
 
 const MAX_ADS = 3;
@@ -48,7 +48,7 @@ export function HintShopModal({ open, adsUsed, onClose, onGrant }: Props) {
       setAdPlaying(true);
       return;
     }
-    if (await showRewardedAd()) {
+    if (await showRewardedAd("hint")) {
       onGrant(1, true);
       onClose();
     }

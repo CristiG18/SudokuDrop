@@ -3,7 +3,7 @@ import { Ticket, Play } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
 import { TICKET_CAP, formatCountdown, msToNextTicket } from "@/game/economy";
 import { useT } from "@/i18n";
-import { showRewardedAd, type RewardedAdKind } from "@/lib/ads";
+import { showRewardedAd } from "@/lib/ads";
 import { toast } from "sonner";
 
 /**
@@ -41,7 +41,7 @@ export function TicketMeter({ compact = false }: { compact?: boolean }) {
       toast.error(t("Ai epuizat videoclipurile de azi."));
       return;
     }
-    const rewarded = await showRewardedAd();
+    const rewarded = await showRewardedAd("ticket");
     if (!rewarded) {
       toast.error(t("Reclama nu a putut fi afișată."));
       return;

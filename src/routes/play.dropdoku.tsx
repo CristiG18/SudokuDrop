@@ -732,7 +732,7 @@ function DropdokuPage() {
 
   const revive = async (free: boolean) => {
     // The free revive is paid for with a rewarded ad on device.
-    if (free && isNative() && !(await showRewardedAd())) return;
+    if (free && isNative() && !(await showRewardedAd("revive"))) return;
     if (!free && !spendDiamonds(reviveCost)) return;
     if (free) setUsedFreeRevive(true);
     else setReviveCount((n) => n + 1);

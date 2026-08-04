@@ -61,6 +61,32 @@ function ensureManifestMetaData() {
   }
 }
 
+/**
+ * Google Play Billing permission. Play Console refuses to create in-app
+ * products until an uploaded build declares it.
+ */
+function ensureBillingPermission() {
+  const content = fs.readFileSync(manifestPath, "utf8");
+  const perm = "com.android.vending.BILLING";
+  if (content.includes(perm)) return;
+  const line = `    <uses-permission android:name="${perm}" />`;
+  const updated = content.replace(/(<manifest[^>]*>)/, `$1\n${line}`);
+  fs.writeFileSync(manifestPath, updated);
+}
+
+/** Native Play Billing library required by cordova-plugin-purchase. */
+function ensureBillingDependency() {
+  const gradlePath = path.resolve("android/app/build.gradle");
+  if (!fs.existsSync(gradlePath)) return;
+  const content = fs.readFileSync(gradlePath, "utf8");
+  if (content.includes("com.android.billingclient:billing")) return;
+  const updated = content.replace(
+    /(dependencies\s*\{)/,
+    `$1\n    implementation "com.android.billingclient:billing:7.1.1"`
+  );
+  fs.writeFileSync(gradlePath, updated);
+}
+
 function main() {
   if (!fs.existsSync(manifestPath)) {
     console.log("[inject-admob-android] Android project not found. Run `npx cap add android` first.");
@@ -70,7 +96,10 @@ function main() {
   const appId = readConfigAppId();
   ensureStringsXml(appId);
   ensureManifestMetaData();
+  ensureBillingPermission();
+  ensureBillingDependency();
   console.log(`[inject-admob-android] AdMob App ID injected: ${appId}`);
+  console.log("[inject-admob-android] Google Play Billing permission + dependency ensured.");
 }
 
 main();

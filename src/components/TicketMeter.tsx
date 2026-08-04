@@ -41,7 +41,7 @@ export function TicketMeter({ compact = false }: { compact?: boolean }) {
       toast.error(t("Ai epuizat videoclipurile de azi."));
       return;
     }
-    const rewarded = await showRewardedAd();
+    const rewarded = await showRewardedAd("ticket");
     if (!rewarded) {
       toast.error(t("Reclama nu a putut fi afișată."));
       return;

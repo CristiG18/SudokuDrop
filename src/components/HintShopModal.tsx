@@ -48,7 +48,7 @@ export function HintShopModal({ open, adsUsed, onClose, onGrant }: Props) {
       setAdPlaying(true);
       return;
     }
-    if (await showRewardedAd()) {
+    if (await showRewardedAd("hint")) {
       onGrant(1, true);
       onClose();
     }

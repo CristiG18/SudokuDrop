@@ -69,7 +69,7 @@ export function RewardedHelperModal({ helper, onClose }: Props) {
       setAdPlaying(true);
       return;
     }
-    if (await showRewardedAd()) grantFree();
+    if (await showRewardedAd("powerup")) grantFree();
   };
 
   const buy = () => {

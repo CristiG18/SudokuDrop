@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { fmtNum } from "@/lib/format";
-import { ArrowLeft, Gem, Check, Coins, Ticket, ArrowLeftRight } from "lucide-react";
+import { ArrowLeft, Gem, Check, Coins, Ticket, ArrowLeftRight, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useGameStore, type Helper, type Skin } from "@/store/game-store";
 import { SKIN_CATALOG, THEME_CATALOG } from "@/game/cosmetics";
@@ -8,6 +8,7 @@ import { skinStyle } from "@/components/game/Jewel";
 import { toast } from "sonner";
 import { useT } from "@/i18n";
 import { ExchangeSheet } from "@/components/ExchangeSheet";
+import { GEM_PACKS, purchaseGems } from "@/lib/billing";
 
 export const Route = createFileRoute("/shop")({
   head: () => ({ meta: [{ title: "Magazin" }] }),
@@ -16,12 +17,7 @@ export const Route = createFileRoute("/shop")({
 
 type Tab = "diamonds" | "skins" | "colors" | "helpers";
 
-const DIAMOND_PACKS = [
-  { n: 100, price: "€0,99" },
-  { n: 500, price: "€3,99" },
-  { n: 1200, price: "€7,99" },
-  { n: 3000, price: "€17,99" },
-];
+const DIAMOND_PACKS = GEM_PACKS;
 
 const SKINS = SKIN_CATALOG;
 
@@ -41,6 +37,52 @@ function PreviewBlock({ kind }: { kind: Skin }) {
     >
       7
     </div>
+  );
+}
+
+function GemPackButton({ pack }: { pack: (typeof GEM_PACKS)[number] }) {
+  const t = useT();
+  const [busy, setBusy] = useState(false);
+  const addDiamonds = useGameStore((s) => s.addDiamonds);
+
+  const buy = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const gems = await purchaseGems(pack.id);
+      addDiamonds(gems);
+      toast.success(`${t("Ai primit")} ${fmtNum(gems)} ${t("gemuri")}!`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.toLowerCase().includes("cancel")) {
+        toast.info(t("Achiziție anulată."));
+      } else {
+        toast.error(`${t("Achiziție eșuată")}: ${message}`);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <button
+      disabled={busy}
+      onClick={buy}
+      className="bg-card border border-border rounded-2xl p-4 shadow-soft text-left active:scale-[0.98] transition disabled:opacity-60"
+    >
+      <div className="flex items-center gap-1 text-primary">
+        <Gem className="w-5 h-5" />
+        {busy ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : (
+          <span className="text-2xl font-bold">{fmtNum(pack.gems)}</span>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground mt-1">{t("diamante")}</p>
+      <div className="mt-3 inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
+        {pack.price}
+      </div>
+    </button>
   );
 }
 
@@ -170,20 +212,7 @@ function ShopPage() {
       {tab === "diamonds" && (
         <div className="mt-4 grid grid-cols-2 gap-3">
           {DIAMOND_PACKS.map((p) => (
-            <button
-              key={p.n}
-              onClick={() => toast.info(t("Plățile reale vin în curând."))}
-              className="bg-card border border-border rounded-2xl p-4 shadow-soft text-left active:scale-[0.98] transition"
-            >
-              <div className="flex items-center gap-1 text-primary">
-                <Gem className="w-5 h-5" />
-                <span className="text-2xl font-bold">{p.n}</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{t("diamante")}</p>
-              <div className="mt-3 inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
-                {p.price}
-              </div>
-            </button>
+            <GemPackButton key={p.id} pack={p} />
           ))}
         </div>
       )}

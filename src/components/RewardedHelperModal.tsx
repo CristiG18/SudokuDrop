@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Gem, Play, X } from "lucide-react";
 import { useGameStore, type Helper } from "@/store/game-store";
 import { useT } from "@/i18n";
-import { showRewardedAd } from "@/lib/ads";
+import { showRewardedAd, type RewardedAdKind } from "@/lib/ads";
 import { isNative } from "@/lib/native";
 
 const LABELS: Record<Helper, string> = {

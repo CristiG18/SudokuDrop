@@ -3,7 +3,7 @@ import { Ticket, Play } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
 import { TICKET_CAP, formatCountdown, msToNextTicket } from "@/game/economy";
 import { useT } from "@/i18n";
-import { showRewardedAd } from "@/lib/ads";
+import { showRewardedAd, type RewardedAdKind } from "@/lib/ads";
 import { toast } from "sonner";
 
 /**

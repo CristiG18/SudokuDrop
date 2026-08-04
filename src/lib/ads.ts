@@ -13,11 +13,26 @@ import { isNative } from "./native";
 // AdMob App ID from the Google Play / AdMob dashboard.
 export const ADMOB_APP_ID = "ca-app-pub-4013371667115642~7583618725";
 
-// Rewarded ad unit. In development / preview we use Google's test unit.
-// Replace with the live rewarded unit from AdMob → Ad units.
-const REWARDED_UNIT_ID =
-  (typeof import.meta.env !== "undefined" && import.meta.env.VITE_ADMOB_REWARDED_UNIT_ID) ||
-  "ca-app-pub-3940256099942544/5224354917";
+export type RewardedAdKind = "ticket" | "revive" | "hint" | "powerup";
+
+// Live rewarded ad units from AdMob. Env vars can override them for testing.
+const REWARDED_UNITS: Record<RewardedAdKind, string> = {
+  ticket:
+    (typeof import.meta.env !== "undefined" && import.meta.env.VITE_ADMOB_REWARDED_TICKET_UNIT_ID) ||
+    "ca-app-pub-4013371667115642/6073196121",
+  revive:
+    (typeof import.meta.env !== "undefined" && import.meta.env.VITE_ADMOB_REWARDED_REVIVE_UNIT_ID) ||
+    "ca-app-pub-4013371667115642/6560995296",
+  hint:
+    (typeof import.meta.env !== "undefined" && import.meta.env.VITE_ADMOB_REWARDED_HINT_UNIT_ID) ||
+    "ca-app-pub-4013371667115642/1308668611",
+  powerup:
+    (typeof import.meta.env !== "undefined" && import.meta.env.VITE_ADMOB_REWARDED_POWERUP_UNIT_ID) ||
+    "ca-app-pub-4013371667115642/9590749246",
+};
+
+// Google's universal rewarded test unit for development / emulators.
+const TEST_REWARDED_UNIT_ID = "ca-app-pub-3940256099942544/5224354917";
 
 let initialized = false;
 let canRequestAds = false;
@@ -77,12 +92,19 @@ export async function initAds(): Promise<void> {
   }
 }
 
+function getUnitId(kind: RewardedAdKind): string {
+  const useTest =
+    typeof import.meta.env !== "undefined" && import.meta.env.VITE_ADMOB_USE_TEST_UNITS === "true";
+  if (useTest) return TEST_REWARDED_UNIT_ID;
+  return REWARDED_UNITS[kind];
+}
+
 /**
  * Shows a rewarded video. Returns true when the user earned the reward.
  * Falls back to a simulated ad break outside the native shell so the game
  * stays playable in browser preview.
  */
-export async function showRewardedAd(): Promise<boolean> {
+export async function showRewardedAd(kind: RewardedAdKind = "ticket"): Promise<boolean> {
   const adMob = await loadAdMob();
   if (!adMob) {
     // Browser / plugin not installed: simulate a short ad break.
@@ -94,7 +116,7 @@ export async function showRewardedAd(): Promise<boolean> {
   if (!canRequestAds) return false;
 
   try {
-    await adMob.prepareRewardVideoAd({ adId: REWARDED_UNIT_ID });
+    await adMob.prepareRewardVideoAd({ adId: getUnitId(kind) });
     const result = (await adMob.showRewardVideoAd()) as { amount?: number } | undefined;
     return Boolean(result);
   } catch {

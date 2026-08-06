@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useT } from "@/i18n";
 import { ExchangeSheet } from "@/components/ExchangeSheet";
 import { GEM_PACKS, purchaseGems } from "@/lib/billing";
+import { verifyGemPurchase } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/shop")({
   head: () => ({ meta: [{ title: "Magazin" }] }),

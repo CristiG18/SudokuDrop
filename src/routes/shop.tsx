@@ -49,9 +49,16 @@ function GemPackButton({ pack }: { pack: (typeof GEM_PACKS)[number] }) {
     if (busy) return;
     setBusy(true);
     try {
-      const gems = await purchaseGems(pack.id);
-      addDiamonds(gems);
-      toast.success(`${t("Ai primit")} ${fmtNum(gems)} ${t("gemuri")}!`);
+      const result = await purchaseGems(pack.id);
+      await verifyGemPurchase({
+        data: {
+          productId: result.productId,
+          purchaseToken: result.purchaseToken,
+          gems: result.gems,
+        },
+      }).catch(() => null);
+      addDiamonds(result.gems);
+      toast.success(`${t("Ai primit")} ${fmtNum(result.gems)} ${t("gemuri")}!`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.toLowerCase().includes("cancel")) {

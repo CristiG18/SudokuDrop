@@ -22,7 +22,7 @@ declare global {
         verbosity: number;
         register: (products: unknown[]) => void;
         when: () => {
-          approved: (cb: (transaction: { products: { id?: string }[]; finish: () => Promise<void> }) => void) => { cancelled: (cb: () => void) => void };
+          approved: (cb: (transaction: { products: { id?: string }[]; purchaseId?: string; transactionId?: string; finish: () => Promise<void> }) => void) => { cancelled: (cb: () => void) => void };
         };
         initialize: (platforms: unknown[]) => Promise<unknown>;
         get: (productId: string) => { getOffer: () => { order: () => Promise<unknown> } | undefined } | undefined;

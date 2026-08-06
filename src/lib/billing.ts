@@ -34,9 +34,15 @@ declare global {
   }
 }
 
+export type PurchaseResult = {
+  productId: string;
+  gems: number;
+  purchaseToken: string;
+};
+
 let storeInitStarted = false;
 let storeReady = false;
-let pendingResolver: ((gems: number) => void) | null = null;
+let pendingResolver: ((result: PurchaseResult) => void) | null = null;
 let pendingRejecter: ((err: Error) => void) | null = null;
 
 function getStore() {

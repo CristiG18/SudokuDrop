@@ -73,9 +73,14 @@ async function initStore(): Promise<void> {
   store
     .when()
     .approved((transaction) => {
-      const gems = getGemAmount(transaction.products[0]?.id ?? "");
+      const pid = transaction.products[0]?.id ?? "";
+      const gems = getGemAmount(pid);
       if (gems && pendingResolver) {
-        pendingResolver(gems);
+        pendingResolver({
+          productId: pid,
+          gems,
+          purchaseToken: transaction.purchaseId ?? transaction.transactionId ?? "",
+        });
         pendingResolver = null;
         pendingRejecter = null;
       }
@@ -94,10 +99,10 @@ async function initStore(): Promise<void> {
 }
 
 /**
- * Initiates a purchase for the given gem pack. Returns the number of gems
- * granted on success. Throws on cancellation or error.
+ * Initiates a purchase for the given gem pack. Resolves with the granted gems
+ * and the store purchase token. Throws on cancellation or error.
  */
-export async function purchaseGems(productId: string): Promise<number> {
+export async function purchaseGems(productId: string): Promise<PurchaseResult> {
   const pack = GEM_PACKS.find((p) => p.id === productId);
   if (!pack) throw new Error("Invalid gem pack");
 
@@ -105,12 +110,12 @@ export async function purchaseGems(productId: string): Promise<number> {
   if (!store) {
     // Browser / preview: simulate a purchase so the UI stays testable.
     await new Promise((r) => setTimeout(r, 800));
-    return pack.gems;
+    return { productId, gems: pack.gems, purchaseToken: `sim-${Date.now()}` };
   }
 
   if (!storeReady) await initStore();
 
-  return new Promise((resolve, reject) => {
+  return new Promise<PurchaseResult>((resolve, reject) => {
     pendingResolver = resolve;
     pendingRejecter = reject;
 

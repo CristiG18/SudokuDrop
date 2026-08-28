@@ -327,11 +327,12 @@ function ClassicGame() {
   };
 
 
-  const reset = () => {
-    setGrid(puzzle.map((r) => r.slice()));
-    setMistakes(0);
-    setHintsLeft(3);
-    setHintsUsed(0);
+  const undo = () => {
+    if (won || lost || history.length === 0) return;
+    const prev = history[history.length - 1];
+    setHistory((h) => h.slice(0, -1));
+    setGrid(prev);
+    if (soundOn) sfx.click();
   };
 
   const counts = useMemo(() => {
@@ -497,7 +498,12 @@ function ClassicGame() {
 
 
       <div className="mt-5 flex justify-around">
-        <ToolBtn Icon={RotateCcw} label={t("Reset")} onClick={reset} />
+        <ToolBtn
+          Icon={Undo2}
+          label={t("Anulează")}
+          onClick={undo}
+          disabled={history.length === 0 || won || lost}
+        />
         <ToolBtn Icon={Eraser} label={t("Șterge")} onClick={() => enter(null)} />
         <ToolBtn
           Icon={Lightbulb}

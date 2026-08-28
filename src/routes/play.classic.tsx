@@ -270,10 +270,16 @@ function ClassicGame() {
     [autoCompleteOn, solution, finish, soundOn, seconds],
   );
 
+  const pushHistory = (g: SudokuGrid) => {
+    setHistory((h) => [...h.slice(-99), g.map((row) => row.slice())]);
+  };
+
   const enter = (n: number | null) => {
     if (!sel || won || lost) return;
     const { r, c } = sel;
     if (fixed[r][c]) return;
+    if (grid[r][c] === n) return;
+    pushHistory(grid);
     const next = grid.map((row) => row.slice());
     if (n === null) {
       next[r][c] = null;
@@ -306,6 +312,8 @@ function ClassicGame() {
     }
     if (!sel) return;
     if (fixed[sel.r][sel.c]) return;
+    if (grid[sel.r][sel.c] === solution[sel.r][sel.c]) return;
+    pushHistory(grid);
     const next = grid.map((row) => row.slice());
     next[sel.r][sel.c] = solution[sel.r][sel.c];
     setGrid(next);

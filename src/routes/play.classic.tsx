@@ -500,7 +500,7 @@ function ClassicGame() {
       <div className="mt-5 flex justify-around">
         <ToolBtn
           Icon={Undo2}
-          label={t("Anulează")}
+          label={t("Undo")}
           onClick={undo}
           disabled={history.length === 0 || won || lost}
         />

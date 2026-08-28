@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Eraser, Lightbulb, Pause, Play, RotateCcw } from "lucide-react";
+import { ArrowLeft, Eraser, Lightbulb, Pause, Play, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { submitScore } from "@/lib/leaderboard";
 import {
@@ -113,6 +113,7 @@ function ClassicGame() {
   }, []);
 
   const [grid, setGrid] = useState<SudokuGrid>(init.grid);
+  const [history, setHistory] = useState<SudokuGrid[]>([]);
   const [sel, setSel] = useState<{ r: number; c: number } | null>(null);
   const [mistakes, setMistakes] = useState(init.mistakes);
   const [seconds, setSeconds] = useState(init.seconds);

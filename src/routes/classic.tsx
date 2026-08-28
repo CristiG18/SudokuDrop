@@ -7,7 +7,7 @@ import { useT } from "@/i18n";
 export const Route = createFileRoute("/classic")({
   head: () => ({ meta: [{ title: "Sudoku Clasic" }] }),
   component: ClassicPicker,
-  validateSearch: (s: Record<string, unknown>) => ({ help: s.help ? 1 : undefined }),
+  validateSearch: (s: Record<string, unknown>) => (s.help ? { help: 1 as const } : {}),
 });
 
 const LEVELS: Array<{ key: SudokuDifficulty; label: string }> = [

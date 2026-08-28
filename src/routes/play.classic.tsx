@@ -29,8 +29,8 @@ export const Route = createFileRoute("/play/classic")({
           : undefined;
     return {
       difficulty: (s.difficulty as SudokuDifficulty) || "medium",
-      seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
-      resume: s.resume === true || s.resume === "true" ? true : undefined,
+      ...(Number.isFinite(parsedSeed) ? { seed: parsedSeed as number } : {}),
+      ...(s.resume === true || s.resume === "true" ? { resume: true as const } : {}),
     };
   },
 });

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Eraser, Lightbulb, Pause, Play, RotateCcw } from "lucide-react";
+import { ArrowLeft, Eraser, Lightbulb, Pause, Play, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { submitScore } from "@/lib/leaderboard";
 import {
@@ -29,8 +29,8 @@ export const Route = createFileRoute("/play/classic")({
           : undefined;
     return {
       difficulty: (s.difficulty as SudokuDifficulty) || "medium",
-      seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
-      resume: s.resume === true || s.resume === "true" ? true : undefined,
+      ...(Number.isFinite(parsedSeed) ? { seed: parsedSeed as number } : {}),
+      ...(s.resume === true || s.resume === "true" ? { resume: true as const } : {}),
     };
   },
 });
@@ -113,6 +113,7 @@ function ClassicGame() {
   }, []);
 
   const [grid, setGrid] = useState<SudokuGrid>(init.grid);
+  const [history, setHistory] = useState<SudokuGrid[]>([]);
   const [sel, setSel] = useState<{ r: number; c: number } | null>(null);
   const [mistakes, setMistakes] = useState(init.mistakes);
   const [seconds, setSeconds] = useState(init.seconds);
@@ -269,10 +270,16 @@ function ClassicGame() {
     [autoCompleteOn, solution, finish, soundOn, seconds],
   );
 
+  const pushHistory = (g: SudokuGrid) => {
+    setHistory((h) => [...h.slice(-99), g.map((row) => row.slice())]);
+  };
+
   const enter = (n: number | null) => {
     if (!sel || won || lost) return;
     const { r, c } = sel;
     if (fixed[r][c]) return;
+    if (grid[r][c] === n) return;
+    pushHistory(grid);
     const next = grid.map((row) => row.slice());
     if (n === null) {
       next[r][c] = null;
@@ -305,6 +312,8 @@ function ClassicGame() {
     }
     if (!sel) return;
     if (fixed[sel.r][sel.c]) return;
+    if (grid[sel.r][sel.c] === solution[sel.r][sel.c]) return;
+    pushHistory(grid);
     const next = grid.map((row) => row.slice());
     next[sel.r][sel.c] = solution[sel.r][sel.c];
     setGrid(next);
@@ -318,11 +327,12 @@ function ClassicGame() {
   };
 
 
-  const reset = () => {
-    setGrid(puzzle.map((r) => r.slice()));
-    setMistakes(0);
-    setHintsLeft(3);
-    setHintsUsed(0);
+  const undo = () => {
+    if (won || lost || history.length === 0) return;
+    const prev = history[history.length - 1];
+    setHistory((h) => h.slice(0, -1));
+    setGrid(prev);
+    if (soundOn) sfx.click();
   };
 
   const counts = useMemo(() => {
@@ -488,7 +498,12 @@ function ClassicGame() {
 
 
       <div className="mt-5 flex justify-around">
-        <ToolBtn Icon={RotateCcw} label={t("Reset")} onClick={reset} />
+        <ToolBtn
+          Icon={Undo2}
+          label={t("Undo")}
+          onClick={undo}
+          disabled={history.length === 0 || won || lost}
+        />
         <ToolBtn Icon={Eraser} label={t("Șterge")} onClick={() => enter(null)} />
         <ToolBtn
           Icon={Lightbulb}

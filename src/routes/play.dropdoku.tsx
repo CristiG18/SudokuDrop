@@ -53,16 +53,18 @@ export const Route = createFileRoute("/play/dropdoku")({
   validateSearch: (s: Record<string, unknown>) => {
     const modes = ["timeattack"] as const;
     type GameMode = (typeof modes)[number];
+    const mode = modes.includes(s.mode as GameMode) ? (s.mode as GameMode) : undefined;
+    const seconds =
+      typeof s.seconds === "number" ? s.seconds : s.seconds ? Number(s.seconds) : undefined;
     return {
       difficulty: (s.difficulty as Difficulty) || "normal",
-      resume: s.resume === true || s.resume === "true" ? true : undefined,
-      mode: modes.includes(s.mode as GameMode) ? (s.mode as GameMode) : undefined,
-      seconds:
-        typeof s.seconds === "number" ? s.seconds : s.seconds ? Number(s.seconds) : undefined,
+      ...(s.resume === true || s.resume === "true" ? { resume: true as const } : {}),
+      ...(mode ? { mode } : {}),
+      ...(typeof seconds === "number" && Number.isFinite(seconds) ? { seconds } : {}),
       // Tournament category this run counts towards (e.g. "duel:hard").
-      tkey: typeof s.tkey === "string" ? s.tkey : undefined,
+      ...(typeof s.tkey === "string" ? { tkey: s.tkey } : {}),
       // Versus bracket match (score is reported to the running bracket).
-      vkey: typeof s.vkey === "string" ? s.vkey : undefined,
+      ...(typeof s.vkey === "string" ? { vkey: s.vkey } : {}),
     };
   },
 

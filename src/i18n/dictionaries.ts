@@ -22,6 +22,7 @@ const TABLE: Record<string, readonly [string, string, string, string, string, st
   "Meniu": ["Menu", "Menú", "Menu", "Menü", "Menu", "Menu"],
   "Meniu principal": ["Main menu", "Menú principal", "Menu principal", "Hauptmenü", "Menu principale", "Menu principal"],
   "Reset": ["Reset", "Reiniciar", "Réinit.", "Zurücksetzen", "Reset", "Repor"],
+  "Undo": ["Undo", "Deshacer", "Annuler", "Rückgängig", "Annulla", "Desfazer"],
   "Restart": ["Restart", "Reiniciar", "Recommencer", "Neustart", "Riavvia", "Reiniciar"],
   "Joc nou": ["New game", "Partida nueva", "Nouvelle partie", "Neues Spiel", "Nuova partita", "Novo jogo"],
   "Joc Nou": ["New game", "Partida nueva", "Nouvelle partie", "Neues Spiel", "Nuova partita", "Novo jogo"],

@@ -28,8 +28,8 @@ export function ThemePicker() {
                 </span>
               )}
               {!owned && (
-                <span className="absolute bottom-1.5 left-1.5 text-[9px] px-1.5 py-0.5 rounded-full bg-white/90 text-foreground font-bold inline-flex items-center gap-0.5">
-                  <Gem className="w-2.5 h-2.5" />
+                <span className="absolute bottom-1.5 left-1.5 right-1.5 text-[11px] px-1.5 py-1 rounded-full bg-white text-foreground font-bold flex items-center justify-center gap-1 shadow-md">
+                  <Gem className="w-3 h-3 text-primary" />
                   {theme.cost}
                 </span>
               )}

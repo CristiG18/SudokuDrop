@@ -16,7 +16,7 @@ import { dailyForDate } from "@/game/schedule";
 import { DifficultySheet, type DropDifficulty } from "@/components/DifficultySheet";
 import { ContinueCard } from "@/components/ContinueCard";
 import { DailyRewardModal } from "@/components/DailyRewardModal";
-import logo from "@/assets/sudoku-drop-emblem.png";
+import { ThemedEmblem } from "@/components/ThemedEmblem";
 import { useT } from "@/i18n";
 import { TicketMeter } from "@/components/TicketMeter";
 import { XpBar } from "@/components/XpBar";
@@ -130,13 +130,7 @@ function Home() {
         <div className="relative isolate w-full max-w-[17rem] aspect-square">
           <div className="absolute inset-[9%] -z-10 rounded-full bg-primary/35 blur-2xl" />
           <div className="absolute inset-[16%] -z-10 rounded-full bg-primary/30" />
-          <img
-            src={logo}
-            alt="Emblema rotundă Sudoku Drop cu piese numerotate care cad"
-            width={1024}
-            height={1024}
-            className="h-full w-full object-contain drop-shadow-xl"
-          />
+          <ThemedEmblem theme={activeTheme} />
         </div>
         <p className="text-sm text-muted-foreground mt-2">{t("Piesele cad. Tu completezi.")}</p>
         <Link

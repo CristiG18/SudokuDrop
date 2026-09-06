@@ -55,8 +55,9 @@ export function SkinPicker({ compact }: Props) {
                 </span>
               )}
               {!isOwned && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-muted text-muted-foreground flex items-center justify-center">
-                  <Lock className="w-2.5 h-2.5" />
+                <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[10px] px-1.5 py-0.5 rounded-full bg-white text-foreground font-bold flex items-center gap-0.5 shadow-md whitespace-nowrap">
+                  <Gem className="w-2.5 h-2.5 text-primary" />
+                  {s.cost}
                 </span>
               )}
             </button>

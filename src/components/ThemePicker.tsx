@@ -38,7 +38,7 @@ export function ThemePicker() {
           const className =
             "relative aspect-square rounded-2xl flex flex-col items-center justify-end p-2 border transition " +
             (active ? "border-primary ring-2 ring-primary/40" : "border-border") +
-            (owned ? "" : " opacity-70");
+            (owned ? "" : " opacity-95");
 
           if (!owned) {
             return (

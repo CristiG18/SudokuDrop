@@ -16,7 +16,7 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
   },
   server: {
-    url: "https://sudoku-drop.lovable.app",
+    url: "https://sudokudrop.lovable.app",
     androidScheme: "https",
     cleartext: false,
   },

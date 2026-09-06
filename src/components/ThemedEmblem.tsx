@@ -11,9 +11,15 @@ function readThemeColor(): Rgb | null {
   const color = getComputedStyle(probe).backgroundColor;
   probe.remove();
 
-  const channels = color.match(/[\d.]+/g)?.slice(0, 3).map(Number);
-  if (!channels || channels.length < 3) return null;
-  return { r: channels[0], g: channels[1], b: channels[2] };
+  const sample = document.createElement("canvas");
+  sample.width = 1;
+  sample.height = 1;
+  const context = sample.getContext("2d");
+  if (!context) return null;
+  context.fillStyle = color;
+  context.fillRect(0, 0, 1, 1);
+  const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
+  return { r, g, b };
 }
 
 function isFallingPiece(x: number, y: number, size: number) {

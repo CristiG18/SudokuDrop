@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  ChevronRight,
   FileText,
   Loader2,
   LogIn,
   LogOut,
+  Palette,
   Shield,
   Trash2,
   UserCircle2,
@@ -14,8 +16,6 @@ import { useGameStore } from "@/store/game-store";
 import { supabase } from "@/integrations/supabase/client";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { toast } from "sonner";
-import { ThemePicker } from "@/components/ThemePicker";
-import { SkinPicker } from "@/components/SkinPicker";
 import { LanguagePicker } from "@/components/LanguagePicker";
 import { useT } from "@/i18n";
 
@@ -103,9 +103,23 @@ function SettingsPage() {
       </div>
 
       <div className="mt-4 space-y-3">
+        <Link
+          to="/appearance"
+          className="w-full flex items-center gap-3 bg-card border border-border rounded-2xl p-4 shadow-soft"
+        >
+          <span className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
+            <Palette className="w-5 h-5 text-primary-foreground" />
+          </span>
+          <span className="flex-1">
+            <span className="block font-semibold">{t("Aspect")}</span>
+            <span className="block text-xs text-muted-foreground mt-0.5">
+              {t("Culoarea interfeței și skinul pieselor")}
+            </span>
+          </span>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+
         <LanguagePicker />
-        <ThemePicker />
-        <SkinPicker />
 
         <Row
           title={t("Mod control")}

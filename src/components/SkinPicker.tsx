@@ -1,4 +1,5 @@
 import { Check, Lock } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useGameStore } from "@/store/game-store";
 import { skinStyle } from "@/components/game/Jewel";
 import { useT } from "@/i18n";
@@ -16,6 +17,7 @@ export function SkinPicker({ compact }: Props) {
   const owned = useGameStore((s) => s.ownedSkins);
   const active = useGameStore((s) => s.activeSkin);
   const setSkin = useGameStore((s) => s.setSkin);
+  const navigate = useNavigate();
 
   const size = compact ? 40 : 48;
 
@@ -37,8 +39,7 @@ export function SkinPicker({ compact }: Props) {
             <button
               key={s.id}
               type="button"
-              onClick={() => isOwned && setSkin(s.id)}
-              disabled={!isOwned}
+              onClick={() => (isOwned ? setSkin(s.id) : navigate({ to: "/shop" }))}
               aria-label={t(s.name)}
               className={
                 "relative shrink-0 rounded-xl flex items-center justify-center font-bold transition " +

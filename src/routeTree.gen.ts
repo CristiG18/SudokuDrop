@@ -22,6 +22,7 @@ import { Route as DailyRouteImport } from './routes/daily'
 import { Route as ClassicRouteImport } from './routes/classic'
 import { Route as BattleRouteImport } from './routes/battle'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AppearanceRouteImport } from './routes/appearance'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TutorialModeRouteImport } from './routes/tutorial.$mode'
 import { Route as PlayDropdokuRouteImport } from './routes/play.dropdoku'
@@ -92,6 +93,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppearanceRoute = AppearanceRouteImport.update({
+  id: '/appearance',
+  path: '/appearance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -115,6 +121,7 @@ const PlayClassicRoute = PlayClassicRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/appearance': typeof AppearanceRoute
   '/auth': typeof AuthRoute
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/appearance': typeof AppearanceRoute
   '/auth': typeof AuthRoute
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
@@ -154,6 +162,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/appearance': typeof AppearanceRoute
   '/auth': typeof AuthRoute
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/appearance'
     | '/auth'
     | '/battle'
     | '/classic'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/appearance'
     | '/auth'
     | '/battle'
     | '/classic'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/appearance'
     | '/auth'
     | '/battle'
     | '/classic'
@@ -233,6 +245,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppearanceRoute: typeof AppearanceRoute
   AuthRoute: typeof AuthRoute
   BattleRoute: typeof BattleRoute
   ClassicRoute: typeof ClassicRoute
@@ -343,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/appearance': {
+      id: '/appearance'
+      path: '/appearance'
+      fullPath: '/appearance'
+      preLoaderRoute: typeof AppearanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -388,6 +408,7 @@ const TutorialRouteWithChildren = TutorialRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppearanceRoute: AppearanceRoute,
   AuthRoute: AuthRoute,
   BattleRoute: BattleRoute,
   ClassicRoute: ClassicRoute,

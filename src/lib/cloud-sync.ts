@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGameStore } from "@/store/game-store";
+import { xpForLevel } from "@/game/economy";
 
 /**
  * Fields of the local store that belong to the player's account and therefore

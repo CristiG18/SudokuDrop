@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
-import emblem from "@/assets/sudoku-drop-emblem.png";
+import emblemAsset from "@/assets/sudoku-drop-emblem.png.asset.json";
+
+const emblem = emblemAsset.url;
 
 type Rgb = { r: number; g: number; b: number };
 

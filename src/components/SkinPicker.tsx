@@ -1,4 +1,4 @@
-import { Check, Lock } from "lucide-react";
+import { Check, Gem } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useGameStore } from "@/store/game-store";
 import { skinStyle } from "@/components/game/Jewel";

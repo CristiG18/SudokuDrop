@@ -1,4 +1,4 @@
-import { Check, Lock } from "lucide-react";
+import { Check, Gem } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useGameStore } from "@/store/game-store";
 import { skinStyle } from "@/components/game/Jewel";
@@ -44,7 +44,7 @@ export function SkinPicker({ compact }: Props) {
               className={
                 "relative shrink-0 rounded-xl flex items-center justify-center font-bold transition " +
                 (isActive ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : "") +
-                (isOwned ? "" : " opacity-45")
+                (isOwned ? "" : " opacity-85")
               }
               style={{ width: size, height: size, fontSize: size * 0.45, ...skinStyle(s.id, 7) }}
             >
@@ -55,8 +55,9 @@ export function SkinPicker({ compact }: Props) {
                 </span>
               )}
               {!isOwned && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-muted text-muted-foreground flex items-center justify-center">
-                  <Lock className="w-2.5 h-2.5" />
+                <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[10px] px-1.5 py-0.5 rounded-full bg-white text-foreground font-bold flex items-center gap-0.5 shadow-md whitespace-nowrap">
+                  <Gem className="w-2.5 h-2.5 text-primary" />
+                  {s.cost}
                 </span>
               )}
             </button>

@@ -26,13 +26,13 @@ export function LanguagePicker() {
               className={cn(
                 "flex items-center gap-2 rounded-xl border p-2.5 text-sm transition active:scale-[0.98]",
                 active
-                  ? "border-primary bg-accent font-semibold"
+                  ? "border-primary bg-primary text-primary-foreground font-semibold"
                   : "border-border bg-card text-muted-foreground",
               )}
             >
               <span className="text-base">{l.flag}</span>
               <span className="flex-1 text-left">{l.label}</span>
-              {active && <Check className="w-4 h-4 text-primary" />}
+              {active && <Check className="w-4 h-4 text-primary-foreground" />}
             </button>
           );
         })}

@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  ChevronRight,
   FileText,
   Loader2,
   LogIn,
   LogOut,
+  Palette,
   Shield,
   Trash2,
   UserCircle2,
@@ -14,8 +16,6 @@ import { useGameStore } from "@/store/game-store";
 import { supabase } from "@/integrations/supabase/client";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { toast } from "sonner";
-import { ThemePicker } from "@/components/ThemePicker";
-import { SkinPicker } from "@/components/SkinPicker";
 import { LanguagePicker } from "@/components/LanguagePicker";
 import { useT } from "@/i18n";
 

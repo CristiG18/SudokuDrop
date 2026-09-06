@@ -7,6 +7,11 @@ const ORDER = ["en", "es", "fr", "de", "it", "pt"] as const;
 /** key = Romanian source string, value = [en, es, fr, de, it, pt] */
 const TABLE: Record<string, readonly [string, string, string, string, string, string]> = {
   // navigation & general
+  "Aspect": ["Appearance", "Apariencia", "Apparence", "Aussehen", "Aspetto", "Aparência"],
+  "Culoare": ["Color", "Color", "Couleur", "Farbe", "Colore", "Cor"],
+  "Culoarea interfeței și skinul pieselor": ["Interface color and piece skin", "Color de la interfaz y skin de piezas", "Couleur d'interface et skin des pièces", "Oberflächenfarbe und Stein-Skin", "Colore interfaccia e skin dei pezzi", "Cor da interface e skin das peças"],
+  "Culoarea interfeței și skinul pieselor. Skinul poate schimba și fundalul jocului.": ["Interface color and piece skin. A skin can also change the game background.", "Color de la interfaz y skin de piezas. Un skin también puede cambiar el fondo del juego.", "Couleur d'interface et skin des pièces. Un skin peut aussi changer le fond du jeu.", "Oberflächenfarbe und Stein-Skin. Ein Skin kann auch den Hintergrund ändern.", "Colore interfaccia e skin dei pezzi. Uno skin può cambiare anche lo sfondo.", "Cor da interface e skin das peças. Um skin pode mudar também o fundo."],
+  "Revino la verdele implicit": ["Back to default green", "Volver al verde por defecto", "Revenir au vert par défaut", "Zurück zum Standardgrün", "Torna al verde predefinito", "Voltar ao verde padrão"],
   "Acasă": ["Home", "Inicio", "Accueil", "Start", "Home", "Início"],
   "Bătălie": ["Battle", "Batalla", "Bataille", "Kampf", "Battaglia", "Batalha"],
   "Explorează": ["Explore", "Explorar", "Explorer", "Entdecken", "Esplora", "Explorar"],

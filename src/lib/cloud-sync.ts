@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGameStore } from "@/store/game-store";
+import { xpForLevel } from "@/game/economy";
 
 /**
  * Fields of the local store that belong to the player's account and therefore
@@ -40,8 +41,20 @@ function merge(local: Snapshot, cloud: Snapshot): Snapshot {
   const out: Snapshot = { ...local };
   const num = (k: string) =>
     (out[k] = Math.max(Number(local[k] ?? 0), Number(cloud[k] ?? 0)));
-  for (const k of ["diamonds", "coins", "tickets", "xp", "level", "loginStreak", "classicStreak"])
-    num(k);
+  for (const k of ["diamonds", "coins", "tickets", "loginStreak", "classicStreak"]) num(k);
+
+  // Level + XP travel together: compare lifetime XP and keep the whole pair,
+  // otherwise max()-ing each field on its own invents progress out of nowhere.
+  const lifetime = (s: Snapshot) => {
+    const lv = Math.max(1, Math.floor(Number(s.level ?? 1)));
+    let total = Math.max(0, Math.floor(Number(s.xp ?? 0)));
+    for (let i = 1; i < lv; i++) total += xpForLevel(i);
+    return total;
+  };
+  const best = lifetime(cloud) > lifetime(local) ? cloud : local;
+  out.level = Math.max(1, Math.floor(Number(best.level ?? 1)));
+  out.xp = Math.max(0, Math.floor(Number(best.xp ?? 0)));
+
 
   const bestMap = (k: string) => {
     const a = (local[k] ?? {}) as Record<string, number>;

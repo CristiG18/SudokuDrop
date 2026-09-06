@@ -16,7 +16,7 @@ import { dailyForDate } from "@/game/schedule";
 import { DifficultySheet, type DropDifficulty } from "@/components/DifficultySheet";
 import { ContinueCard } from "@/components/ContinueCard";
 import { DailyRewardModal } from "@/components/DailyRewardModal";
-import logoAsset from "@/assets/sudoku-drop-logo.png.asset.json";
+import logo from "@/assets/sudoku-drop-emblem.png";
 import { useT } from "@/i18n";
 import { TicketMeter } from "@/components/TicketMeter";
 import { XpBar } from "@/components/XpBar";
@@ -127,13 +127,17 @@ function Home() {
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-5 py-6">
-        <img
-          src={logoAsset.url}
-          alt="Sudoku Drop — piese numerotate care cad pe tabla de joc"
-          width={1408}
-          height={768}
-          className="w-full max-w-sm aspect-[11/6] rounded-2xl object-cover shadow-card"
-        />
+        <div className="relative isolate w-full max-w-[17rem] aspect-square">
+          <div className="absolute inset-[9%] -z-10 rounded-full bg-primary/35 blur-2xl" />
+          <div className="absolute inset-[16%] -z-10 rounded-full bg-primary/30" />
+          <img
+            src={logo}
+            alt="Emblema rotundă Sudoku Drop cu piese numerotate care cad"
+            width={1024}
+            height={1024}
+            className="h-full w-full object-contain drop-shadow-xl"
+          />
+        </div>
         <p className="text-sm text-muted-foreground mt-2">{t("Piesele cad. Tu completezi.")}</p>
         <Link
           to="/tutorial"

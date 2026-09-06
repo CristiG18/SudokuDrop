@@ -44,7 +44,7 @@ export function SkinPicker({ compact }: Props) {
               className={
                 "relative shrink-0 rounded-xl flex items-center justify-center font-bold transition " +
                 (isActive ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : "") +
-                (isOwned ? "" : " opacity-45")
+                (isOwned ? "" : " opacity-85")
               }
               style={{ width: size, height: size, fontSize: size * 0.45, ...skinStyle(s.id, 7) }}
             >

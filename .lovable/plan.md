@@ -1,158 +1,85 @@
-# Lansare Sudoku Drop — de la GitHub la Google Play
+# Lansare fără laptop — analiza răspunsului celuilalt AI + planul final
 
-Ghid complet, în ordinea corectă, cu valorile exacte din proiectul tău.
+## Verdictul meu despre ce ți-a zis celălalt AI
 
-## Informațiile tale fixe
+**Ce are dreptate:** Da, se poate publica pe Google Play fără laptop, prin build în cloud. E o metodă reală și gratuită.
+
+**Ce greșește sau nu știe despre proiectul tău:**
+
+1. **Pasul 2 e inutil** — Capacitor e deja configurat complet (`capacitor.config.ts`, appId `app.lovable.sudokudrop`, AdMob, splash, script de injectare care adaugă și permisiunea de facturare). Dacă ai urma sfatul lui cu `com.sudokudrop.app`, ai strica legătura cu AdMob și cu produsele de cumpărare deja stabilite. NU schimbăm appId.
+2. **Codemagic de pe telefon e chinuitor** — cere configurare YAML și încărcare manuală de chei de semnare, greoi fără tastatură. Varianta mai bună: **GitHub Actions** — eu scriu fișierul de build direct în proiect, se sincronizează singur pe GitHub, tu doar apeși un buton „Run" din browser.
+3. **„Politica de confidențialitate generată pe un site random" e o prostie** — ai deja pagini reale publicate: `sudokudrop.lovable.app/privacy` și `/terms`. Le folosim pe alea.
+4. **„Declară că nu colectezi date" e periculos** — aplicația colectează e-mail (cont) și ID-uri de dispozitiv (AdMob). O declarație falsă în Data Safety poate duce la respingerea sau eliminarea aplicației.
+5. **Omite complet:** cheia de semnare, permisiunea de facturare (fără ea nu poți crea produsele de gemuri), produsele in-app, legarea AdMob, mesajul GDPR.
+
+## Planul final — totul de pe telefon/tabletă
 
 ```text
-ID pachet Android:                    app.lovable.sudokudrop
-AdMob App ID:                         ca-app-pub-4013371667115642~7583618725
-Unități reclamă cu recompensă:
-  - Tichet:    ca-app-pub-4013371667115642/6073196121
-  - Revivire:  ca-app-pub-4013371667115642/6560995296
-  - Indiciu:   ca-app-pub-4013371667115642/1308668611
-  - Power-up:  ca-app-pub-4013371667115642/9590749246
-Produse în aplicație (consumabile):
-  - gems_100   = 100 gemuri    → 0,99 €
-  - gems_500   = 500 gemuri    → 3,99 €
-  - gems_1200  = 1200 gemuri   → 7,99 €
-  - gems_3000  = 3000 gemuri   → 17,99 €
+PASUL 1  → Conectezi proiectul la GitHub (2 minute, din Lovable)
+PASUL 2  → Eu scriu workflow-ul de build; tu adaugi 4 secrete în GitHub
+PASUL 3  → Apeși „Run workflow" în GitHub → descarci app-release.aab
+PASUL 4  → Play Console: creezi aplicația, urci .aab, completezi fișa
+PASUL 5  → Creezi cele 4 produse de gemuri + profil de plăți
+PASUL 6  → AdMob: legi aplicația, mesaj GDPR, date de plată
+PASUL 7  → Testare internă → promovezi în producție
 ```
 
----
+### Pasul 1 — GitHub (tu, 2 minute)
+În editorul Lovable: meniul **+** din chat → **GitHub → Connect project** → autorizezi → **Create Repository**. Gata, codul se sincronizează singur de acum.
 
-## PARTEA 1 — Salvează proiectul pe GitHub
+### Pasul 2 — Build-ul automat (eu scriu codul, tu pui secretele)
+Eu creez `.github/workflows/android.yml` care: instalează proiectul, construiește aplicația web, generează proiectul Android, injectează AdMob + permisiunea de facturare, semnează și livrează `app-release.aab`.
 
-### 1.1 Creează un repository nou
+Pentru semnare ai nevoie de o cheie (keystore). Fluxul fără laptop:
+- Prima rulare a workflow-ului **generează singură cheia** și ți-o dă ca fișier de descărcat, plus un text lung de copiat.
+- Tu copiezi acel text în **GitHub → repo → Settings → Secrets and variables → Actions** ca secret `KEYSTORE_BASE64`, împreună cu parolele afișate de workflow (`KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD` — toate ți le dă workflow-ul gata de copiat).
+- **Copiază cheia și parolele și într-o notiță/Google Drive.** Cu „Play App Signing" (pasul 4) Google poate reseta cheia dacă o pierzi, deci riscul e mic.
+- Rulezi workflow-ul a doua oară → primești `app-release.aab` la „Artifacts", pe care îl descarci pe telefon.
 
-1. Pe telefon/tabletă sau PC, intră pe [github.com/new](https://github.com/new).
-2. Nume: `sudoku-drop` (sau cum vrei tu). Lasă public sau private.
-3. NU bifa „Initialize this repository with a README" — vom împinge tot de aici.
-4. Copiază URL-ul SSH sau HTTPS (de ex. `https://github.com/USER/sudoku-drop.git`).
+### Pasul 3 — descarci `.aab`
+GitHub → repo → **Actions** → rularea terminată → **Artifacts** → descarci. Fișierul ajunge în Downloads pe telefon.
 
-### 1.2 Conectează proiectul Lovable la GitHub
+### Pasul 4 — Play Console (din browser, activează „Versiune desktop" în Chrome)
+1. [play.google.com/console](https://play.google.com/console) → **Creează aplicație**: nume `Sudoku Drop`, română, Joc, Gratuit.
+2. La primul upload alege **Play App Signing** (recomandat).
+3. **Testare → Testare internă → Creează versiune** → încarci `app-release.aab` din Downloads.
+4. Completezi checklist-ul:
+   - **Fișa magazinului**: descrieri (ți le scriu eu, română + engleză), iconiță 512×512 și imagine 1024×500 (ți le generez eu), 2 capturi de ecran făcute pe telefon.
+   - **Evaluare conținut (IARC)**: „Nu" la violență/jocuri de noroc → PEGI 3.
+   - **Politica de confidențialitate**: `https://sudokudrop.lovable.app/privacy` (există deja).
+   - **Declarație reclame**: DA (AdMob).
+   - **Data safety**: e-mail, ID dispozitiv, date de joc; criptate în tranzit: Da.
+   - **Public țintă**: 13+. **Țări**: toate.
 
-Cel mai simplu și sigur: din editorul Lovable, mergi la **Settings → Git → Connect to GitHub**. Alege repository-ul creat. Astfel:
+### Pasul 5 — Produsele de gemuri
+Play Console → **Monetizare → Produse → Produse în aplicație**, câte unul, toate **consumabile**, apoi **Activează**:
 
-- codul se sincronizează automat la fiecare modificare;
-- poți descărca proiectul pe PC pentru build Android;
-- nu mai trebuie să copiezi fișiere manual.
+| ID produs (exact!) | Preț |
+|---|---|
+| `gems_100` | 0,99 € |
+| `gems_500` | 3,99 € |
+| `gems_1200` | 7,99 € |
+| `gems_3000` | 17,99 € |
 
-### 1.3 Alternativa manuală (doar dacă nu funcționează conectarea automată)
+Plus: **Setări → Profil de plăți** — completezi datele și IBAN-ul (validarea durează câteva zile, fă-o devreme).
 
-Pe un PC cu Git instalat:
+### Pasul 6 — AdMob
+1. [apps.admob.com](https://apps.admob.com) → **Aplicații** → leagi aplicația de pachetul `app.lovable.sudokudrop`.
+2. **Confidențialitate și mesagerie** → creezi mesajul GDPR (aplicația îl afișează singură).
+3. Completezi datele de plată AdMob (prag 100 $).
+4. `app-ads.txt` e deja publicat la `https://sudokudrop.lovable.app/app-ads.txt` — pui acest URL în AdMob când îl cere.
 
-```bash
-# 1. Descarcă proiectul din Lovable (File → Export ZIP) și dezarhivează.
-# 2. În folderul proiectului:
-git init
-git add .
-git commit -m "Initial Sudoku Drop commit"
-git branch -M main
-git remote add origin https://github.com/USER/sudoku-drop.git
-git push -u origin main
-```
+### Pasul 7 — Testare și lansare
+1. Play Console → Testare internă → te adaugi ca tester (Gmail) → instalezi pe telefon din linkul de testare.
+2. Testezi real: o partidă, o reclamă cu recompensă, o cumpărare de gemuri (ca tester e gratuită).
+3. **Promovează în Producție** → Trimite spre examinare. Prima examinare: 3–7 zile.
 
----
+## Ce fac eu după aprobarea planului
+1. Scriu `.github/workflows/android.yml` (build complet + semnare + generarea cheii la prima rulare).
+2. Generez iconița 512×512 și imaginea reprezentativă 1024×500 pentru fișa magazinului.
+3. Scriu descrierile scurtă + lungă (română + engleză) gata de copiat în Play Console.
 
-## PARTEA 2 — Generează fișierul .aab (ai nevoie de laptop/PC)
-
-Acest pas NU se poate face de pe tabletă/telefon.
-
-1. Pe PC: clonează repository-ul:
-   ```bash
-   git clone https://github.com/USER/sudoku-drop.git
-   cd sudoku-drop
-   ```
-2. Instalează dependențele:
-   ```bash
-   npm install
-   ```
-3. Sincronizează proiectul Android (injectează automat AdMob App ID):
-   ```bash
-   npm run cap:sync
-   ```
-4. Dacă lipsește, adaugă pluginurile native:
-   ```bash
-   npm install @capacitor-community/admob cordova-plugin-purchase
-   npm run cap:sync
-   ```
-5. Deschide în Android Studio:
-   ```bash
-   npx cap open android
-   ```
-6. În Android Studio: **Build → Generate Signed App Bundle / APK → Android App Bundle (.aab)**.
-7. La „Key store", creează o cheie nouă. **Păstrează fișierul .jks și parolele în cel puțin 2 locuri sigure** (fără ele nu mai poți actualiza aplicația). Sau activează **Play App Signing** la primul upload și Google păstrează cheia principală.
-8. Alege varianta **release** și generează. Rezultatul: `app-release.aab`.
-
----
-
-## PARTEA 3 — Play Console: creează aplicația
-
-1. Intră pe [play.google.com/console](https://play.google.com/console) → **Creează aplicație**.
-2. Nume: `Sudoku Drop`, limbă implicită română, tip: Joc, gratuit.
-3. Bifează declarațiile cerute (reguli dezvoltator, legi SUA).
-4. La primul upload .aab, alege **Play App Signing (Google)** — recomandat.
-5. Mergi la **Testare → Testare internă** → Creează lansare → încarcă `app-release.aab`.
-6. Completează datele obligatorii din panoul stâng:
-
-   - **Fișa magazinului**: descriere scurtă (max 80 car.) + lungă, iconiță 512×512, imagine reprezentativă 1024×500, minim 2 capturi telefon.
-   - **Evaluare conținut (IARC)**: răspunde „Nu" la violență/jocuri de noroc → PEGI 3 / Everyone.
-   - **Politica de confidențialitate**: URL public. Îți generez paginile `/privacy` și `/terms` (vezi „Ce fac eu").
-   - **Declarație reclame**: DA, aplicația conține reclame (AdMob).
-   - **Siguranța datelor (Data safety)**: bifează e-mail, ID-uri dispozitiv, date de joc; criptate în tranzit: Da.
-   - **Țară/regiuni**: România + restul lumii.
-   - **Public țintă**: 13+.
-
-7. Adaugă-te ca tester (adresa ta de Gmail) și instalează aplicația din linkul de testare internă pe telefon. **Testează real**: cumpărare gemuri, reclamă cu recompensă, cont Google, turnee.
-
----
-
-## PARTEA 4 — Produsele de cumpărare (monetizarea gemurilor)
-
-În Play Console → **Monetizare → Produse → Produse în aplicație** → Creează, câte unul:
-
-| ID produs (exact!) | Nume | Preț |
-|---|---|---|
-| `gems_100` | 100 gemuri | 0,99 € |
-| `gems_500` | 500 gemuri | 3,99 € |
-| `gems_1200` | 1200 gemuri | 7,99 € |
-| `gems_3000` | 3000 gemuri | 17,99 € |
-
-- ID-urile trebuie scrise **exact** ca în tabel.
-- Activează fiecare produs.
-- Completează **Configurare → Cont de plăți** cu datele tale și IBAN (Google plătește lunar, prag minim 100 $).
-
----
-
-## PARTEA 5 — AdMob (reclamele)
-
-Unitățile de reclamă sunt deja create și puse în cod. Mai faci:
-
-1. În [apps.admob.com](https://apps.admob.com) → **Aplicații → Setări aplicație**: leagă aplicația de pachetul `app.lovable.sudokudrop` (devine disponibil după ce aplicația apare în Play Console).
-2. **app-ads.txt**: AdMob → Setări → îți arată fișierul și domeniul unde trebuie publicat. Noi avem deja `public/app-ads.txt` — îl public pe URL-ul aplicației și-ți dau URL-ul exact pentru AdMob.
-3. **Mesaj GDPR (UMP)**: AdMob → **Confidențialitate și mesagerie → Mesaje europene** → creează mesajul GDPR pentru aplicație. Codul din aplicație afișează automat formularul.
-4. Completează datele de plată în AdMob (CNP/date fiscale + IBAN; prag de plată 100 $).
-5. Reclamele reale apar doar în build release pe dispozitiv; în testare pot apărea reclame de test — e normal.
-
----
-
-## PARTEA 6 — Lansarea în producție
-
-1. După ce testarea internă e OK: **Testare → Promovează lansarea → Producție** (sau creează o lansare nouă de producție cu același .aab).
-2. Alege țările, apasă **Trimite spre examinare**.
-3. Prima examinare durează de obicei **3–7 zile**. După aprobare, aplicația e live.
-4. În prima săptămână verifică: Play Console → Statistici (instalări, erori ANR) și AdMob → venituri.
-
----
-
-## Ce fac eu în acest proiect (după aprobarea planului)
-
-1. Public paginile `/privacy` și `/terms` pe URL-uri publice și-ți dau linkurile exacte de pus în Play Console.
-2. Verific că `public/app-ads.txt` e servit corect și-ți dau URL-ul exact pentru AdMob.
-3. Adaug în scriptul de build o verificare automată a AdMob App ID-ului, ca să nu poți publica din greșeală fără el.
-4. Îți pregătesc textele fișei de magazin (descriere scurtă + lungă, română + engleză).
-
-## Ce îmi mai trebuie de la tine (pe parcurs, nu acum)
-
-- Dacă vrei anti-fraudă completă la cumpărături (verificare pe server a bonurilor): un fișier JSON „service account" din Google Cloud — îți explic atunci, pas cu pas, cum se generează. Fără el, cumpărările funcționează, dar validarea e doar locală.
+## Ce trebuie să știi
+- Taxa de 25 $ pentru contul Google Play Developer o plătești tu, o singură dată.
+- Build-ul durează ~5–10 minute la fiecare rulare; GitHub oferă gratuit 2.000 minute/lună — ajung lejer.
+- Singurul lucru care rămâne opțional pe viitor: verificarea anti-fraudă a cumpărăturilor pe server (necesită un fișier din Google Cloud — îți explic atunci).

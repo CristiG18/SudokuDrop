@@ -1,0 +1,115 @@
+# Build Android (.aab) pentru Sudoku Drop — rulează complet în cloud.
+#
+# Cum se folosește (totul din browser, fără laptop):
+#   1. Prima rulare: nu există încă secretul KEYSTORE_BASE64, deci workflow-ul
+#      generează singur cheia de semnare și o urcă la "Artifacts"
+#      (fișierul keystore-setup.zip), apoi se oprește.
+#   2. Deschide artifactul, copiază valorile afișate și creează în repo
+#      (Settings → Secrets and variables → Actions) secretele:
+#        KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
+#   3. Rulează workflow-ul din nou (Actions → Android AAB → Run workflow).
+#      La final descarci app-release.aab din "Artifacts".
+
+name: Android AAB
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync Capacitor + inject AdMob/BILLING
+        run: npm run cap:sync
+
+      - name: Prepare keystore
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/upload-keystore.jks"
+            echo "KEYSTORE_PATH=$RUNNER_TEMP/upload-keystore.jks" >> "$GITHUB_ENV"
+            echo "HAS_KEYSTORE=true" >> "$GITHUB_ENV"
+          else
+            KEYSTORE_PASSWORD=$(head -c 24 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 24)
+            keytool -genkeypair -v \
+              -keystore "$RUNNER_TEMP/upload-keystore.jks" \
+              -alias upload -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" \
+              -dname "CN=Sudoku Drop Upload, O=Sudoku Drop, C=RO"
+            base64 -w0 "$RUNNER_TEMP/upload-keystore.jks" > "$RUNNER_TEMP/KEYSTORE_BASE64.txt"
+            {
+              echo "=== COPIAZA ACESTE VALORI IN Settings → Secrets and variables → Actions ==="
+              echo ""
+              echo "KEYSTORE_BASE64  =  (continutul fisierului KEYSTORE_BASE64.txt din acest artifact)"
+              echo "KEYSTORE_PASSWORD  =  $KEYSTORE_PASSWORD"
+              echo "KEY_ALIAS  =  upload"
+              echo "KEY_PASSWORD  =  $KEYSTORE_PASSWORD"
+              echo ""
+              echo "Pastreaza si fisierul upload-keystore.jks + parolele intr-un loc sigur (Google Drive)."
+              echo "Apoi ruleaza workflow-ul din nou pentru a obtine app-release.aab."
+            } > "$RUNNER_TEMP/CITESTE-MAI-INTAI.txt"
+            cp "$RUNNER_TEMP/upload-keystore.jks" "$RUNNER_TEMP/keystore-backup.jks"
+            mkdir -p keystore-out
+            cp "$RUNNER_TEMP/CITESTE-MAI-INTAI.txt" "$RUNNER_TEMP/KEYSTORE_BASE64.txt" "$RUNNER_TEMP/keystore-backup.jks" keystore-out/
+            echo "HAS_KEYSTORE=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Upload keystore setup (doar la prima rulare)
+        if: env.HAS_KEYSTORE == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: keystore-setup
+          path: keystore-out/
+          retention-days: 30
+
+      - name: Stop — aștept secretele de semnare
+        if: env.HAS_KEYSTORE == 'false'
+        run: |
+          echo "::error::Cheia de semnare a fost generată. Descarcă artifactul 'keystore-setup', adaugă cele 4 secrete în repo (vezi CITESTE-MAI-INTAI.txt), apoi rulează workflow-ul din nou."
+          exit 1
+
+      - name: Build signed AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew app:bundleRelease \
+            -Pandroid.injected.signing.store.file="$KEYSTORE_PATH" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+
+      - name: Upload app-release.aab
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30

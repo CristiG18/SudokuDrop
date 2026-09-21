@@ -33,8 +33,15 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # SDK-ul Android e deja preinstalat pe runner-ele GitHub (ubuntu-latest).
+      # Acțiunea android-actions/setup-android@v3 e abandonată și pică pe noile
+      # imagini de runner — acceptăm licențele și instalăm platforma direct.
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" > /dev/null
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund

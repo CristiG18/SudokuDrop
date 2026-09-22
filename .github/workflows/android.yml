@@ -50,7 +50,9 @@ jobs:
         run: npm run build
 
       - name: Add Android platform
-        run: npx cap add android
+        run: |
+          npx cap add android
+          mkdir -p android/app/src/main/assets
 
       - name: Sync Capacitor + inject AdMob/BILLING
         run: npm run cap:sync

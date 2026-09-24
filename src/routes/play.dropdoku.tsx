@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { submitScore } from "@/lib/leaderboard";
@@ -28,6 +29,8 @@ import { useGameStore, type Helper } from "@/store/game-store";
 import { ArrowLeft, ArrowDown, Gem, Pause, Play, RotateCw } from "lucide-react";
 import { sfx, unlockAudio } from "@/lib/sfx";
 import { PauseSheet } from "@/components/PauseSheet";
+import { LockedSkinPrompt, MatchShopSheet } from "@/components/MatchShopSheet";
+import { setBackHandler } from "@/lib/native";
 import { ClearFx, type ClearFxItem } from "@/components/game/ClearFx";
 import { RewardedHelperModal } from "@/components/RewardedHelperModal";
 import { useT } from "@/i18n";
@@ -207,6 +210,8 @@ function DropdokuPage() {
   const [clearingCells, setClearingCells] = useState<Array<{ r: number; c: number }>>([]);
   const [paused, setPaused] = useState(false);
   const [backOpen, setBackOpen] = useState(false);
+  const [lockedSkin, setLockedSkin] = useState<string | null>(null);
+  const [matchShop, setMatchShop] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [endXp, setEndXp] = useState<{ xp: number; levelsGained: number; rank: string } | null>(null);
   const xpAwardedRef = useRef(false);
@@ -249,6 +254,16 @@ function DropdokuPage() {
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
+
+  // Android back button pauses the match instead of leaving it.
+  useEffect(() => {
+    setBackHandler(() => {
+      if (matchShop || lockedSkin) return true;
+      setPaused(true);
+      return true;
+    });
+    return () => setBackHandler(null);
+  }, [matchShop, lockedSkin]);
 
   // Countdown for Time Attack.
   const remainingAttack = isTimed
@@ -640,6 +655,16 @@ function DropdokuPage() {
     setPaused(true);
   };
 
+  // Didn't come back from the shop within 2 minutes → disqualified (score 0).
+  const disqualify = useCallback(() => {
+    setMatchShop(false);
+    setPaused(false);
+    setBackOpen(false);
+    setScore(0);
+    setGameOver(true);
+    toast.error(t("Descalificat — nu ai revenit la timp."));
+  }, [t]);
+
   const helperSeconds = helperPresses <= 1 ? 10 : helperPresses === 2 ? 6 : 3;
 
   const cancelHelper = () => {
@@ -975,7 +1000,8 @@ function DropdokuPage() {
       )}
 
       <PauseSheet
-        open={paused && !helperMode && !backOpen}
+        open={paused && !helperMode && !backOpen && !matchShop}
+        onLockedSkin={setLockedSkin}
         onResume={() => setPaused(false)}
         onRestart={startFresh}
         onMenu={() => navigate({ to: "/" })}
@@ -986,7 +1012,8 @@ function DropdokuPage() {
       />
 
       <PauseSheet
-        open={backOpen}
+        open={backOpen && !matchShop}
+        onLockedSkin={setLockedSkin}
         title={t("Meniu pauză")}
         onResume={() => setBackOpen(false)}
         onRestart={startFresh}
@@ -995,6 +1022,20 @@ function DropdokuPage() {
           setSession(null);
           navigate({ to: "/" });
         }}
+      />
+
+      <LockedSkinPrompt
+        skinId={lockedSkin}
+        onClose={() => setLockedSkin(null)}
+        onGoShop={() => {
+          setLockedSkin(null);
+          setMatchShop(true);
+        }}
+      />
+      <MatchShopSheet
+        open={matchShop}
+        onReturn={() => setMatchShop(false)}
+        onExpire={disqualify}
       />
 
       {gameOver && !isVersus && (

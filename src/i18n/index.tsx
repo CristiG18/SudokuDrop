@@ -16,33 +16,21 @@ export type LangCode = (typeof LANGUAGES)[number]["code"];
 
 interface LangState {
   lang: LangCode;
+  /** True once the player picked a language on first launch. */
+  chosen: boolean;
   setLang: (l: LangCode) => void;
-}
-
-function detect(): LangCode {
-  if (typeof navigator === "undefined") return "ro";
-  const nav = (navigator.language || "ro").slice(0, 2).toLowerCase();
-  return (LANGUAGES.some((l) => l.code === nav) ? nav : "en") as LangCode;
 }
 
 export const useLangStore = create<LangState>()(
   persist(
     (set) => ({
-      lang: "ro" as LangCode,
-      setLang: (lang) => set({ lang }),
+      lang: "en" as LangCode,
+      chosen: false,
+      setLang: (lang) => set({ lang, chosen: true }),
     }),
-    {
-      name: "sudoku-drop-lang",
-      onRehydrateStorage: () => (state, error) => {
-        if (!error && state && !localStorage.getItem("sudoku-drop-lang-touched")) {
-          localStorage.setItem("sudoku-drop-lang-touched", "1");
-          state.setLang(detect());
-        }
-      },
-    },
+    { name: "sudoku-drop-lang-v2" },
   ),
 );
-
 /** Translate a Romanian source string into the active language. */
 export function translate(lang: LangCode, key: string): string {
   if (lang === "ro") return key;

@@ -427,3 +427,19 @@
 @media (prefers-reduced-motion: reduce) {
   .fx-beam-h, .fx-beam-v, .fx-spark, .fx-box-ring { animation-duration: 1ms; }
 }
+
+/* Full-screen app shell: the page itself never scrolls. */
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+.app-frame {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+}
+.app-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 5rem;
+}
+.app-content .min-h-screen { min-height: 100%; }

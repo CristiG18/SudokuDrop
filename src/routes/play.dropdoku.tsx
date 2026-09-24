@@ -37,6 +37,7 @@ import {
   estimatePercentile,
   formatPercentile,
   versusRivalLive,
+  versusRivalSchedule,
   versusRivalName,
   versusRivalScore,
 } from "@/game/economy";
@@ -159,8 +160,13 @@ function DropdokuPage() {
   // shown while playing and reused when the match is recorded.
   const rival = useMemo(() => {
     if (!vkey) return null;
+    const schedule = versusRivalSchedule(
+      versusRivalScore(versusRun?.difficulty ?? "easy", versusRun?.round ?? 0),
+      Math.max(30, attackSeconds ?? 120),
+    );
     return {
-      target: versusRivalScore(versusRun?.difficulty ?? "easy", versusRun?.round ?? 0),
+      target: schedule[schedule.length - 1]?.score ?? 0,
+      schedule,
       name: versusRivalName(),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -250,10 +256,7 @@ function DropdokuPage() {
     : 0;
   // Rival's live score in a Versus match, paced with the match clock.
   const rivalLive = rival
-    ? versusRivalLive(
-        rival.target,
-        totalAttackSecs > 0 ? secondsPlayed / totalAttackSecs : 0,
-      )
+    ? versusRivalLive(rival.schedule, secondsPlayed)
     : 0;
   useEffect(() => {
     if (!isTimed || gameOver) return;

@@ -1,3 +1,4 @@
+import { registerPlugin } from "@capacitor/core";
 import { isNative } from "./native";
 
 /**
@@ -53,17 +54,12 @@ type AdMobModule = {
   };
 };
 
+const AdMobPlugin = registerPlugin<AdMobModule["AdMob"]>("AdMob");
+
+// Reached through the Capacitor bridge (works with the remote site too).
 async function loadAdMob(): Promise<AdMobModule["AdMob"] | null> {
   if (!isNative()) return null;
-  try {
-    // Resolved at runtime only: the plugin is added to the native shell, so
-    // the web build must not try to bundle or type-check it.
-    const specifier = "@capacitor-community/admob";
-    const mod = (await import(/* @vite-ignore */ specifier)) as unknown as AdMobModule;
-    return mod.AdMob;
-  } catch {
-    return null;
-  }
+  return AdMobPlugin;
 }
 
 /**
@@ -115,12 +111,21 @@ export async function showRewardedAd(kind: RewardedAdKind = "ticket"): Promise<b
   if (!initialized) await initAds();
   if (!canRequestAds) return false;
 
-  try {
-    await adMob.prepareRewardVideoAd({ adId: getUnitId(kind) });
+  const tryUnit = async (adId: string) => {
+    await adMob.prepareRewardVideoAd({ adId });
     const result = (await adMob.showRewardVideoAd()) as { amount?: number } | undefined;
     return Boolean(result);
+  };
+  try {
+    return await tryUnit(getUnitId(kind));
   } catch {
-    return false;
+    // New / not-yet-approved apps get "no fill" on live units — fall back to
+    // Google's official test ad so the reward flow still works.
+    try {
+      return await tryUnit(TEST_REWARDED_UNIT_ID);
+    } catch {
+      return false;
+    }
   }
 }
 

@@ -1,10 +1,11 @@
+import { registerPlugin } from "@capacitor/core";
 import { isNative } from "./native";
 
 /**
- * Google Play Billing layer for gem packs.
- *
- * Uses cordova-plugin-purchase on the native Android shell. In browser / preview
- * we simulate a successful purchase so the shop flow stays testable.
+ * Google Play Billing for gem packs via the native Capacitor plugin
+ * (@capgo/native-purchases). The plugin is reached through the Capacitor
+ * bridge, so it also works when the shell loads the published site.
+ * In a normal browser we simulate the purchase so the flow stays testable.
  */
 
 export const GEM_PACKS = [
@@ -14,25 +15,23 @@ export const GEM_PACKS = [
   { id: "gems_3000", gems: 3000, price: "€17,99" },
 ];
 
-// cordova-plugin-purchase exposes a global CdvPurchase namespace.
-declare global {
-  interface Window {
-    CdvPurchase?: {
-      store: {
-        verbosity: number;
-        register: (products: unknown[]) => void;
-        when: () => {
-          approved: (cb: (transaction: { products: { id?: string }[]; purchaseId?: string; transactionId?: string; finish: () => Promise<void> }) => void) => { cancelled: (cb: () => void) => void };
-        };
-        initialize: (platforms: unknown[]) => Promise<unknown>;
-        get: (productId: string) => { getOffer: () => { order: () => Promise<unknown> } | undefined } | undefined;
-      };
-      LogLevel: { ERROR: number };
-      ProductType: { CONSUMABLE: string };
-      Platform: { GOOGLE_PLAY: string };
-    };
-  }
+type Transaction = { transactionId?: string; purchaseToken?: string; productIdentifier?: string };
+
+interface NativePurchasesPlugin {
+  isBillingSupported: () => Promise<{ isBillingSupported: boolean }>;
+  purchaseProduct: (opts: {
+    productIdentifier: string;
+    productType?: "inapp" | "subs";
+    quantity?: number;
+    isConsumable?: boolean;
+  }) => Promise<Transaction>;
+  getProducts: (opts: {
+    productIdentifiers: string[];
+    productType?: "inapp" | "subs";
+  }) => Promise<{ products: { identifier: string; priceString: string }[] }>;
 }
+
+const NativePurchases = registerPlugin<NativePurchasesPlugin>("NativePurchases");
 
 export type PurchaseResult = {
   productId: string;
@@ -40,103 +39,42 @@ export type PurchaseResult = {
   purchaseToken: string;
 };
 
-let storeInitStarted = false;
-let storeReady = false;
-let pendingResolver: ((result: PurchaseResult) => void) | null = null;
-let pendingRejecter: ((err: Error) => void) | null = null;
-
-function getStore() {
-  if (!isNative()) return null;
-  return window.CdvPurchase?.store ?? null;
-}
-
-function getGemAmount(productId: string): number {
-  return GEM_PACKS.find((p) => p.id === productId)?.gems ?? 0;
-}
-
-async function initStore(): Promise<void> {
-  const store = getStore();
-  if (!store || storeInitStarted) return;
-  storeInitStarted = true;
-
-  const Cdv = window.CdvPurchase!;
-  store.verbosity = Cdv.LogLevel.ERROR;
-
-  store.register(
-    GEM_PACKS.map((p) => ({
-      id: p.id,
-      type: Cdv.ProductType.CONSUMABLE,
-      platform: Cdv.Platform.GOOGLE_PLAY,
-    }))
-  );
-
-  store
-    .when()
-    .approved((transaction) => {
-      const pid = transaction.products[0]?.id ?? "";
-      const gems = getGemAmount(pid);
-      if (gems && pendingResolver) {
-        pendingResolver({
-          productId: pid,
-          gems,
-          purchaseToken: transaction.purchaseId ?? transaction.transactionId ?? "",
-        });
-        pendingResolver = null;
-        pendingRejecter = null;
-      }
-      void transaction.finish();
-    })
-    .cancelled(() => {
-      if (pendingRejecter) {
-        pendingRejecter(new Error("Purchase cancelled"));
-        pendingResolver = null;
-        pendingRejecter = null;
-      }
+/** Localized store prices (e.g. "4,99 RON"), keyed by product id. */
+export async function loadStorePrices(): Promise<Record<string, string>> {
+  if (!isNative()) return {};
+  try {
+    const { products } = await NativePurchases.getProducts({
+      productIdentifiers: GEM_PACKS.map((p) => p.id),
+      productType: "inapp",
     });
-
-  await store.initialize([{ platform: Cdv.Platform.GOOGLE_PLAY }]);
-  storeReady = true;
+    return Object.fromEntries(products.map((p) => [p.identifier, p.priceString]));
+  } catch {
+    return {};
+  }
 }
 
-/**
- * Initiates a purchase for the given gem pack. Resolves with the granted gems
- * and the store purchase token. Throws on cancellation or error.
- */
 export async function purchaseGems(productId: string): Promise<PurchaseResult> {
   const pack = GEM_PACKS.find((p) => p.id === productId);
   if (!pack) throw new Error("Invalid gem pack");
 
-  const store = getStore();
-  if (!store) {
-    // Browser / preview: simulate a purchase so the UI stays testable.
+  if (!isNative()) {
     await new Promise((r) => setTimeout(r, 800));
     return { productId, gems: pack.gems, purchaseToken: `sim-${Date.now()}` };
   }
 
-  if (!storeReady) await initStore();
-
-  return new Promise<PurchaseResult>((resolve, reject) => {
-    pendingResolver = resolve;
-    pendingRejecter = reject;
-
-    const product = store.get(productId);
-    const offer = product?.getOffer();
-    if (!offer) {
-      pendingResolver = null;
-      pendingRejecter = null;
-      reject(new Error("Product not available in store"));
-      return;
-    }
-
-    offer.order().catch((err: unknown) => {
-      pendingResolver = null;
-      pendingRejecter = null;
-      reject(err instanceof Error ? err : new Error(String(err)));
-    });
+  const tx = await NativePurchases.purchaseProduct({
+    productIdentifier: productId,
+    productType: "inapp",
+    quantity: 1,
+    isConsumable: true,
   });
+  return {
+    productId,
+    gems: pack.gems,
+    purchaseToken: tx.purchaseToken ?? tx.transactionId ?? "",
+  };
 }
 
-/** True when the native billing store is available. */
 export function billingAvailable(): boolean {
-  return getStore() !== null;
+  return isNative();
 }

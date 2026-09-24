@@ -11,6 +11,7 @@ interface Props {
   onRestart?: () => void;
   onMenu: () => void; // back to previous menu (keep session)
   onExit?: () => void; // discard session and leave
+  onLockedSkin?: (skinId: string) => void;
 }
 
 export function PauseSheet({
@@ -21,6 +22,7 @@ export function PauseSheet({
   onRestart,
   onMenu,
   onExit,
+  onLockedSkin,
 }: Props) {
   const t = useT();
   if (!open) return null;
@@ -37,7 +39,7 @@ export function PauseSheet({
         <p className="text-center text-sm text-muted-foreground mt-1">{t("Ce vrei să faci?")}</p>
 
         <div className="mt-4 rounded-2xl bg-muted/60 p-3">
-          <SkinPicker compact />
+          <SkinPicker compact onLocked={onLockedSkin} />
         </div>
 
         <div className="flex flex-col gap-2 mt-4">

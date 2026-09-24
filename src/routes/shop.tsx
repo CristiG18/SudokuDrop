@@ -41,7 +41,7 @@ function PreviewBlock({ kind }: { kind: Skin }) {
   );
 }
 
-function GemPackButton({ pack }: { pack: (typeof GEM_PACKS)[number] }) {
+export function GemPackButton({ pack }: { pack: (typeof GEM_PACKS)[number] }) {
   const t = useT();
   const [busy, setBusy] = useState(false);
   const addDiamonds = useGameStore((s) => s.addDiamonds);

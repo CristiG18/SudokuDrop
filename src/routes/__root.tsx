@@ -17,6 +17,7 @@ import { useGameStore } from "../store/game-store";
 import { useCloudSync } from "../lib/cloud-sync";
 import { initNativeShell } from "../lib/native";
 import { initAds } from "../lib/ads";
+import { LanguageGate } from "../components/LanguageGate";
 
 
 
@@ -84,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Sudoku Drop — puzzle cu piese care cad" },
       {
         name: "description",
@@ -168,10 +169,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen pb-20">
-        <Outlet />
+      <div className="app-frame">
+        <div className="app-content no-scrollbar">
+          <Outlet />
+        </div>
+        <BottomTabs />
       </div>
-      <BottomTabs />
+      <LanguageGate />
     </QueryClientProvider>
   );
 }

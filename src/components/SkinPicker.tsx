@@ -10,9 +10,11 @@ export const SKIN_LIST = SKIN_CATALOG;
 interface Props {
   /** Compact variant used inside the in-game pause sheet. */
   compact?: boolean;
+  /** Called instead of opening the shop when a locked skin is tapped (in-match). */
+  onLocked?: (skinId: string) => void;
 }
 
-export function SkinPicker({ compact }: Props) {
+export function SkinPicker({ compact, onLocked }: Props) {
   const t = useT();
   const owned = useGameStore((s) => s.ownedSkins);
   const active = useGameStore((s) => s.activeSkin);
@@ -39,7 +41,7 @@ export function SkinPicker({ compact }: Props) {
             <button
               key={s.id}
               type="button"
-              onClick={() => (isOwned ? setSkin(s.id) : navigate({ to: "/shop" }))}
+              onClick={() => (isOwned ? setSkin(s.id) : onLocked ? onLocked(s.id) : navigate({ to: "/shop" }))}
               aria-label={t(s.name)}
               className={
                 "relative shrink-0 rounded-xl flex items-center justify-center font-bold transition " +

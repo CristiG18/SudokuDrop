@@ -277,14 +277,41 @@ export function versusRivalName() {
   return VERSUS_RIVAL_NAMES[Math.floor(Math.random() * VERSUS_RIVAL_NAMES.length)];
 }
 
-/** Rival's live score at a given progress (0..1) — slightly uneven pacing. */
-export function versusRivalLive(target: number, progress: number) {
-  const p = Math.min(1, Math.max(0, progress));
-  // Ease-in a touch so the rival doesn't look perfectly linear.
-  const curve = 0.85 * p + 0.15 * p * p;
-  return Math.round(target * curve);
+/**
+ * Realistic rival pacing: the rival "thinks" 4–10s, then scores in real
+ * clear-sized jumps (+100 line/column, +150 box, +250–450 combos).
+ * Returns cumulative [second, score] steps; last score is the final total.
+ */
+export function versusRivalSchedule(target: number, totalSecs: number) {
+  const jumps: number[] = [];
+  let sum = 0;
+  while (sum < target) {
+    const r = Math.random();
+    const j = r < 0.5 ? 100 : r < 0.8 ? 150 : 250 + Math.floor(Math.random() * 3) * 100;
+    jumps.push(j);
+    sum += j;
+  }
+  const gaps = jumps.map(() => 4 + Math.random() * 6);
+  const gapSum = gaps.reduce((a, b) => a + b, 0);
+  const span = Math.max(10, totalSecs - 3);
+  const scale = gapSum > span ? span / gapSum : 1;
+  let t = 0;
+  let s = 0;
+  return jumps.map((j, i) => {
+    t += gaps[i] * scale;
+    s += j;
+    return { t, score: s };
+  });
 }
 
+export function versusRivalLive(schedule: { t: number; score: number }[], seconds: number) {
+  let live = 0;
+  for (const step of schedule) {
+    if (step.t <= seconds) live = step.score;
+    else break;
+  }
+  return live;
+}
 
 /** Stable identifiers for a tournament category (one paid entry each). */
 export function timeAttackKey(minutes: number, tier: TierId) {

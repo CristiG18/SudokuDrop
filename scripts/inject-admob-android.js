@@ -97,7 +97,6 @@ function main() {
   ensureStringsXml(appId);
   ensureManifestMetaData();
   ensureBillingPermission();
-  ensureBillingDependency();
   console.log(`[inject-admob-android] AdMob App ID injected: ${appId}`);
   console.log("[inject-admob-android] Google Play Billing permission + dependency ensured.");
 }

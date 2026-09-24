@@ -1,3 +1,4 @@
+import { isNative } from "@/lib/native";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Mail, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -25,6 +26,10 @@ function AuthPage() {
       if (data.session) navigate({ to: "/" });
     });
   }, [navigate]);
+
+  // Google blocks sign-in inside the Android app view; email login is used there.
+  const [native, setNative] = useState(false);
+  useEffect(() => setNative(isNative()), []);
 
   const signInGoogle = async () => {
     if (mode === "signup" && !accepted) {
@@ -120,6 +125,7 @@ function AuthPage() {
         </p>
       </div>
 
+      {!native && (<>
       <button
         onClick={signInGoogle}
         disabled={busy}
@@ -139,6 +145,7 @@ function AuthPage() {
         <span className="text-xs text-muted-foreground">{t("sau email")}</span>
         <div className="flex-1 h-px bg-border" />
       </div>
+      </>)}
 
       <form onSubmit={submit} className="space-y-3">
         <div className="relative">

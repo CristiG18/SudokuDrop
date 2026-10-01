@@ -87,6 +87,18 @@ function ensureBillingDependency() {
   fs.writeFileSync(gradlePath, updated);
 }
 
+/** Play Console needs a higher versionCode on every upload. Bump APP_VERSION_CODE each release. */
+const APP_VERSION_CODE = 2;
+const APP_VERSION_NAME = "1.0.1";
+function ensureVersion() {
+  const gradlePath = path.resolve("android/app/build.gradle");
+  if (!fs.existsSync(gradlePath)) return;
+  let c = fs.readFileSync(gradlePath, "utf8");
+  c = c.replace(/versionCode\s+\d+/, `versionCode ${APP_VERSION_CODE}`)
+       .replace(/versionName\s+"[^"]*"/, `versionName "${APP_VERSION_NAME}"`);
+  fs.writeFileSync(gradlePath, c);
+}
+
 function main() {
   if (!fs.existsSync(manifestPath)) {
     console.log("[inject-admob-android] Android project not found. Run `npx cap add android` first.");
@@ -97,6 +109,7 @@ function main() {
   ensureStringsXml(appId);
   ensureManifestMetaData();
   ensureBillingPermission();
+  ensureVersion();
   console.log(`[inject-admob-android] AdMob App ID injected: ${appId}`);
   console.log("[inject-admob-android] Google Play Billing permission + dependency ensured.");
 }

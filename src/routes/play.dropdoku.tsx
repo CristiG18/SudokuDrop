@@ -215,6 +215,7 @@ function DropdokuPage() {
   const [gameOver, setGameOver] = useState(false);
   const [endXp, setEndXp] = useState<{ xp: number; levelsGained: number; rank: string } | null>(null);
   const xpAwardedRef = useRef(false);
+  const goShopRef = useRef(false);
   const [usedFreeRevive, setUsedFreeRevive] = useState(false);
   const [popups, setPopups] = useState<Popup[]>([]);
   const popupId = useRef(0);
@@ -355,7 +356,11 @@ function DropdokuPage() {
     if (vkey) {
       recordVersusMatch(score, rival?.target, rival?.name);
       // Versus never shows Game Over — you go back to the bracket screen.
-      navigate({ to: "/battle" });
+      navigate({ to: goShopRef.current ? "/shop" : "/battle" });
+      return;
+    }
+    if (goShopRef.current) {
+      navigate({ to: "/shop" });
       return;
     }
     if (!tkey) setModeBest(`free:${mode ?? difficulty}`, score);
@@ -388,7 +393,11 @@ function DropdokuPage() {
   const cellSize = useMemo(() => {
     if (typeof window === "undefined") return 36;
     const max = Math.min(window.innerWidth - 32, 420);
-    return Math.floor((max - 16) / COLS);
+    const byWidth = Math.floor((max - 16) / COLS);
+    // Fit header, controls and helpers on screen: board = ROWS + 3 preview rows.
+    const reserved = 330 + (isTimeAttack ? 60 : 0) + (vkey ? 44 : 0);
+    const byHeight = Math.floor((window.innerHeight - reserved) / (ROWS + 3));
+    return Math.max(22, Math.min(byWidth, byHeight));
   }, []);
   const cellSizeRef = useRef(cellSize);
   cellSizeRef.current = cellSize;
@@ -662,8 +671,27 @@ function DropdokuPage() {
     setBackOpen(false);
     setScore(0);
     setGameOver(true);
-    toast.error(t("Descalificat — nu ai revenit la timp."));
+    toast.error(t("Meci pierdut."));
   }, [t]);
+
+  // Tournament matches: a pause may last at most 5 minutes.
+  const PAUSE_MAX = 300;
+  const [pauseLeft, setPauseLeft] = useState(PAUSE_MAX);
+  const isPausedNow = (paused || backOpen) && !gameOver;
+  useEffect(() => {
+    if (!isSpecial || !isPausedNow) {
+      setPauseLeft(PAUSE_MAX);
+      return;
+    }
+    const id = setInterval(() => setPauseLeft((x) => x - 1), 1000);
+    return () => clearInterval(id);
+  }, [isSpecial, isPausedNow]);
+  useEffect(() => {
+    if (isSpecial && isPausedNow && pauseLeft <= 0) disqualify();
+  }, [isSpecial, isPausedNow, pauseLeft, disqualify]);
+  const pauseNote = isSpecial
+    ? `${t("Pauza expiră în")} ${Math.floor(Math.max(0, pauseLeft) / 60)}:${String(Math.max(0, pauseLeft) % 60).padStart(2, "0")} — ${t("apoi pierzi meciul.")}`
+    : undefined;
 
   const helperSeconds = helperPresses <= 1 ? 10 : helperPresses === 2 ? 6 : 3;
 
@@ -800,7 +828,7 @@ function DropdokuPage() {
 
 
   return (
-    <div className="min-h-screen flex flex-col" onClick={unlockAudio}>
+    <div className="h-full flex flex-col overflow-hidden" onClick={unlockAudio}>
       <header className="px-4 pt-4 pb-2 flex items-center justify-between">
         <button
           onClick={() => setBackOpen(true)}
@@ -966,7 +994,7 @@ function DropdokuPage() {
         </div>
       )}
 
-      <div className="px-4 pb-6 pt-2">
+      <div className="px-4 pb-3 pt-1">
         <HelperBar
           counts={helpers}
           active={helperMode}
@@ -1000,36 +1028,54 @@ function DropdokuPage() {
       )}
 
       <PauseSheet
-        open={paused && !helperMode && !backOpen && !matchShop}
+        open={paused && !helperMode && !backOpen && !matchShop && !gameOver}
+        canRestart={!isSpecial}
+        note={pauseNote}
         onLockedSkin={setLockedSkin}
         onResume={() => setPaused(false)}
         onRestart={startFresh}
-        onMenu={() => navigate({ to: "/" })}
-        onExit={() => {
-          setSession(null);
-          navigate({ to: "/" });
-        }}
+        onMenu={isSpecial ? undefined : () => navigate({ to: "/" })}
+        onExit={
+          isSpecial
+            ? undefined
+            : () => {
+                setSession(null);
+                navigate({ to: "/" });
+              }
+        }
       />
 
       <PauseSheet
-        open={backOpen && !matchShop}
+        open={backOpen && !matchShop && !gameOver}
+        canRestart={!isSpecial}
+        note={pauseNote}
         onLockedSkin={setLockedSkin}
         title={t("Meniu pauză")}
         onResume={() => setBackOpen(false)}
         onRestart={startFresh}
-        onMenu={() => navigate({ to: "/" })}
-        onExit={() => {
-          setSession(null);
-          navigate({ to: "/" });
-        }}
+        onMenu={isSpecial ? undefined : () => navigate({ to: "/" })}
+        onExit={
+          isSpecial
+            ? undefined
+            : () => {
+                setSession(null);
+                navigate({ to: "/" });
+              }
+        }
       />
 
       <LockedSkinPrompt
         skinId={lockedSkin}
         onClose={() => setLockedSkin(null)}
+        leaveWarning={isSpecial}
         onGoShop={() => {
           setLockedSkin(null);
-          setMatchShop(true);
+          if (isSpecial) {
+            goShopRef.current = true;
+            disqualify();
+          } else {
+            navigate({ to: "/shop" });
+          }
         }}
       />
       <MatchShopSheet

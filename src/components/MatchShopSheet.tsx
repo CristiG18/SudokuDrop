@@ -14,7 +14,9 @@ export function LockedSkinPrompt({
   skinId,
   onClose,
   onGoShop,
+  leaveWarning,
 }: {
+  leaveWarning?: boolean;
   skinId: string | null;
   onClose: () => void;
   onGoShop: () => void;
@@ -40,7 +42,9 @@ export function LockedSkinPrompt({
           </p>
         ) : (
           <p className="text-sm text-muted-foreground mt-1">
-            {t("Nu ai suficiente gemuri pentru acest skin. Vrei să mergi la magazin? Ai 2 minute să revii la meci, altfel vei fi descalificat.")}
+            {leaveWarning
+              ? t("Nu ai suficiente gemuri. Dacă mergi la magazin, părăsești meciul și îl pierzi. Continui?")
+              : t("Nu ai suficiente gemuri pentru acest skin. Vrei să mergi la magazin?")}
           </p>
         )}
         <div className="flex flex-col gap-2 mt-4">

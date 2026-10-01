@@ -283,25 +283,24 @@ export function versusRivalName() {
  * Returns cumulative [second, score] steps; last score is the final total.
  */
 export function versusRivalSchedule(target: number, totalSecs: number) {
-  const jumps: number[] = [];
-  let sum = 0;
-  while (sum < target) {
-    const r = Math.random();
-    const j = r < 0.5 ? 100 : r < 0.8 ? 150 : 250 + Math.floor(Math.random() * 3) * 100;
-    jumps.push(j);
-    sum += j;
-  }
-  const gaps = jumps.map(() => 4 + Math.random() * 6);
-  const gapSum = gaps.reduce((a, b) => a + b, 0);
-  const span = Math.max(10, totalSecs - 3);
-  const scale = gapSum > span ? span / gapSum : 1;
-  let t = 0;
+  // A real player clears something roughly every 6–12 seconds, never faster.
+  const span = Math.max(20, totalSecs - 3);
+  const steps: { t: number; score: number }[] = [];
+  let t = 4 + Math.random() * 6;
   let s = 0;
-  return jumps.map((j, i) => {
-    t += gaps[i] * scale;
+  const avgJump = 160;
+  // Tilt jump sizes so the final total lands near the drawn target.
+  const expectedSteps = Math.max(1, Math.floor(span / 9));
+  const bias = Math.min(2.5, Math.max(0.6, target / (expectedSteps * avgJump)));
+  while (t <= span) {
+    const r = Math.random();
+    const base = r < 0.5 ? 100 : r < 0.8 ? 150 : r < 0.95 ? 300 : 450;
+    const j = Math.max(100, Math.round((base * bias) / 50) * 50);
     s += j;
-    return { t, score: s };
-  });
+    steps.push({ t, score: s });
+    t += 6 + Math.random() * 6;
+  }
+  return steps;
 }
 
 export function versusRivalLive(schedule: { t: number; score: number }[], seconds: number) {

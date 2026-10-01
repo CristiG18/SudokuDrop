@@ -9,7 +9,8 @@ interface Props {
   canRestart?: boolean;
   onResume: () => void;
   onRestart?: () => void;
-  onMenu: () => void; // back to previous menu (keep session)
+  onMenu?: () => void; // back to previous menu (keep session)
+  note?: string;
   onExit?: () => void; // discard session and leave
   onLockedSkin?: (skinId: string) => void;
 }
@@ -23,6 +24,7 @@ export function PauseSheet({
   onMenu,
   onExit,
   onLockedSkin,
+  note,
 }: Props) {
   const t = useT();
   if (!open) return null;
@@ -37,6 +39,9 @@ export function PauseSheet({
       >
         <h2 className="text-xl font-bold text-center">{t(title)}</h2>
         <p className="text-center text-sm text-muted-foreground mt-1">{t("Ce vrei să faci?")}</p>
+        {note && (
+          <p className="mt-2 rounded-xl bg-destructive/10 text-destructive text-xs font-semibold text-center p-2">{note}</p>
+        )}
 
         <div className="mt-4 rounded-2xl bg-muted/60 p-3">
           <SkinPicker compact onLocked={onLockedSkin} />
@@ -58,12 +63,12 @@ export function PauseSheet({
               <RotateCcw className="w-4 h-4" /> {t("Restart")}
             </button>
           )}
-          <button
+          {onMenu && (<button
             onClick={onMenu}
             className="py-3 rounded-2xl bg-card border border-border font-semibold flex items-center justify-center gap-2"
           >
             <Home className="w-4 h-4" /> {t("Meniu principal")}
-          </button>
+          </button>)}
           {onExit && (
             <button
               onClick={onExit}

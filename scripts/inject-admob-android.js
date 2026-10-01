@@ -88,8 +88,8 @@ function ensureBillingDependency() {
 }
 
 /** Play Console needs a higher versionCode on every upload. Bump APP_VERSION_CODE each release. */
-const APP_VERSION_CODE = 2;
-const APP_VERSION_NAME = "1.0.1";
+const APP_VERSION_CODE = 3;
+const APP_VERSION_NAME = "1.0.2";
 function ensureVersion() {
   const gradlePath = path.resolve("android/app/build.gradle");
   if (!fs.existsSync(gradlePath)) return;
@@ -97,6 +97,22 @@ function ensureVersion() {
   c = c.replace(/versionCode\s+\d+/, `versionCode ${APP_VERSION_CODE}`)
        .replace(/versionName\s+"[^"]*"/, `versionName "${APP_VERSION_NAME}"`);
   fs.writeFileSync(gradlePath, c);
+}
+
+/** Full-screen: no status bar strip, content drawn edge to edge. */
+function ensureFullscreenTheme() {
+  const stylesPath = path.join(androidDir, "res/values/styles.xml");
+  if (!fs.existsSync(stylesPath)) return;
+  let c = fs.readFileSync(stylesPath, "utf8");
+  if (c.includes("android:windowFullscreen")) return;
+  const items = `
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:statusBarColor">#0F172A</item>
+        <item name="android:navigationBarColor">#0F172A</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>`;
+  c = c.replace(/(<style name="AppTheme\.NoActionBar"[^>]*>)/, `$1${items}`);
+  c = c.replace(/(<style name="AppTheme\.NoActionBarLaunch"[^>]*>)/, `$1${items}`);
+  fs.writeFileSync(stylesPath, c);
 }
 
 function main() {
@@ -110,6 +126,7 @@ function main() {
   ensureManifestMetaData();
   ensureBillingPermission();
   ensureVersion();
+  ensureFullscreenTheme();
   console.log(`[inject-admob-android] AdMob App ID injected: ${appId}`);
   console.log("[inject-admob-android] Google Play Billing permission + dependency ensured.");
 }

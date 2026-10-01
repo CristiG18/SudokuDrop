@@ -47,6 +47,7 @@ export async function initNativeShell(onBack: () => boolean) {
     ]);
     void StatusBar.setStyle({ style: Style.Light }).catch(() => {});
     // Full-screen: hide the Android status bar.
+    void StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
     void StatusBar.hide().catch(() => {});
     void SplashScreen.hide().catch(() => {});
     const handle = await App.addListener("backButton", ({ canGoBack }) => {

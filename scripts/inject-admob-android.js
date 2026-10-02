@@ -88,8 +88,8 @@ function ensureBillingDependency() {
 }
 
 /** Play Console needs a higher versionCode on every upload. Bump APP_VERSION_CODE each release. */
-const APP_VERSION_CODE = 3;
-const APP_VERSION_NAME = "1.0.2";
+const APP_VERSION_CODE = 4;
+const APP_VERSION_NAME = "1.0.3";
 function ensureVersion() {
   const gradlePath = path.resolve("android/app/build.gradle");
   if (!fs.existsSync(gradlePath)) return;

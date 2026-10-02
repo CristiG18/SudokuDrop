@@ -22,7 +22,7 @@ export function BottomTabs() {
     return null;
   }
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-t border-border">
+    <nav className="shrink-0 z-30 bg-card/95 backdrop-blur border-t border-border">
       <div className="max-w-md mx-auto grid grid-cols-4 px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
         {TABS.map(({ to, label, Icon }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);

@@ -5,7 +5,7 @@ export function ThemedEmblem({ theme: _theme }: { theme: string }) {
     <img
       src={emblemAsset.url}
       alt="Emblema rotundă Sudoku Drop cu piese numerotate care cad"
-      className="h-full w-full object-contain drop-shadow-xl"
+      className="absolute inset-0 h-full w-full object-contain drop-shadow-xl"
     />
   );
 }

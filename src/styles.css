@@ -440,9 +440,8 @@ html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding-bottom: 5rem;
 }
 .app-content .min-h-screen { min-height: 100%; }
 
-/* Game screens have no bottom tabs → no reserved space, no scroll. */
-.app-frame:not(:has(nav)) .app-content { padding-bottom: 0; overflow: hidden; }
+/* Game screens have no bottom tabs → no scroll at all. */
+.app-frame:not(:has(nav)) .app-content { overflow: hidden; }

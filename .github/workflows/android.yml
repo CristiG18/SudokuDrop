@@ -55,7 +55,7 @@ jobs:
           mkdir -p android/app/src/main/assets
 
       - name: Generate app icon from logo
-        run: npx @capacitor/assets generate --android --iconBackgroundColor '#0F172A' --iconBackgroundColorDark '#0F172A' --splashBackgroundColor '#0F172A' --splashBackgroundColorDark '#0F172A'
+        run: npx @capacitor/assets generate --android --iconBackgroundColor '#0A0A0A' --iconBackgroundColorDark '#0A0A0A' --splashBackgroundColor '#0A0A0A' --splashBackgroundColorDark '#0A0A0A'
 
       - name: Sync Capacitor + inject AdMob/BILLING
         run: npm run cap:sync

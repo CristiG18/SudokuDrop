@@ -803,6 +803,8 @@ function DropdokuPage() {
   };
 
   const startFresh = () => {
+    // Tournaments (Versus / Time Attack) can never be restarted.
+    if (isSpecial || tkey || vkey) return;
     setSession(null);
     xpAwardedRef.current = false;
     setEndXp(null);
@@ -1113,9 +1115,11 @@ function DropdokuPage() {
                   <Gem className="inline w-4 h-4 mr-1" /> {fmtNum(reviveCost)} — {t("Reînvie")}
                 </button>
               )}
-              <button onClick={startFresh} className="px-6 py-3 rounded-2xl bg-muted font-bold">
-                {t("Joc nou")}
-              </button>
+              {!isSpecial && !tkey && (
+                <button onClick={startFresh} className="px-6 py-3 rounded-2xl bg-muted font-bold">
+                  {t("Joc nou")}
+                </button>
+              )}
               <button
                 onClick={() => navigate({ to: "/" })}
                 className="px-6 py-3 rounded-2xl text-muted-foreground font-semibold"

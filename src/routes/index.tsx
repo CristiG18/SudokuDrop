@@ -67,8 +67,8 @@ function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col pb-6">
-      <header className="px-5 pt-5 flex items-center justify-between">
+    <div className="h-full flex flex-col pb-3 overflow-hidden">
+      <header className="px-5 pt-4 flex items-center justify-between shrink-0">
         <h1 className="display text-2xl font-bold">Sudoku Drop</h1>
         <div className="flex items-center gap-2">
           <Link
@@ -126,16 +126,14 @@ function Home() {
         </Link>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-6">
-        <div className="relative isolate w-full max-w-[17rem] aspect-square">
-          <div className="absolute inset-[9%] -z-10 rounded-full bg-primary/35 blur-2xl" />
-          <div className="absolute inset-[16%] -z-10 rounded-full bg-primary/30" />
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-5 py-2">
+        <div className="relative isolate flex-1 min-h-[6rem] w-full max-w-[17rem] max-h-[17rem]">
           <ThemedEmblem theme={activeTheme} />
         </div>
-        <p className="text-sm text-muted-foreground mt-2">{t("Piesele cad. Tu completezi.")}</p>
+        <p className="text-sm text-muted-foreground mt-1 shrink-0">{t("Piesele cad. Tu completezi.")}</p>
         <Link
           to="/tutorial"
-          className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm font-medium text-primary shadow-soft"
+          className="mt-2 shrink-0 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card border border-border text-sm font-medium text-primary shadow-soft"
         >
           <BookOpen className="w-4 h-4" /> {t("Cum se joacă")}
         </Link>

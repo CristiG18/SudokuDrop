@@ -115,6 +115,21 @@ function ensureFullscreenTheme() {
   fs.writeFileSync(stylesPath, c);
 }
 
+/** Lets Chrome reopen the app after Google sign-in (app.lovable.sudokudrop://auth). */
+function ensureAuthDeepLink() {
+  const c = fs.readFileSync(manifestPath, "utf8");
+  if (c.includes('android:scheme="app.lovable.sudokudrop"')) return;
+  const filter = `
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="app.lovable.sudokudrop" android:host="auth" />
+            </intent-filter>`;
+  const updated = c.replace(/(<activity[\s\S]*?android:name="\.MainActivity"[\s\S]*?>)/, `$1${filter}`);
+  fs.writeFileSync(manifestPath, updated);
+}
+
 function main() {
   if (!fs.existsSync(manifestPath)) {
     console.log("[inject-admob-android] Android project not found. Run `npx cap add android` first.");

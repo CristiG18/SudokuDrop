@@ -56,7 +56,27 @@ export async function initNativeShell(onBack: () => boolean) {
       if (canGoBack) window.history.back();
       else void App.exitApp();
     });
-    return () => void handle.remove();
+    // Google sign-in returns here from Chrome with the session in the link.
+    const urlHandle = await App.addListener("appUrlOpen", async ({ url }) => {
+      if (!url.includes("access_token=")) return;
+      const p = new URLSearchParams(url.split("#")[1] ?? url.split("?")[1] ?? "");
+      const access_token = p.get("access_token");
+      const refresh_token = p.get("refresh_token");
+      if (!access_token || !refresh_token) return;
+      const { supabase } = await import("@/integrations/supabase/client");
+      await supabase.auth.setSession({ access_token, refresh_token });
+      try {
+        const { Browser } = await import("@capacitor/browser");
+        await Browser.close();
+      } catch {
+        /* already closed */
+      }
+      if (window.location.pathname.startsWith("/auth")) window.location.href = "/";
+    });
+    return () => {
+      void handle.remove();
+      void urlHandle.remove();
+    };
   } catch {
     return () => {};
   }

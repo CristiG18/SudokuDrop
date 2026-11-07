@@ -38,6 +38,12 @@ function AuthPage() {
     }
     setBusy(true);
     try {
+      if (native) {
+        // Google blocks the in-app view; sign in via Chrome and come back via the app link.
+        const { Browser } = await import("@capacitor/browser");
+        await Browser.open({ url: `${window.location.origin}/auth-native` });
+        return;
+      }
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
@@ -125,7 +131,7 @@ function AuthPage() {
         </p>
       </div>
 
-      {!native && (<>
+      {(<>
       <button
         onClick={signInGoogle}
         disabled={busy}

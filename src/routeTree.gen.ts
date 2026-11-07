@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppearanceRouteImport } from './routes/appearance'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthNativeRouteImport } from './routes/auth-native'
 import { Route as BattleRouteImport } from './routes/battle'
 import { Route as ClassicRouteImport } from './routes/classic'
 import { Route as DailyRouteImport } from './routes/daily'
@@ -41,6 +42,11 @@ const AppearanceRoute = AppearanceRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthNativeRoute = AuthNativeRouteImport.update({
+  id: '/auth-native',
+  path: '/auth-native',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BattleRoute = BattleRouteImport.update({
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/appearance': typeof AppearanceRoute
   '/auth': typeof AuthRoute
+  '/auth-native': typeof AuthNativeRoute
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/appearance': typeof AppearanceRoute
   '/auth': typeof AuthRoute
+  '/auth-native': typeof AuthNativeRoute
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/appearance': typeof AppearanceRoute
   '/auth': typeof AuthRoute
+  '/auth-native': typeof AuthNativeRoute
   '/battle': typeof BattleRoute
   '/classic': typeof ClassicRoute
   '/daily': typeof DailyRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/'
     | '/appearance'
     | '/auth'
+    | '/auth-native'
     | '/battle'
     | '/classic'
     | '/daily'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/'
     | '/appearance'
     | '/auth'
+    | '/auth-native'
     | '/battle'
     | '/classic'
     | '/daily'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/'
     | '/appearance'
     | '/auth'
+    | '/auth-native'
     | '/battle'
     | '/classic'
     | '/daily'
@@ -247,6 +259,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppearanceRoute: typeof AppearanceRoute
   AuthRoute: typeof AuthRoute
+  AuthNativeRoute: typeof AuthNativeRoute
   BattleRoute: typeof BattleRoute
   ClassicRoute: typeof ClassicRoute
   DailyRoute: typeof DailyRoute
@@ -284,6 +297,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth-native': {
+      id: '/auth-native'
+      path: '/auth-native'
+      fullPath: '/auth-native'
+      preLoaderRoute: typeof AuthNativeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/battle': {
@@ -410,6 +430,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppearanceRoute: AppearanceRoute,
   AuthRoute: AuthRoute,
+  AuthNativeRoute: AuthNativeRoute,
   BattleRoute: BattleRoute,
   ClassicRoute: ClassicRoute,
   DailyRoute: DailyRoute,
